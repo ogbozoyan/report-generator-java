@@ -3,7 +3,6 @@ package com.template.reportgenerator;
 import com.template.reportgenerator.dto.GeneratedReport;
 import com.template.reportgenerator.dto.ReportData;
 import com.template.reportgenerator.dto.TemplateInput;
-import com.template.reportgenerator.exception.TemplateSyntaxException;
 import com.template.reportgenerator.service.ReportGeneratorService;
 import com.template.reportgenerator.service.ReportGeneratorServiceImpl;
 import org.apache.pdfbox.Loader;
@@ -42,7 +41,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReportGeneratorServiceImplTest {
@@ -55,7 +53,7 @@ class ReportGeneratorServiceImplTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("report.xlsx", null, template),
-            new ReportData(Map.of("name", "Alice"), null, null),
+            new ReportData(Map.of("name", "Alice")),
             null
         );
 
@@ -78,7 +76,7 @@ class ReportGeneratorServiceImplTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("report.xls", null, template),
-            new ReportData(Map.of("name", "Bob"), null, null),
+            new ReportData(Map.of("name", "Bob")),
             null
         );
 
@@ -93,7 +91,7 @@ class ReportGeneratorServiceImplTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("report.ods", null, template),
-            new ReportData(Map.of("name", "Carol"), null, null),
+            new ReportData(Map.of("name", "Carol")),
             null
         );
 
@@ -115,7 +113,7 @@ class ReportGeneratorServiceImplTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("report.xlsx", null, template),
-            new ReportData(Map.of("rows", rows), null, null),
+            new ReportData(Map.of("rows", rows)),
             null
         );
 
@@ -140,7 +138,7 @@ class ReportGeneratorServiceImplTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("report.xlsx", null, template),
-            new ReportData(Map.of("rows", rows), null, null),
+            new ReportData(Map.of("rows", rows)),
             null
         );
 
@@ -162,7 +160,7 @@ class ReportGeneratorServiceImplTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("report.xlsx", null, template),
-            new ReportData(Map.of("rows", rows), null, null),
+            new ReportData(Map.of("rows", rows)),
             null
         );
 
@@ -180,7 +178,7 @@ class ReportGeneratorServiceImplTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("report.xlsx", null, template),
-            new ReportData(Map.of("rows", rows), null, null),
+            new ReportData(Map.of("rows", rows)),
             null
         );
 
@@ -209,7 +207,7 @@ class ReportGeneratorServiceImplTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("report.ods", null, template),
-            new ReportData(Map.of("rows", rows), null, null),
+            new ReportData(Map.of("rows", rows)),
             null
         );
 
@@ -235,7 +233,7 @@ class ReportGeneratorServiceImplTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("report.docx", null, template),
-            new ReportData(Map.of("rows", rows), null, null),
+            new ReportData(Map.of("rows", rows)),
             null
         );
 
@@ -257,7 +255,7 @@ class ReportGeneratorServiceImplTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("report.odt", null, template),
-            new ReportData(Map.of("rows", rows), null, null),
+            new ReportData(Map.of("rows", rows)),
             null
         );
 
@@ -279,7 +277,7 @@ class ReportGeneratorServiceImplTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("report.pdf", null, template),
-            new ReportData(Map.of("rows", rows), null, null),
+            new ReportData(Map.of("rows", rows)),
             null
         );
 
@@ -302,7 +300,7 @@ class ReportGeneratorServiceImplTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("report.doc", null, template),
-            new ReportData(Map.of("rows", rows), null, null),
+            new ReportData(Map.of("rows", rows)),
             null
         );
 
@@ -316,24 +314,12 @@ class ReportGeneratorServiceImplTest {
     }
 
     @Test
-    void shouldFailFastWhenLegacyDslMarkersArePresent() throws Exception {
-        byte[] template = createSimpleXlsx("[[TABLE_START:rows]]", false);
-
-        TemplateSyntaxException exception = assertThrows(
-            TemplateSyntaxException.class,
-            () -> service.generate(new TemplateInput("legacy.xlsx", null, template), new ReportData(null, null, null), null)
-        );
-
-        assertTrue(exception.getMessage().contains("{{TABLE_TOKEN}}"));
-    }
-
-    @Test
     void shouldReplaceMissingTokenWithEmptyAndWarningByDefault() throws Exception {
         byte[] template = createSimpleXlsx("{{missing}}", true);
 
         GeneratedReport result = service.generate(
             new TemplateInput("missing.xlsx", null, template),
-            new ReportData(Map.of(), null, null),
+            new ReportData(Map.of()),
             null
         );
 

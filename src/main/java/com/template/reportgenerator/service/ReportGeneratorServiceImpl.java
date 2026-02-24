@@ -28,10 +28,9 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
         if (template == null) {
             throw new IllegalArgumentException("template must not be null");
         }
-
-        ReportData resolvedData = data == null
-            ? new ReportData(null, null, null)
-            : data;
+        if (data == null) {
+            throw new IllegalArgumentException("data must not be null");
+        }
 
         GenerateOptions resolvedOptions = options == null
             ? GenerateOptions.defaults()
@@ -41,7 +40,7 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
         WarningCollector warningCollector = new WarningCollector();
 
         try (WorkbookProcessor processor = createProcessor(format, template.bytes())) {
-            processor.applyScalarTokens(resolvedData.scalars(), resolvedOptions, warningCollector);
+            processor.applyScalarTokens(data.scalars(), resolvedOptions, warningCollector);
             processor.recalculateFormulas(resolvedOptions);
 
             byte[] output = processor.serialize();

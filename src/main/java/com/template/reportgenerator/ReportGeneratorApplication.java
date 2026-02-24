@@ -28,10 +28,10 @@ public class ReportGeneratorApplication {
 //        SpringApplication.run(ReportGeneratorApplication.class, args);
         ReportGeneratorService service = new ReportGeneratorServiceImpl();
 
-        byte[] templateBytes = Files.readAllBytes(Path.of("/Users/onbozoyan/Downloads/report-generator/Book1.xlsx"));
+        byte[] templateBytes = Files.readAllBytes(Path.of("/Users/onbozoyan/Downloads/report-generator/DOC1.docx"));
 
         TemplateInput input = new TemplateInput(
-            "Book1.xlsx",
+            "DOC1.docx",
             null,
             templateBytes
         );
@@ -39,15 +39,22 @@ public class ReportGeneratorApplication {
         ReportData data = new ReportData(
             Map.of(
                 "period", "2026-Q1",
+                "SOME_PLACEHOLDER", "ПУПУПУ",
                 "total", "4550.75",
                 "token", input.toString(),
                 "TABLE_HERE", List.of(
+                    //БАГ, колонки в неправильном порядке
                     Map.of("name", "North", "amount", 1200.25),
-                    Map.of("name", "South", "amount", 900.00)
-                )
-            ),
-            Map.of(),
-            Map.of()
+                    Map.of("name", "South", "amount", 900.00),
+                    Map.of("жопа", "South", "слона", 900.00)
+                ).reversed(),
+                "ANOTHER_TABLE", List.of(
+                    Map.of(
+                        "a", "b", "c", "d"
+                    )
+                ),
+                "mega_test", "mega_value"
+            )
         );
 
         GenerateOptions options = new GenerateOptions(
@@ -60,7 +67,7 @@ public class ReportGeneratorApplication {
         GeneratedReport report = service.generate(input, data, options);
 
         Files.createDirectories(Path.of("out"));
-        Files.write(Path.of("/Users/onbozoyan/Downloads/report-generator/sales-report.xlsx"), report.bytes());
+        Files.write(Path.of("/Users/onbozoyan/Downloads/report-generator/result.docx"), report.bytes());
 
         for (var warning : report.warnings()) {
             System.out.printf("[%s] %s @ %s%n", warning.code(), warning.message(), warning.location());

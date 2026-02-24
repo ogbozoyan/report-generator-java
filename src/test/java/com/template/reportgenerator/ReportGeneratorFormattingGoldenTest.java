@@ -41,7 +41,7 @@ class ReportGeneratorFormattingGoldenTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("table-format.xlsx", null, template),
-            new ReportData(Map.of("rows", rows), null, null),
+            new ReportData(Map.of("rows", rows)),
             null
         );
 
@@ -78,7 +78,7 @@ class ReportGeneratorFormattingGoldenTest {
 
         GeneratedReport result = service.generate(
             new TemplateInput("table-format.ods", null, template),
-            new ReportData(Map.of("rows", rows), null, null),
+            new ReportData(Map.of("rows", rows)),
             null
         );
 

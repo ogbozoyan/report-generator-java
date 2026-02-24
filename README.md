@@ -202,4 +202,7 @@ GeneratedReport report = service.generate(input, data, GenerateOptions.defaults(
 - table token требует exact-placeholder контейнер;
 - `.doc` поддерживается в базовом текстовом виде;
 - PDF не является 1:1 редактором исходного layout, используется text reconstruction pipeline.
-
+- КОЛОНКИ ВСТАВЛЯЮТСЯ НАОБОРОТ
+- УДАЛЯЮТСЯ ОТСТУПЫ В docx формате после вставки placeholderа
+- Не заменяет значения уже в готовой таблице {{mega_test}] из DOC1.docx - надо сделать логику найди все теги и заменяй
+  их
