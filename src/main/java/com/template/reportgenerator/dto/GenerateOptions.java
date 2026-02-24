@@ -3,6 +3,9 @@ package com.template.reportgenerator.dto;
 import java.time.ZoneId;
 import java.util.Locale;
 
+/**
+ * Generation options controlling missing token behavior and localization.
+ */
 public record GenerateOptions(
     MissingValuePolicy missingValuePolicy,
     boolean recalculateFormulas,

@@ -5,6 +5,19 @@ import com.template.reportgenerator.dto.GeneratedReport;
 import com.template.reportgenerator.dto.ReportData;
 import com.template.reportgenerator.dto.TemplateInput;
 
+/**
+ * Public service contract for template-based report generation.
+ */
 public interface ReportGeneratorService {
+
+    /**
+     * Generates report bytes from a template and input data.
+     *
+     * @param template template file metadata and bytes
+     * @param data     token data model; table tokens are provided as
+     *                 {@code List<Map<String, Object>>} values in {@link ReportData#scalars()}
+     * @param options  generation options; if {@code null}, defaults are used
+     * @return generated report
+     */
     GeneratedReport generate(TemplateInput template, ReportData data, GenerateOptions options);
 }

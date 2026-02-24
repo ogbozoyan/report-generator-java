@@ -2,6 +2,13 @@ package com.template.reportgenerator.dto;
 
 import java.util.Objects;
 
+/**
+ * Input template descriptor.
+ *
+ * @param fileName    original template filename (optional)
+ * @param contentType template content type (optional)
+ * @param bytes       raw template bytes
+ */
 public record TemplateInput(
     String fileName,
     String contentType,

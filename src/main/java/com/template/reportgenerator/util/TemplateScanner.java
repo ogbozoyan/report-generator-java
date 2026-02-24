@@ -20,6 +20,9 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Scans spreadsheet templates and collects DSL markers and scalar tokens.
+ */
 @UtilityClass
 public class TemplateScanner {
 

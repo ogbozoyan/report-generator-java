@@ -5,10 +5,27 @@ import com.template.reportgenerator.dto.TemplateInput;
 import com.template.reportgenerator.exception.UnsupportedTemplateFormatException;
 import lombok.experimental.UtilityClass;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
+/**
+ * Detects the template format from file extension, content type, and binary signature.
+ */
 @UtilityClass
 public class TemplateFormatDetector {
+
+    private static final int ZIP_SIGNATURE_0 = 0x50;
+    private static final int ZIP_SIGNATURE_1 = 0x4B;
+    private static final int ZIP_SIGNATURE_2 = 0x03;
+    private static final int ZIP_SIGNATURE_3 = 0x04;
+
+    private static final int OLE2_SIGNATURE_0 = 0xD0;
+    private static final int OLE2_SIGNATURE_1 = 0xCF;
+    private static final int OLE2_SIGNATURE_2 = 0x11;
+    private static final int OLE2_SIGNATURE_3 = 0xE0;
 
     public static TemplateFormat detect(TemplateInput input) {
         if (input.fileName() != null) {
@@ -21,6 +38,18 @@ public class TemplateFormatDetector {
             }
             if (name.endsWith(".ods")) {
                 return TemplateFormat.ODS;
+            }
+            if (name.endsWith(".doc")) {
+                return TemplateFormat.DOC;
+            }
+            if (name.endsWith(".docx")) {
+                return TemplateFormat.DOCX;
+            }
+            if (name.endsWith(".odt")) {
+                return TemplateFormat.ODT;
+            }
+            if (name.endsWith(".pdf")) {
+                return TemplateFormat.PDF;
             }
         }
 
@@ -35,6 +64,18 @@ public class TemplateFormatDetector {
             if (contentType.contains("oasis.opendocument.spreadsheet")) {
                 return TemplateFormat.ODS;
             }
+            if (contentType.contains("msword")) {
+                return TemplateFormat.DOC;
+            }
+            if (contentType.contains("wordprocessingml.document")) {
+                return TemplateFormat.DOCX;
+            }
+            if (contentType.contains("oasis.opendocument.text")) {
+                return TemplateFormat.ODT;
+            }
+            if (contentType.contains("application/pdf")) {
+                return TemplateFormat.PDF;
+            }
         }
 
         byte[] bytes = input.bytes();
@@ -44,21 +85,74 @@ public class TemplateFormatDetector {
             int b2 = bytes[2] & 0xFF;
             int b3 = bytes[3] & 0xFF;
 
-            // ZIP signature (xlsx / ods)
-            if (b0 == 0x50 && b1 == 0x4B && b2 == 0x03 && b3 == 0x04) {
-                String asText = new String(bytes, 0, Math.min(bytes.length, 512));
-                if (asText.contains("mimetypeapplication/vnd.oasis.opendocument.spreadsheet")) {
-                    return TemplateFormat.ODS;
+            // ZIP signature (xlsx/ods/docx/odt)
+            if (b0 == ZIP_SIGNATURE_0 && b1 == ZIP_SIGNATURE_1 && b2 == ZIP_SIGNATURE_2 && b3 == ZIP_SIGNATURE_3) {
+                TemplateFormat zipFormat = detectZipContainer(bytes);
+                if (zipFormat != null) {
+                    return zipFormat;
                 }
-                return TemplateFormat.XLSX;
             }
 
             // OLE2 signature (xls)
-            if (b0 == 0xD0 && b1 == 0xCF && b2 == 0x11 && b3 == 0xE0) {
+            if (b0 == OLE2_SIGNATURE_0 && b1 == OLE2_SIGNATURE_1 && b2 == OLE2_SIGNATURE_2 && b3 == OLE2_SIGNATURE_3) {
                 return TemplateFormat.XLS;
+            }
+
+            // PDF signature (%PDF)
+            if (b0 == 0x25 && b1 == 0x50 && b2 == 0x44 && b3 == 0x46) {
+                return TemplateFormat.PDF;
             }
         }
 
         throw new UnsupportedTemplateFormatException("Unsupported template format for file: " + input.fileName());
+    }
+
+    private static TemplateFormat detectZipContainer(byte[] bytes) {
+        boolean hasWordFolder = false;
+        boolean hasExcelFolder = false;
+        boolean hasOdfSpreadsheetMime = false;
+        boolean hasOdfTextMime = false;
+
+        try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8)) {
+            ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                String name = entry.getName();
+                if (name == null) {
+                    continue;
+                }
+
+                if ("mimetype".equals(name)) {
+                    String mime = new String(zipInputStream.readAllBytes(), StandardCharsets.UTF_8);
+                    if (mime.contains("application/vnd.oasis.opendocument.spreadsheet")) {
+                        hasOdfSpreadsheetMime = true;
+                    } else if (mime.contains("application/vnd.oasis.opendocument.text")) {
+                        hasOdfTextMime = true;
+                    }
+                    continue;
+                }
+
+                if (name.startsWith("word/")) {
+                    hasWordFolder = true;
+                } else if (name.startsWith("xl/")) {
+                    hasExcelFolder = true;
+                }
+            }
+        } catch (Exception ignored) {
+            return null;
+        }
+
+        if (hasOdfSpreadsheetMime) {
+            return TemplateFormat.ODS;
+        }
+        if (hasOdfTextMime) {
+            return TemplateFormat.ODT;
+        }
+        if (hasWordFolder) {
+            return TemplateFormat.DOCX;
+        }
+        if (hasExcelFolder) {
+            return TemplateFormat.XLSX;
+        }
+        return null;
     }
 }

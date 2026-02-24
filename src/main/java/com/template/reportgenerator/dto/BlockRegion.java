@@ -1,5 +1,8 @@
 package com.template.reportgenerator.dto;
 
+/**
+ * Validated rectangle of a TABLE/COL block.
+ */
 public record BlockRegion(
     BlockType blockType,
     String key,

@@ -12,6 +12,9 @@ import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 
+/**
+ * Writes Java values to format-specific cells while preserving type where possible.
+ */
 @UtilityClass
 public class ValueWriter {
 
@@ -58,6 +61,8 @@ public class ValueWriter {
     }
 
     public void writeOdsValue(OdfTableCell cell, Object value, ZoneId zoneId) {
+        Calendar calendar = Calendar.getInstance();
+
         switch (value) {
             case null -> {
                 cell.setStringValue("");
@@ -71,12 +76,6 @@ public class ValueWriter {
                 cell.setBooleanValue(bool);
                 return;
             }
-            default -> {
-            }
-        }
-
-        Calendar calendar = Calendar.getInstance();
-        switch (value) {
             case Date date -> {
                 calendar.setTime(date);
                 cell.setDateValue(calendar);
@@ -98,6 +97,7 @@ public class ValueWriter {
                 return;
             }
             default -> {
+
             }
         }
 

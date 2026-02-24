@@ -28,23 +28,23 @@
 
 ```java
 ReportData data = new ReportData(
-        Map.of(
-                "period", "2026-Q1",
-                "rows", List.of(
-                        Map.of("name", "North", "amount", 1200.25),
-                        Map.of("name", "South", "amount", 900.00)
-                )
-        ),
-        Map.of(),
-        Map.of()
+    Map.of(
+        "period", "2026-Q1",
+        "rows", List.of(
+            Map.of("name", "North", "amount", 1200.25),
+            Map.of("name", "South", "amount", 900.00)
+        )
+    ),
+    Map.of(),
+    Map.of()
 );
 ```
 
 ### Правила table token
 
 - таблица вставляется только если токен является **единственным содержимым контейнера**:
-  - spreadsheet: единственное содержимое ячейки;
-  - docx/odt/doc/pdf: единственное содержимое абзаца/строки.
+    - spreadsheet: единственное содержимое ячейки;
+    - docx/odt/doc/pdf: единственное содержимое абзаца/строки.
 - если table token встроен inline в текст, вставка таблицы не делается, остаётся scalar-режим + warning
   `TABLE_TOKEN_INLINE_IGNORED`.
 - порядок колонок: ключи первой строки + новые ключи из следующих строк в конец.
@@ -69,14 +69,14 @@ ReportData data = new ReportData(
 ## Service layer
 
 - `com.template.reportgenerator.service.ReportGeneratorService`
-  - публичный контракт `generate(template, data, options)`.
+    - публичный контракт `generate(template, data, options)`.
 - `com.template.reportgenerator.service.ReportGeneratorServiceImpl`
-  - оркестрация:
-    1) detect format (`TemplateFormatDetector`);
-    2) fail-fast legacy DSL (`LegacyDslDetector`);
-    3) token apply в format-процессоре;
-    4) formula recalc (где применимо);
-    5) serialize (`ReportSerializer`).
+    - оркестрация:
+        1) detect format (`TemplateFormatDetector`);
+        2) fail-fast legacy DSL (`LegacyDslDetector`);
+        3) token apply в format-процессоре;
+        4) formula recalc (где применимо);
+        5) serialize (`ReportSerializer`).
 
 ## DTO / model
 
@@ -85,21 +85,21 @@ ReportData data = new ReportData(
 ## Format processors
 
 - `PoiWorkbookProcessor` (XLS/XLSX)
-  - scalar token replace;
-  - table token insert (`Header + rows`);
-  - baseline style/height от маркерной ячейки;
-  - сдвиг строк вниз при необходимости;
-  - auto-width по контенту таблицы.
+    - scalar token replace;
+    - table token insert (`Header + rows`);
+    - baseline style/height от маркерной ячейки;
+    - сдвиг строк вниз при необходимости;
+    - auto-width по контенту таблицы.
 - `OdsWorkbookProcessor` (ODS)
-  - тот же контракт table token + baseline style/height + auto-width.
+    - тот же контракт table token + baseline style/height + auto-width.
 - `DocxDocumentProcessor` (DOCX)
-  - table token -> `XWPFTable` в позицию placeholder paragraph.
+    - table token -> `XWPFTable` в позицию placeholder paragraph.
 - `OdtDocumentProcessor` (ODT)
-  - table token -> `OdfTable` в позицию placeholder paragraph.
+    - table token -> `OdfTable` в позицию placeholder paragraph.
 - `DocDocumentProcessor` (DOC)
-  - basic text-table для exact placeholder токена.
+    - basic text-table для exact placeholder токена.
 - `PdfDocumentProcessor` (PDF)
-  - table token -> ASCII/text grid.
+    - table token -> ASCII/text grid.
 
 ## Utilities
 
@@ -117,26 +117,26 @@ ReportData data = new ReportData(
 ### Основной coverage
 
 - `src/test/java/com/template/reportgenerator/ReportGeneratorServiceImplTest.java`
-  - scalar генерация для xls/xlsx/ods;
-  - table token для xlsx/ods/docx/odt/doc/pdf;
-  - порядок колонок;
-  - auto-width;
-  - baseline style;
-  - fail-fast для legacy DSL;
-  - missing token warnings.
+    - scalar генерация для xls/xlsx/ods;
+    - table token для xlsx/ods/docx/odt/doc/pdf;
+    - порядок колонок;
+    - auto-width;
+    - baseline style;
+    - fail-fast для legacy DSL;
+    - missing token warnings.
 
 ### Форматирование regression
 
 - `src/test/java/com/template/reportgenerator/ReportGeneratorFormattingGoldenTest.java`
-  - сохранение style/font/row height/column width;
-  - сохранение merged-region поведения в xlsx при вставке таблицы.
+    - сохранение style/font/row height/column width;
+    - сохранение merged-region поведения в xlsx при вставке таблицы.
 
 ### Detection / validator
 
 - `src/test/java/com/template/reportgenerator/util/TemplateFormatDetectorTest.java`
-  - детект формата, включая `.doc`.
+    - детект формата, включая `.doc`.
 - `src/test/java/com/template/reportgenerator/util/LegacyDslDetectorTest.java`
-  - fail-fast на legacy DSL и миграционный текст ошибки.
+    - fail-fast на legacy DSL и миграционный текст ошибки.
 
 ---
 
@@ -176,15 +176,15 @@ ReportGeneratorService service = new ReportGeneratorServiceImpl();
 
 TemplateInput input = new TemplateInput("Book1.xlsx", null, templateBytes);
 ReportData data = new ReportData(
-        Map.of(
-                "period", "2026-Q1",
-                "TABLE_HERE", List.of(
-                        Map.of("name", "North", "amount", 1200.25),
-                        Map.of("name", "South", "amount", 900.00)
-                )
-        ),
-        Map.of(),
-        Map.of()
+    Map.of(
+        "period", "2026-Q1",
+        "TABLE_HERE", List.of(
+            Map.of("name", "North", "amount", 1200.25),
+            Map.of("name", "South", "amount", 900.00)
+        )
+    ),
+    Map.of(),
+    Map.of()
 );
 
 GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());

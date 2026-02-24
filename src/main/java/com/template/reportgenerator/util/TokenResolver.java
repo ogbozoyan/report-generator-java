@@ -6,12 +6,18 @@ import com.template.reportgenerator.exception.TemplateDataBindingException;
 import lombok.experimental.UtilityClass;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Resolves {@code {{token}}} expressions against runtime context.
+ */
 @UtilityClass
 public class TokenResolver {
 
@@ -78,6 +84,16 @@ public class TokenResolver {
                 continue;
             }
 
+            if (isTableValue(resolved)) {
+                warningCollector.add(
+                    "TABLE_TOKEN_INLINE_IGNORED",
+                    "Table token can be inserted only as exact placeholder",
+                    location
+                );
+                matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group(0)));
+                continue;
+            }
+
             String replacement = stringify(resolved);
             matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
             changed = true;
@@ -106,7 +122,39 @@ public class TokenResolver {
         return current;
     }
 
-    public boolean isItemOrIndexToken(String token) {
+    /**
+     * Checks whether token value can be treated as table payload.
+     */
+    public static boolean isTableValue(Object value) {
+        return toTableRows(value) != null;
+    }
+
+    /**
+     * Safely converts a value to table rows.
+     *
+     * @return ordered rows or {@code null} when structure is not {@code List<Map<...>>}
+     */
+    public static List<Map<String, Object>> toTableRows(Object value) {
+        if (!(value instanceof List<?> list)) {
+            return null;
+        }
+
+        List<Map<String, Object>> rows = new ArrayList<>(list.size());
+        for (Object item : list) {
+            if (!(item instanceof Map<?, ?> map)) {
+                return null;
+            }
+            LinkedHashMap<String, Object> row = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                String key = entry.getKey() == null ? "" : String.valueOf(entry.getKey());
+                row.put(key, entry.getValue());
+            }
+            rows.add(row);
+        }
+        return rows;
+    }
+
+    public static boolean isItemOrIndexToken(String token) {
         return "index".equals(token) || token.startsWith("item.");
     }
 

@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Mutable collector for generation warnings.
+ */
 public class WarningCollector {
 
     private final List<GenerationWarning> warnings = new ArrayList<>();

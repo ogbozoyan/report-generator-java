@@ -1,9 +1,16 @@
 package com.template.reportgenerator.dto;
 
+/**
+ * Supported template formats and their output metadata.
+ */
 public enum TemplateFormat {
     XLS("application/vnd.ms-excel", ".xls"),
     XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx"),
-    ODS("application/vnd.oasis.opendocument.spreadsheet", ".ods");
+    ODS("application/vnd.oasis.opendocument.spreadsheet", ".ods"),
+    DOC("application/msword", ".doc"),
+    DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".docx"),
+    ODT("application/vnd.oasis.opendocument.text", ".odt"),
+    PDF("application/pdf", ".pdf");
 
     private final String contentType;
     private final String extension;

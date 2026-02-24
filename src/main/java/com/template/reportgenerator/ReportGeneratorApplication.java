@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * Spring Boot entrypoint and local manual runner for quick generation checks.
+ */
 @SpringBootApplication
 public class ReportGeneratorApplication {
 
@@ -36,15 +39,14 @@ public class ReportGeneratorApplication {
         ReportData data = new ReportData(
             Map.of(
                 "period", "2026-Q1",
-                "total", 4550.75
-            ),
-            Map.of(
-                "rows", List.of(
+                "total", "4550.75",
+                "token", input.toString(),
+                "TABLE_HERE", List.of(
                     Map.of("name", "North", "amount", 1200.25),
-                    Map.of("name", "South", "amount", 900.00),
-                    Map.of("name", "West", "amount", 2450.50)
+                    Map.of("name", "South", "amount", 900.00)
                 )
             ),
+            Map.of(),
             Map.of()
         );
 

@@ -5,6 +5,9 @@ import com.template.reportgenerator.dto.TemplateFormat;
 import com.template.reportgenerator.dto.TemplateInput;
 import lombok.experimental.UtilityClass;
 
+/**
+ * Serializes generation result with normalized filename and content type.
+ */
 @UtilityClass
 public class ReportSerializer {
 
@@ -25,7 +28,13 @@ public class ReportSerializer {
         }
 
         String lower = originalFileName.toLowerCase();
-        if (lower.endsWith(".xls") || lower.endsWith(".xlsx") || lower.endsWith(".ods")) {
+        if (lower.endsWith(".xls")
+            || lower.endsWith(".xlsx")
+            || lower.endsWith(".ods")
+            || lower.endsWith(".doc")
+            || lower.endsWith(".docx")
+            || lower.endsWith(".odt")
+            || lower.endsWith(".pdf")) {
             return originalFileName;
         }
 

@@ -4,6 +4,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Generated artifact with output metadata and warnings.
+ */
 public record GeneratedReport(
     String fileName,
     String contentType,

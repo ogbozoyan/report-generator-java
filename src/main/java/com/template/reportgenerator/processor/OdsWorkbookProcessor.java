@@ -8,7 +8,6 @@ import com.template.reportgenerator.dto.ResolvedText;
 import com.template.reportgenerator.dto.TemplateScanResult;
 import com.template.reportgenerator.exception.TemplateDataBindingException;
 import com.template.reportgenerator.exception.TemplateReadWriteException;
-import com.template.reportgenerator.exception.TemplateSyntaxException;
 import com.template.reportgenerator.util.TemplateScanner;
 import com.template.reportgenerator.util.TokenResolver;
 import com.template.reportgenerator.util.ValueWriter;
@@ -21,11 +20,18 @@ import org.odftoolkit.odfdom.doc.table.OdfTableRow;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Spreadsheet processor for ODS format based on ODFDOM.
+ * <p>
+ * Legacy TABLE/COL DSL expansion is intentionally disabled. Table insertion is
+ * based on exact-placeholder tokens where token value is {@code List<Map<...>>}.
+ */
 public class OdsWorkbookProcessor implements WorkbookProcessor {
 
     private final OdfSpreadsheetDocument document;
@@ -45,26 +51,82 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
 
     @Override
     public void applyScalarTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
-        List<OdfTable> tables = document.getTableList(false);
-        for (int t = 0; t < tables.size(); t++) {
-            OdfTable table = tables.get(t);
-            String tableName = table.getTableName() == null ? ("Sheet" + t) : table.getTableName();
+        Map<String, Object> context = scalars == null ? Map.of() : scalars;
+        List<OdfTable> sheets = document.getTableList(false);
 
-            int maxRows = Math.min(table.getRowCount(), 5000);
-            int maxCols = Math.min(table.getColumnCount(), 512);
+        for (int sheetIndex = 0; sheetIndex < sheets.size(); sheetIndex++) {
+            OdfTable sheet = sheets.get(sheetIndex);
+            String sheetName = sheet.getTableName() == null ? ("Sheet" + sheetIndex) : sheet.getTableName();
+            int maxRows = Math.min(sheet.getRowCount(), 5000);
+            int maxCols = Math.min(sheet.getColumnCount(), 512);
 
-            for (int row = 0; row < maxRows; row++) {
-                for (int col = 0; col < maxCols; col++) {
-                    OdfTableCell cell = table.getCellByPosition(col, row);
+            List<TableAnchor> anchors = new ArrayList<>();
+
+            for (int rowIndex = 0; rowIndex < maxRows; rowIndex++) {
+                for (int colIndex = 0; colIndex < maxCols; colIndex++) {
+                    OdfTableCell cell = sheet.getCellByPosition(colIndex, rowIndex);
+                    String location = cellLocation(sheetName, rowIndex, colIndex);
+                    String original = cell.getStringValue();
+
+                    String formula = cell.getFormula();
+                    if (TokenResolver.hasTokens(formula)) {
+                        warningCollector.add(
+                            "FORMULA_TOKEN_SKIPPED",
+                            "Formula contains token and was not modified",
+                            location
+                        );
+                        continue;
+                    }
+
+                    if (!TokenResolver.hasTokens(original)) {
+                        continue;
+                    }
+
+                    String exactToken = TokenResolver.getExactToken(original);
+                    if (exactToken != null && !TokenResolver.isItemOrIndexToken(exactToken)) {
+                        Object resolved = TokenResolver.resolvePath(context, exactToken);
+                        if (TokenResolver.isTableValue(resolved)) {
+                            List<Map<String, Object>> rows = TokenResolver.toTableRows(resolved);
+                            if (rows == null) {
+                                warningCollector.add(
+                                    "TABLE_TOKEN_INVALID",
+                                    "Table token has invalid structure: " + exactToken,
+                                    location
+                                );
+                            } else {
+                                OdfTableRow row = sheet.getRowByIndex(rowIndex);
+                                anchors.add(new TableAnchor(
+                                    rowIndex,
+                                    colIndex,
+                                    exactToken,
+                                    rows,
+                                    cell.getStyleName(),
+                                    cell.getHorizontalAlignment(),
+                                    cell.getVerticalAlignment(),
+                                    cell.isTextWrapped(),
+                                    row == null ? 0 : row.getHeight(),
+                                    row != null && row.isOptimalHeight()
+                                ));
+                            }
+                            continue;
+                        }
+                    }
+
                     applyTokenToCell(
                         cell,
-                        scalars,
+                        context,
                         options,
                         warningCollector,
-                        false,
-                        tableName + "!R" + (row + 1) + "C" + (col + 1)
+                        location
                     );
                 }
+            }
+
+            anchors.sort(Comparator.comparingInt(TableAnchor::rowIndex).reversed()
+                .thenComparing(Comparator.comparingInt(TableAnchor::colIndex).reversed()));
+
+            for (TableAnchor anchor : anchors) {
+                insertTableAtAnchor(sheet, sheetName, anchor, options, warningCollector);
             }
         }
     }
@@ -76,14 +138,7 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
         GenerateOptions options,
         WarningCollector warningCollector
     ) {
-        List<BlockRegion> sorted = tableBlocks.stream()
-            .sorted(Comparator.comparingInt(BlockRegion::sheetIndex).reversed()
-                .thenComparing(Comparator.comparingInt(BlockRegion::startRow).reversed()))
-            .toList();
-
-        for (BlockRegion block : sorted) {
-            expandSingleTable(block, data, options, warningCollector);
-        }
+        // Legacy TABLE DSL is disabled.
     }
 
     @Override
@@ -93,23 +148,12 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
         GenerateOptions options,
         WarningCollector warningCollector
     ) {
-        List<BlockRegion> sorted = columnBlocks.stream()
-            .sorted(Comparator.comparingInt(BlockRegion::sheetIndex).reversed()
-                .thenComparing(Comparator.comparingInt(BlockRegion::startCol).reversed()))
-            .toList();
-
-        for (BlockRegion block : sorted) {
-            expandSingleColumns(block, data, options, warningCollector);
-        }
+        // Legacy COL DSL is disabled.
     }
 
     @Override
     public void clearMarkers(List<BlockRegion> blockRegions) {
-        for (BlockRegion block : blockRegions) {
-            OdfTable table = getTable(block.sheetIndex());
-            table.getCellByPosition(block.startCol(), block.startRow()).setStringValue("");
-            table.getCellByPosition(block.endCol(), block.endRow()).setStringValue("");
-        }
+        // Marker cleanup is not required in token-only mode.
     }
 
     @Override
@@ -136,177 +180,17 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
         }
     }
 
-    private void expandSingleTable(
-        BlockRegion block,
-        ReportData data,
-        GenerateOptions options,
-        WarningCollector warningCollector
-    ) {
-        OdfTable table = getTable(block.sheetIndex());
-
-        int innerStartRow = block.innerStartRow();
-        int innerEndRow = block.innerEndRow();
-        int innerStartCol = block.innerStartCol();
-        int innerEndCol = block.innerEndCol();
-
-        int templateRowCount = innerEndRow - innerStartRow + 1;
-        if (templateRowCount <= 0) {
-            throw new TemplateSyntaxException("TABLE block has empty internal rows: " + block.asLocation());
-        }
-
-        List<Map<String, Object>> items = data.tables().getOrDefault(block.key(), List.of());
-        if (items.isEmpty()) {
-            table.removeRowsByIndex(innerStartRow, templateRowCount);
-            return;
-        }
-
-        for (int group = 1; group < items.size(); group++) {
-            int insertAt = innerEndRow + 1 + (group - 1) * templateRowCount;
-            table.insertRowsBefore(insertAt, templateRowCount);
-            cloneRowRange(table, innerStartRow, innerEndRow, insertAt, innerStartCol, innerEndCol);
-        }
-
-        for (int group = 0; group < items.size(); group++) {
-            Map<String, Object> context = buildContext(data.scalars(), items.get(group), group);
-            for (int rowOffset = 0; rowOffset < templateRowCount; rowOffset++) {
-                int rowIndex = innerStartRow + group * templateRowCount + rowOffset;
-                for (int col = innerStartCol; col <= innerEndCol; col++) {
-                    OdfTableCell cell = table.getCellByPosition(col, rowIndex);
-                    applyTokenToCell(
-                        cell,
-                        context,
-                        options,
-                        warningCollector,
-                        true,
-                        block.sheetName() + "!R" + (rowIndex + 1) + "C" + (col + 1)
-                    );
-                }
-            }
-        }
-    }
-
-    private void expandSingleColumns(
-        BlockRegion block,
-        ReportData data,
-        GenerateOptions options,
-        WarningCollector warningCollector
-    ) {
-        OdfTable table = getTable(block.sheetIndex());
-
-        int innerStartRow = block.innerStartRow();
-        int innerEndRow = block.innerEndRow();
-        int innerStartCol = block.innerStartCol();
-        int innerEndCol = block.innerEndCol();
-
-        int templateColCount = innerEndCol - innerStartCol + 1;
-        if (templateColCount <= 0) {
-            throw new TemplateSyntaxException("COL block has empty internal columns: " + block.asLocation());
-        }
-
-        List<Map<String, Object>> items = data.columns().getOrDefault(block.key(), List.of());
-        if (items.isEmpty()) {
-            table.removeColumnsByIndex(innerStartCol, templateColCount);
-            return;
-        }
-
-        for (int group = 1; group < items.size(); group++) {
-            int insertAt = innerEndCol + 1 + (group - 1) * templateColCount;
-            table.insertColumnsBefore(insertAt, templateColCount);
-            cloneColumnRange(table, innerStartCol, innerEndCol, insertAt, innerStartRow, innerEndRow);
-        }
-
-        for (int group = 0; group < items.size(); group++) {
-            Map<String, Object> context = buildContext(data.scalars(), items.get(group), group);
-            for (int rowIndex = innerStartRow; rowIndex <= innerEndRow; rowIndex++) {
-                for (int colOffset = 0; colOffset < templateColCount; colOffset++) {
-                    int colIndex = innerStartCol + group * templateColCount + colOffset;
-                    OdfTableCell cell = table.getCellByPosition(colIndex, rowIndex);
-                    applyTokenToCell(
-                        cell,
-                        context,
-                        options,
-                        warningCollector,
-                        true,
-                        block.sheetName() + "!R" + (rowIndex + 1) + "C" + (colIndex + 1)
-                    );
-                }
-            }
-        }
-    }
-
-    private void cloneRowRange(
-        OdfTable table,
-        int sourceStartRow,
-        int sourceEndRow,
-        int targetStartRow,
-        int colStart,
-        int colEnd
-    ) {
-        int rowCount = sourceEndRow - sourceStartRow + 1;
-        for (int i = 0; i < rowCount; i++) {
-            int sourceRowIndex = sourceStartRow + i;
-            int targetRowIndex = targetStartRow + i;
-
-            OdfTableRow sourceRow = table.getRowByIndex(sourceRowIndex);
-            OdfTableRow targetRow = table.getRowByIndex(targetRowIndex);
-
-            targetRow.setHeight(sourceRow.getHeight(), sourceRow.isOptimalHeight());
-
-            for (int col = colStart; col <= colEnd; col++) {
-                copyCell(table.getCellByPosition(col, sourceRowIndex), table.getCellByPosition(col, targetRowIndex));
-            }
-        }
-    }
-
-    private void cloneColumnRange(
-        OdfTable table,
-        int sourceStartCol,
-        int sourceEndCol,
-        int targetStartCol,
-        int rowStart,
-        int rowEnd
-    ) {
-        int colCount = sourceEndCol - sourceStartCol + 1;
-
-        for (int i = 0; i < colCount; i++) {
-            OdfTableColumn sourceCol = table.getColumnByIndex(sourceStartCol + i);
-            OdfTableColumn targetCol = table.getColumnByIndex(targetStartCol + i);
-            targetCol.setWidth(sourceCol.getWidth());
-            targetCol.setUseOptimalWidth(sourceCol.isOptimalWidth());
-        }
-
-        for (int row = rowStart; row <= rowEnd; row++) {
-            for (int i = 0; i < colCount; i++) {
-                copyCell(table.getCellByPosition(sourceStartCol + i, row), table.getCellByPosition(targetStartCol + i, row));
-            }
-        }
-    }
-
     private void applyTokenToCell(
         OdfTableCell cell,
         Map<String, Object> context,
         GenerateOptions options,
         WarningCollector warningCollector,
-        boolean allowItemTokens,
         String location
     ) {
-        String formula = cell.getFormula();
-        if (TokenResolver.hasTokens(formula)) {
-            warningCollector.add(
-                "FORMULA_TOKEN_SKIPPED",
-                "Formula contains token and was not modified",
-                location
-            );
-            return;
-        }
-
         String original = cell.getStringValue();
-        if (!TokenResolver.hasTokens(original)) {
-            return;
-        }
-
         String exactToken = TokenResolver.getExactToken(original);
-        if (exactToken != null && (allowItemTokens || !TokenResolver.isItemOrIndexToken(exactToken))) {
+
+        if (exactToken != null && !TokenResolver.isItemOrIndexToken(exactToken)) {
             Object resolved = TokenResolver.resolvePath(context, exactToken);
             if (resolved == null) {
                 handleMissingExactToken(cell, exactToken, options.missingValuePolicy(), warningCollector, location);
@@ -322,12 +206,68 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
             options.missingValuePolicy(),
             warningCollector,
             location,
-            allowItemTokens
+            false
         );
 
         if (resolvedText.changed()) {
             cell.setStringValue(resolvedText.value());
         }
+    }
+
+    private void insertTableAtAnchor(
+        OdfTable table,
+        String tableName,
+        TableAnchor anchor,
+        GenerateOptions options,
+        WarningCollector warningCollector
+    ) {
+        String location = cellLocation(tableName, anchor.rowIndex(), anchor.colIndex());
+        List<Map<String, Object>> rows = anchor.rows();
+        OdfTableCell anchorCell = table.getCellByPosition(anchor.colIndex(), anchor.rowIndex());
+
+        if (rows.isEmpty()) {
+            warningCollector.add("TABLE_TOKEN_EMPTY", "Table token has no rows: " + anchor.token(), location);
+            applyBaselineStyle(anchorCell, anchor);
+            ValueWriter.writeOdsValue(anchorCell, null, options.zoneId());
+            return;
+        }
+
+        List<String> columns = buildColumnOrder(rows);
+        if (columns.isEmpty()) {
+            warningCollector.add("TABLE_TOKEN_INVALID", "Table token has no columns: " + anchor.token(), location);
+            applyBaselineStyle(anchorCell, anchor);
+            ValueWriter.writeOdsValue(anchorCell, null, options.zoneId());
+            return;
+        }
+
+        int dataRowCount = rows.size();
+        if (dataRowCount > 0) {
+            table.insertRowsBefore(anchor.rowIndex() + 1, dataRowCount);
+        }
+
+        OdfTableRow headerRow = table.getRowByIndex(anchor.rowIndex());
+        applyBaselineHeight(headerRow, anchor);
+        for (int c = 0; c < columns.size(); c++) {
+            OdfTableCell cell = table.getCellByPosition(anchor.colIndex() + c, anchor.rowIndex());
+            applyBaselineStyle(cell, anchor);
+            cell.setStringValue(columns.get(c));
+        }
+
+        for (int r = 0; r < rows.size(); r++) {
+            int rowIndex = anchor.rowIndex() + 1 + r;
+            OdfTableRow row = table.getRowByIndex(rowIndex);
+            applyBaselineHeight(row, anchor);
+
+            Map<String, Object> values = rows.get(r);
+            for (int c = 0; c < columns.size(); c++) {
+                String column = columns.get(c);
+                OdfTableCell cell = table.getCellByPosition(anchor.colIndex() + c, rowIndex);
+                applyBaselineStyle(cell, anchor);
+                ValueWriter.writeOdsValue(cell, values.get(column), options.zoneId());
+            }
+        }
+
+        autoResizeTableColumns(table, anchor.colIndex(), columns, rows);
     }
 
     private void handleMissingExactToken(
@@ -349,48 +289,81 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
         }
     }
 
-    private void copyCell(OdfTableCell source, OdfTableCell target) {
-        String styleName = source.getStyleName();
-        if (styleName != null) {
-            target.getOdfElement().setTableStyleNameAttribute(styleName);
-        }
+    private void autoResizeTableColumns(
+        OdfTable table,
+        int startColumnIndex,
+        List<String> columns,
+        List<Map<String, Object>> rows
+    ) {
+        for (int c = 0; c < columns.size(); c++) {
+            String column = columns.get(c);
+            int maxLength = column.length();
+            for (Map<String, Object> row : rows) {
+                maxLength = Math.max(maxLength, stringifyLength(row.get(column)));
+            }
 
-        String formula = source.getFormula();
-        if (formula != null) {
-            target.setFormula(formula);
-        }
-
-        target.setTextWrapped(source.isTextWrapped());
-        target.setHorizontalAlignment(source.getHorizontalAlignment());
-        target.setVerticalAlignment(source.getVerticalAlignment());
-
-        String valueType = source.getValueType();
-        if (valueType == null) {
-            target.setStringValue(source.getStringValue());
-            return;
-        }
-
-        switch (valueType) {
-            case "float", "currency", "percentage" -> target.setDoubleValue(source.getDoubleValue());
-            case "boolean" -> target.setBooleanValue(source.getBooleanValue());
-            case "date" -> target.setDateValue(source.getDateValue());
-            case "time" -> target.setTimeValue(source.getTimeValue());
-            default -> target.setStringValue(source.getStringValue());
+            long desiredWidth = calculateDesiredWidth(maxLength);
+            OdfTableColumn target = table.getColumnByIndex(startColumnIndex + c);
+            if (target.getWidth() < desiredWidth) {
+                target.setWidth(desiredWidth);
+            }
         }
     }
 
-    private OdfTable getTable(int index) {
-        List<OdfTable> tables = document.getTableList(false);
-        if (index < 0 || index >= tables.size()) {
-            throw new TemplateSyntaxException("Invalid table index: " + index);
-        }
-        return tables.get(index);
+    private long calculateDesiredWidth(int maxLength) {
+        long width = (long) (maxLength + 2) * 260L;
+        long min = 1400L;
+        long max = 12000L;
+        return Math.max(min, Math.min(width, max));
     }
 
-    private Map<String, Object> buildContext(Map<String, Object> scalars, Map<String, Object> item, int index) {
-        Map<String, Object> context = new HashMap<>(scalars);
-        context.put("item", item == null ? Map.of() : item);
-        context.put("index", index);
-        return context;
+    private int stringifyLength(Object value) {
+        return value == null ? 0 : String.valueOf(value).length();
+    }
+
+    private List<String> buildColumnOrder(List<Map<String, Object>> rows) {
+        LinkedHashSet<String> ordered = new LinkedHashSet<>();
+        ordered.addAll(rows.get(0).keySet());
+        for (Map<String, Object> row : rows) {
+            ordered.addAll(row.keySet());
+        }
+        return List.copyOf(ordered);
+    }
+
+    private void applyBaselineStyle(OdfTableCell cell, TableAnchor anchor) {
+        if (anchor.styleName() != null) {
+            cell.getOdfElement().setTableStyleNameAttribute(anchor.styleName());
+        }
+        if (anchor.horizontalAlignment() != null) {
+            cell.setHorizontalAlignment(anchor.horizontalAlignment());
+        }
+        if (anchor.verticalAlignment() != null) {
+            cell.setVerticalAlignment(anchor.verticalAlignment());
+        }
+        cell.setTextWrapped(anchor.wrapped());
+    }
+
+    private void applyBaselineHeight(OdfTableRow row, TableAnchor anchor) {
+        if (row != null && anchor.rowHeight() > 0) {
+            row.setHeight(anchor.rowHeight(), anchor.rowOptimalHeight());
+        }
+    }
+
+    private String cellLocation(String tableName, int rowIndex, int colIndex) {
+        return tableName + "!R" + (rowIndex + 1) + "C" + (colIndex + 1);
+    }
+
+    private record TableAnchor(
+        int rowIndex,
+        int colIndex,
+        String token,
+        List<Map<String, Object>> rows,
+        String styleName,
+        String horizontalAlignment,
+        String verticalAlignment,
+        boolean wrapped,
+        long rowHeight,
+        boolean rowOptimalHeight
+    ) {
     }
 }

@@ -20,6 +20,7 @@ import org.odftoolkit.odfdom.doc.table.OdfTable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,156 +32,78 @@ class ReportGeneratorFormattingGoldenTest {
     private final ReportGeneratorService service = new ReportGeneratorServiceImpl();
 
     @Test
-    void shouldPreserveFormattingAndMergedRegionsForExpandedTableInXlsx() throws Exception {
-        byte[] template = createXlsxTableFormattingTemplate();
+    void shouldPreserveStylesWidthsAndMergedRegionsForInsertedTableInXlsx() throws Exception {
+        byte[] template = createXlsxFormattingTemplate();
+        List<Map<String, Object>> rows = List.of(
+            row("name", "Alice with long content", "amount", 100),
+            row("name", "Bob", "amount", 200)
+        );
 
         GeneratedReport result = service.generate(
             new TemplateInput("table-format.xlsx", null, template),
-            new ReportData(
-                Map.of(),
-                Map.of("rows", List.of(
-                    Map.of("name", "Alice"),
-                    Map.of("name", "Bob")
-                )),
-                Map.of()
-            ),
+            new ReportData(Map.of("rows", rows), null, null),
             null
         );
 
         try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
             Sheet sheet = workbook.getSheetAt(0);
-            assertEquals("Alice", sheet.getRow(1).getCell(1).getStringCellValue());
+            assertEquals("name", sheet.getRow(0).getCell(1).getStringCellValue());
+            assertEquals("Alice with long content", sheet.getRow(1).getCell(1).getStringCellValue());
             assertEquals("Bob", sheet.getRow(2).getCell(1).getStringCellValue());
 
-            assertEquals(5555, sheet.getColumnWidth(1));
-            assertEquals(sheet.getRow(1).getHeight(), sheet.getRow(2).getHeight());
+            CellStyle headerStyle = sheet.getRow(0).getCell(1).getCellStyle();
+            CellStyle dataStyle = sheet.getRow(1).getCell(1).getCellStyle();
+            Font headerFont = workbook.getFontAt(headerStyle.getFontIndexAsInt());
+            Font dataFont = workbook.getFontAt(dataStyle.getFontIndexAsInt());
 
-            Font templateFont = workbook.getFontAt(sheet.getRow(1).getCell(1).getCellStyle().getFontIndexAsInt());
-            Font clonedFont = workbook.getFontAt(sheet.getRow(2).getCell(1).getCellStyle().getFontIndexAsInt());
+            assertTrue(headerFont.getBold());
+            assertEquals(headerFont.getBold(), dataFont.getBold());
+            assertEquals(headerStyle.getWrapText(), dataStyle.getWrapText());
+            assertEquals(HorizontalAlignment.CENTER, dataStyle.getAlignment());
+            assertEquals(sheet.getRow(0).getHeight(), sheet.getRow(1).getHeight());
 
-            assertTrue(templateFont.getBold());
-            assertEquals(templateFont.getBold(), clonedFont.getBold());
-            assertEquals(templateFont.getFontHeightInPoints(), clonedFont.getFontHeightInPoints());
-            assertEquals(sheet.getRow(1).getCell(1).getCellStyle().getWrapText(), sheet.getRow(2).getCell(1).getCellStyle().getWrapText());
-            assertEquals(HorizontalAlignment.CENTER, sheet.getRow(2).getCell(1).getCellStyle().getAlignment());
-
-            assertTrue(hasMergedRegion(sheet, 1, 1, 1, 2));
-            assertTrue(hasMergedRegion(sheet, 2, 2, 1, 2));
+            assertTrue(sheet.getColumnWidth(1) > 1700);
+            assertEquals("static", sheet.getRow(3).getCell(1).getStringCellValue());
+            assertTrue(hasMergedRegion(sheet, 3, 3, 1, 2));
         }
     }
 
     @Test
-    void shouldPreserveFormattingAndMergedRegionsForExpandedColumnsInXlsx() throws Exception {
-        byte[] template = createXlsxColumnFormattingTemplate();
-
-        GeneratedReport result = service.generate(
-            new TemplateInput("col-format.xlsx", null, template),
-            new ReportData(
-                Map.of(),
-                Map.of(),
-                Map.of("cols", List.of(
-                    Map.of("name", "Q1"),
-                    Map.of("name", "Q2")
-                ))
-            ),
-            null
+    void shouldPreserveStylesAndWidthsForInsertedTableInOds() throws Exception {
+        byte[] template = createOdsFormattingTemplate();
+        List<Map<String, Object>> rows = List.of(
+            row("name", "North region with long content", "amount", 100),
+            row("name", "South", "amount", 200)
         );
-
-        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
-            Sheet sheet = workbook.getSheetAt(0);
-            assertEquals("Q1", sheet.getRow(1).getCell(1).getStringCellValue());
-            assertEquals("Q2", sheet.getRow(1).getCell(2).getStringCellValue());
-
-            assertEquals(4400, sheet.getColumnWidth(1));
-            assertEquals(4400, sheet.getColumnWidth(2));
-
-            Font sourceFont = workbook.getFontAt(sheet.getRow(1).getCell(1).getCellStyle().getFontIndexAsInt());
-            Font clonedFont = workbook.getFontAt(sheet.getRow(1).getCell(2).getCellStyle().getFontIndexAsInt());
-            assertEquals(sourceFont.getItalic(), clonedFont.getItalic());
-            assertEquals(sourceFont.getFontHeightInPoints(), clonedFont.getFontHeightInPoints());
-
-            assertTrue(hasMergedRegion(sheet, 1, 2, 1, 1));
-            assertTrue(hasMergedRegion(sheet, 1, 2, 2, 2));
-        }
-    }
-
-    @Test
-    void shouldPreserveStylesAndWidthsForExpandedTableInOds() throws Exception {
-        byte[] template = createOdsTableFormattingTemplate();
 
         GeneratedReport result = service.generate(
             new TemplateInput("table-format.ods", null, template),
-            new ReportData(
-                Map.of(),
-                Map.of("rows", List.of(
-                    Map.of("name", "North"),
-                    Map.of("name", "South")
-                )),
-                Map.of()
-            ),
+            new ReportData(Map.of("rows", rows), null, null),
             null
         );
 
         try (OdfSpreadsheetDocument document = OdfSpreadsheetDocument.loadDocument(new ByteArrayInputStream(result.bytes()))) {
             OdfTable table = document.getTableList(false).get(0);
 
-            assertEquals("North", table.getCellByPosition(1, 1).getStringValue());
+            assertEquals("name", table.getCellByPosition(1, 0).getStringValue());
+            assertEquals("North region with long content", table.getCellByPosition(1, 1).getStringValue());
             assertEquals("South", table.getCellByPosition(1, 2).getStringValue());
 
-            assertTrue(Math.abs(3100 - table.getColumnByIndex(1).getWidth()) <= 1);
-            assertEquals(table.getRowByIndex(1).getHeight(), table.getRowByIndex(2).getHeight());
-
-            assertEquals("center", table.getCellByPosition(1, 2).getHorizontalAlignment());
-            assertTrue(table.getCellByPosition(1, 2).isTextWrapped());
+            assertEquals("center", table.getCellByPosition(1, 1).getHorizontalAlignment());
+            assertTrue(table.getCellByPosition(1, 1).isTextWrapped());
+            assertEquals(table.getRowByIndex(0).getHeight(), table.getRowByIndex(1).getHeight());
+            assertTrue(table.getColumnByIndex(1).getWidth() > 1500);
+            assertEquals("static", table.getCellByPosition(1, 3).getStringValue());
         }
     }
 
-    @Test
-    void shouldPreserveStylesAndWidthsForExpandedColumnsInOds() throws Exception {
-        byte[] template = createOdsColumnFormattingTemplate();
-
-        GeneratedReport result = service.generate(
-            new TemplateInput("col-format.ods", null, template),
-            new ReportData(
-                Map.of(),
-                Map.of(),
-                Map.of("cols", List.of(
-                    Map.of("name", "Jan"),
-                    Map.of("name", "Feb"),
-                    Map.of("name", "Mar")
-                ))
-            ),
-            null
-        );
-
-        try (OdfSpreadsheetDocument document = OdfSpreadsheetDocument.loadDocument(new ByteArrayInputStream(result.bytes()))) {
-            OdfTable table = document.getTableList(false).get(0);
-
-            assertEquals("Jan", table.getCellByPosition(1, 1).getStringValue());
-            assertEquals("Feb", table.getCellByPosition(2, 1).getStringValue());
-            assertEquals("Mar", table.getCellByPosition(3, 1).getStringValue());
-
-            assertTrue(Math.abs(2800 - table.getColumnByIndex(1).getWidth()) <= 1);
-            assertTrue(Math.abs(2800 - table.getColumnByIndex(2).getWidth()) <= 1);
-            assertTrue(Math.abs(2800 - table.getColumnByIndex(3).getWidth()) <= 1);
-
-            assertTrue(
-                "right".equals(table.getCellByPosition(2, 1).getHorizontalAlignment())
-                    || "end".equals(table.getCellByPosition(2, 1).getHorizontalAlignment())
-            );
-            assertTrue(table.getCellByPosition(2, 1).isTextWrapped());
-        }
-    }
-
-    private byte[] createXlsxTableFormattingTemplate() throws Exception {
+    private byte[] createXlsxFormattingTemplate() throws Exception {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("S");
 
-            sheet.createRow(0).createCell(0).setCellValue("[[TABLE_START:rows]]");
-
-            Row templateRow = sheet.createRow(1);
-            templateRow.setHeight((short) 680);
-            templateRow.createCell(1).setCellValue("{{item.name}}");
+            Row markerRow = sheet.createRow(0);
+            markerRow.setHeight((short) 680);
+            markerRow.createCell(1).setCellValue("{{rows}}");
 
             CellStyle style = workbook.createCellStyle();
             Font font = workbook.createFont();
@@ -189,84 +112,43 @@ class ReportGeneratorFormattingGoldenTest {
             style.setFont(font);
             style.setWrapText(true);
             style.setAlignment(HorizontalAlignment.CENTER);
-            templateRow.getCell(1).setCellStyle(style);
+            markerRow.getCell(1).setCellStyle(style);
+            sheet.setColumnWidth(1, 1700);
 
-            templateRow.createCell(2).setCellValue("");
-            templateRow.getCell(2).setCellStyle(style);
-
+            Row staticRow = sheet.createRow(1);
+            staticRow.createCell(1).setCellValue("static");
+            staticRow.createCell(2).setCellValue("");
+            staticRow.getCell(1).setCellStyle(style);
+            staticRow.getCell(2).setCellStyle(style);
             sheet.addMergedRegion(new CellRangeAddress(1, 1, 1, 2));
-            sheet.setColumnWidth(1, 5555);
-
-            sheet.createRow(2).createCell(3).setCellValue("[[TABLE_END:rows]]");
 
             workbook.write(output);
             return output.toByteArray();
         }
     }
 
-    private byte[] createXlsxColumnFormattingTemplate() throws Exception {
-        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.createSheet("S");
-
-            sheet.createRow(0).createCell(0).setCellValue("[[COL_START:cols]]");
-
-            Row row1 = sheet.createRow(1);
-            row1.createCell(1).setCellValue("{{item.name}}");
-            Row row2 = sheet.createRow(2);
-            row2.createCell(1).setCellValue("");
-
-            CellStyle style = workbook.createCellStyle();
-            Font font = workbook.createFont();
-            font.setItalic(true);
-            font.setFontHeightInPoints((short) 12);
-            style.setFont(font);
-            style.setWrapText(true);
-            row1.getCell(1).setCellStyle(style);
-            row2.getCell(1).setCellStyle(style);
-
-            sheet.addMergedRegion(new CellRangeAddress(1, 2, 1, 1));
-            sheet.setColumnWidth(1, 4400);
-
-            sheet.createRow(3).createCell(2).setCellValue("[[COL_END:cols]]");
-
-            workbook.write(output);
-            return output.toByteArray();
-        }
-    }
-
-    private byte[] createOdsTableFormattingTemplate() throws Exception {
+    private byte[] createOdsFormattingTemplate() throws Exception {
         try (OdfSpreadsheetDocument document = OdfSpreadsheetDocument.newSpreadsheetDocument();
              ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-
             OdfTable table = document.getTableList(false).get(0);
-            table.getCellByPosition(0, 0).setStringValue("[[TABLE_START:rows]]");
-            table.getCellByPosition(1, 1).setStringValue("{{item.name}}");
-            table.getCellByPosition(1, 1).setHorizontalAlignment("center");
-            table.getCellByPosition(1, 1).setTextWrapped(true);
-            table.getRowByIndex(1).setHeight(1600, false);
-            table.getColumnByIndex(1).setWidth(3100);
-            table.getCellByPosition(3, 2).setStringValue("[[TABLE_END:rows]]");
+            table.getCellByPosition(1, 0).setStringValue("{{rows}}");
+            table.getCellByPosition(1, 0).setHorizontalAlignment("center");
+            table.getCellByPosition(1, 0).setTextWrapped(true);
+            table.getRowByIndex(0).setHeight(1600, false);
+            table.getColumnByIndex(1).setWidth(1500);
+            table.getCellByPosition(1, 1).setStringValue("static");
 
             document.save(output);
             return output.toByteArray();
         }
     }
 
-    private byte[] createOdsColumnFormattingTemplate() throws Exception {
-        try (OdfSpreadsheetDocument document = OdfSpreadsheetDocument.newSpreadsheetDocument();
-             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-
-            OdfTable table = document.getTableList(false).get(0);
-            table.getCellByPosition(0, 0).setStringValue("[[COL_START:cols]]");
-            table.getCellByPosition(1, 1).setStringValue("{{item.name}}");
-            table.getCellByPosition(1, 1).setHorizontalAlignment("right");
-            table.getCellByPosition(1, 1).setTextWrapped(true);
-            table.getColumnByIndex(1).setWidth(2800);
-            table.getCellByPosition(2, 3).setStringValue("[[COL_END:cols]]");
-
-            document.save(output);
-            return output.toByteArray();
+    private Map<String, Object> row(Object... values) {
+        LinkedHashMap<String, Object> row = new LinkedHashMap<>();
+        for (int i = 0; i < values.length; i += 2) {
+            row.put(String.valueOf(values[i]), values[i + 1]);
         }
+        return row;
     }
 
     private boolean hasMergedRegion(Sheet sheet, int firstRow, int lastRow, int firstCol, int lastCol) {
