@@ -1,9 +1,10 @@
 package com.template.reportgenerator.util;
 
-import com.template.reportgenerator.dto.GeneratedReport;
-import com.template.reportgenerator.dto.TemplateFormat;
-import com.template.reportgenerator.dto.TemplateInput;
+import com.template.reportgenerator.contract.GeneratedReport;
+import com.template.reportgenerator.contract.TemplateFormat;
+import com.template.reportgenerator.contract.TemplateInput;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Serializes generation result with normalized filename and content type.
@@ -22,12 +23,12 @@ public class ReportSerializer {
         return new GeneratedReport(fileName, contentType, bytes, warningCollector.asList());
     }
 
-    private static String normalizeFileName(String originalFileName, TemplateFormat format) {
-        if (originalFileName == null || originalFileName.isBlank()) {
+    private static String normalizeFileName(String fileName, TemplateFormat format) {
+        if (StringUtils.isEmpty(fileName)) {
             return "generated" + format.extension();
         }
 
-        String lower = originalFileName.toLowerCase();
+        String lower = fileName.toLowerCase();
         if (lower.endsWith(".xls")
             || lower.endsWith(".xlsx")
             || lower.endsWith(".ods")
@@ -35,9 +36,9 @@ public class ReportSerializer {
             || lower.endsWith(".docx")
             || lower.endsWith(".odt")
             || lower.endsWith(".pdf")) {
-            return originalFileName;
+            return fileName;
         }
 
-        return originalFileName + format.extension();
+        return fileName + format.extension();
     }
 }

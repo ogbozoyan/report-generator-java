@@ -1,8 +1,8 @@
 package com.template.reportgenerator;
 
-import com.template.reportgenerator.dto.GeneratedReport;
-import com.template.reportgenerator.dto.ReportData;
-import com.template.reportgenerator.dto.TemplateInput;
+import com.template.reportgenerator.contract.GeneratedReport;
+import com.template.reportgenerator.contract.ReportData;
+import com.template.reportgenerator.contract.TemplateInput;
 import com.template.reportgenerator.service.ReportGeneratorService;
 import com.template.reportgenerator.service.ReportGeneratorServiceImpl;
 import org.apache.poi.ss.usermodel.CellStyle;

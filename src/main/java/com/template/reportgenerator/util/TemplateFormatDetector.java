@@ -1,9 +1,10 @@
 package com.template.reportgenerator.util;
 
-import com.template.reportgenerator.dto.TemplateFormat;
-import com.template.reportgenerator.dto.TemplateInput;
+import com.template.reportgenerator.contract.TemplateFormat;
+import com.template.reportgenerator.contract.TemplateInput;
 import com.template.reportgenerator.exception.UnsupportedTemplateFormatException;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -15,6 +16,7 @@ import java.util.zip.ZipInputStream;
  * Detects the template format from file extension, content type, and binary signature.
  */
 @UtilityClass
+@Slf4j
 public class TemplateFormatDetector {
 
     private static final int ZIP_SIGNATURE_0 = 0x50;
@@ -27,33 +29,37 @@ public class TemplateFormatDetector {
     private static final int OLE2_SIGNATURE_2 = 0x11;
     private static final int OLE2_SIGNATURE_3 = 0xE0;
 
-    public static TemplateFormat detect(TemplateInput input) {
-        if (input.fileName() != null) {
-            String name = input.fileName().toLowerCase(Locale.ROOT);
-            if (name.endsWith(".xlsx")) {
-                return TemplateFormat.XLSX;
+    public static TemplateFormat detectFormat(TemplateInput input) {
+        log.debug("detectFormat() - start: input {}", input);
+        byte[] bytes = input.bytes();
+        if (bytes.length >= 4) {
+            log.debug("detectFormat() - bytes length: {}", bytes.length);
+            int b0 = bytes[0] & 0xFF;
+            int b1 = bytes[1] & 0xFF;
+            int b2 = bytes[2] & 0xFF;
+            int b3 = bytes[3] & 0xFF;
+
+            // ZIP signature (xlsx/ods/docx/odt)
+            if (b0 == ZIP_SIGNATURE_0 && b1 == ZIP_SIGNATURE_1 && b2 == ZIP_SIGNATURE_2 && b3 == ZIP_SIGNATURE_3) {
+                TemplateFormat zipFormat = detectZipContainer(bytes);
+                if (zipFormat != null) {
+                    return zipFormat;
+                }
             }
-            if (name.endsWith(".xls")) {
+
+            // OLE2 signature (xls)
+            if (b0 == OLE2_SIGNATURE_0 && b1 == OLE2_SIGNATURE_1 && b2 == OLE2_SIGNATURE_2 && b3 == OLE2_SIGNATURE_3) {
                 return TemplateFormat.XLS;
             }
-            if (name.endsWith(".ods")) {
-                return TemplateFormat.ODS;
-            }
-            if (name.endsWith(".doc")) {
-                return TemplateFormat.DOC;
-            }
-            if (name.endsWith(".docx")) {
-                return TemplateFormat.DOCX;
-            }
-            if (name.endsWith(".odt")) {
-                return TemplateFormat.ODT;
-            }
-            if (name.endsWith(".pdf")) {
+
+            // PDF signature (%PDF)
+            if (b0 == 0x25 && b1 == 0x50 && b2 == 0x44 && b3 == 0x46) {
                 return TemplateFormat.PDF;
             }
         }
 
         if (input.contentType() != null) {
+            log.debug("detectFormat() - contentType: {}", input.contentType());
             String contentType = input.contentType().toLowerCase(Locale.ROOT);
             if (contentType.contains("spreadsheetml")) {
                 return TemplateFormat.XLSX;
@@ -77,29 +83,28 @@ public class TemplateFormatDetector {
                 return TemplateFormat.PDF;
             }
         }
-
-        byte[] bytes = input.bytes();
-        if (bytes.length >= 4) {
-            int b0 = bytes[0] & 0xFF;
-            int b1 = bytes[1] & 0xFF;
-            int b2 = bytes[2] & 0xFF;
-            int b3 = bytes[3] & 0xFF;
-
-            // ZIP signature (xlsx/ods/docx/odt)
-            if (b0 == ZIP_SIGNATURE_0 && b1 == ZIP_SIGNATURE_1 && b2 == ZIP_SIGNATURE_2 && b3 == ZIP_SIGNATURE_3) {
-                TemplateFormat zipFormat = detectZipContainer(bytes);
-                if (zipFormat != null) {
-                    return zipFormat;
-                }
+        if (input.fileName() != null) {
+            log.debug("detectFormat() - fileName: {}", input.fileName());
+            String name = input.fileName().toLowerCase(Locale.ROOT);
+            if (name.endsWith(".xlsx")) {
+                return TemplateFormat.XLSX;
             }
-
-            // OLE2 signature (xls)
-            if (b0 == OLE2_SIGNATURE_0 && b1 == OLE2_SIGNATURE_1 && b2 == OLE2_SIGNATURE_2 && b3 == OLE2_SIGNATURE_3) {
+            if (name.endsWith(".xls")) {
                 return TemplateFormat.XLS;
             }
-
-            // PDF signature (%PDF)
-            if (b0 == 0x25 && b1 == 0x50 && b2 == 0x44 && b3 == 0x46) {
+            if (name.endsWith(".ods")) {
+                return TemplateFormat.ODS;
+            }
+            if (name.endsWith(".doc")) {
+                return TemplateFormat.DOC;
+            }
+            if (name.endsWith(".docx")) {
+                return TemplateFormat.DOCX;
+            }
+            if (name.endsWith(".odt")) {
+                return TemplateFormat.ODT;
+            }
+            if (name.endsWith(".pdf")) {
                 return TemplateFormat.PDF;
             }
         }

@@ -1,14 +1,15 @@
 package com.template.reportgenerator.processor;
 
-import com.template.reportgenerator.dto.GenerateOptions;
-import com.template.reportgenerator.dto.MissingValuePolicy;
-import com.template.reportgenerator.dto.ResolvedText;
-import com.template.reportgenerator.dto.TemplateScanResult;
+import com.template.reportgenerator.contract.GenerateOptions;
+import com.template.reportgenerator.contract.MissingValuePolicy;
+import com.template.reportgenerator.contract.OdsCellReference;
+import com.template.reportgenerator.contract.OdsTableAnchor;
+import com.template.reportgenerator.contract.ResolvedText;
+import com.template.reportgenerator.contract.TemplateScanResult;
 import com.template.reportgenerator.exception.TemplateDataBindingException;
 import com.template.reportgenerator.exception.TemplateReadWriteException;
 import com.template.reportgenerator.util.TemplateScanner;
 import com.template.reportgenerator.util.TokenResolver;
-import com.template.reportgenerator.util.ValueWriter;
 import com.template.reportgenerator.util.WarningCollector;
 import lombok.extern.slf4j.Slf4j;
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
@@ -23,8 +24,14 @@ import org.w3c.dom.NodeList;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -68,27 +75,27 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
     }
 
     @Override
-    public void applyScalarTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
-        Map<String, Object> context = scalars == null ? Map.of() : scalars;
+    public void applyTemplateTokens(Map<String, Object> templateToken, GenerateOptions options, WarningCollector warningCollector) {
+        Map<String, Object> context = templateToken == null ? Map.of() : templateToken;
         List<OdfTable> sheets = document.getTableList(false);
 
-        log.info("Applying scalar tokens to {} sheets with context size: {}", sheets.size(), context.size());
+        log.info("Applying templateToken to {} sheets with context size: {}", sheets.size(), context.size());
         log.info("Processing options: missingValuePolicy={}, zoneId={}", options.missingValuePolicy(), options.zoneId());
 
         for (int sheetIndex = 0; sheetIndex < sheets.size(); sheetIndex++) {
             OdfTable sheet = sheets.get(sheetIndex);
             String sheetName = sheet.getTableName() == null ? ("Sheet" + sheetIndex) : sheet.getTableName();
-            List<CellReference> tokenCells = collectTokenCellsFromSource(sheetIndex);
+            List<OdsCellReference> tokenCells = collectTokenCellsFromSource(sheetIndex);
             log.info(
                 "Processing sheet '{}' ({}): logical size {}x{}, token cells {}",
                 sheetName, sheetIndex, sheet.getRowCount(), sheet.getColumnCount(), tokenCells.size()
             );
 
-            List<TableAnchor> anchors = new ArrayList<>();
+            List<OdsTableAnchor> anchors = new ArrayList<>();
             int tableTokensFound = 0;
             int scalarTokensApplied = 0;
 
-            for (CellReference ref : tokenCells) {
+            for (OdsCellReference ref : tokenCells) {
                 int rowIndex = ref.rowIndex();
                 int colIndex = ref.colIndex();
                 OdfTableCell cell = sheet.getCellByPosition(colIndex, rowIndex);
@@ -126,7 +133,7 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
                         } else {
                             tableTokensFound++;
                             OdfTableRow row = sheet.getRowByIndex(rowIndex);
-                            anchors.add(new TableAnchor(
+                            anchors.add(new OdsTableAnchor(
                                 rowIndex,
                                 colIndex,
                                 exactToken,
@@ -154,15 +161,15 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
                 scalarTokensApplied++;
             }
 
-            anchors.sort(Comparator.comparingInt(TableAnchor::rowIndex).reversed()
-                .thenComparing(Comparator.comparingInt(TableAnchor::colIndex).reversed()));
+            anchors.sort(Comparator.comparingInt(OdsTableAnchor::rowIndex).reversed()
+                .thenComparing(Comparator.comparingInt(OdsTableAnchor::colIndex).reversed()));
 
             log.info(
                 "Sheet '{}': found {} table tokens, applied {} scalar tokens, inserting {} tables",
                 sheetName, tableTokensFound, scalarTokensApplied, anchors.size()
             );
 
-            for (TableAnchor anchor : anchors) {
+            for (OdsTableAnchor anchor : anchors) {
                 insertTableAtAnchor(sheet, sheetName, anchor, options, warningCollector);
             }
         }
@@ -212,7 +219,58 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
                 return;
             }
             log.info("Writing resolved value for token {} at {}: {}", exactToken, location, resolved);
-            ValueWriter.writeOdsValue(cell, resolved, options.zoneId());
+            boolean finished = false;
+            ZoneId zoneId = options.zoneId();
+            Calendar calendar = Calendar.getInstance();
+
+            switch (resolved) {
+                case null -> {
+                    cell.setStringValue("");
+                    finished = true;
+                    break;
+                }
+                case Number number -> {
+                    cell.setDoubleValue(number.doubleValue());
+                    finished = true;
+                    break;
+                }
+                case Boolean bool -> {
+                    cell.setBooleanValue(bool);
+                    finished = true;
+                    break;
+                }
+                case Date date -> {
+                    calendar.setTime(date);
+                    cell.setDateValue(calendar);
+                    finished = true;
+                    break;
+                }
+                case LocalDate localDate -> {
+                    calendar.setTime(Date.from(localDate.atStartOfDay(zoneId).toInstant()));
+                    cell.setDateValue(calendar);
+                    finished = true;
+                    break;
+                }
+                case LocalDateTime localDateTime -> {
+                    calendar.setTime(Date.from(localDateTime.atZone(zoneId).toInstant()));
+                    cell.setDateValue(calendar);
+                    finished = true;
+                    break;
+                }
+                case Instant instant -> {
+                    calendar.setTime(Date.from(instant));
+                    cell.setDateValue(calendar);
+                    finished = true;
+                    break;
+                }
+                default -> {
+
+                }
+            }
+            if (!finished) {
+                cell.setStringValue(String.valueOf(resolved));
+            }
+
             return;
         }
 
@@ -235,7 +293,7 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
     private void insertTableAtAnchor(
         OdfTable table,
         String tableName,
-        TableAnchor anchor,
+        OdsTableAnchor anchor,
         GenerateOptions options,
         WarningCollector warningCollector
     ) {
@@ -249,7 +307,58 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
             log.warn("Empty table token {} at {}", anchor.token(), location);
             warningCollector.add("TABLE_TOKEN_EMPTY", "Table token has no rows: " + anchor.token(), location);
             applyBaselineStyle(anchorCell, anchor);
-            ValueWriter.writeOdsValue(anchorCell, null, options.zoneId());
+            boolean finished = false;
+            ZoneId zoneId = options.zoneId();
+            Calendar calendar = Calendar.getInstance();
+
+            switch ((Object) null) {
+                case null -> {
+                    anchorCell.setStringValue("");
+                    finished = true;
+                    break;
+                }
+                case Number number -> {
+                    anchorCell.setDoubleValue(number.doubleValue());
+                    finished = true;
+                    break;
+                }
+                case Boolean bool -> {
+                    anchorCell.setBooleanValue(bool);
+                    finished = true;
+                    break;
+                }
+                case Date date -> {
+                    calendar.setTime(date);
+                    anchorCell.setDateValue(calendar);
+                    finished = true;
+                    break;
+                }
+                case LocalDate localDate -> {
+                    calendar.setTime(Date.from(localDate.atStartOfDay(zoneId).toInstant()));
+                    anchorCell.setDateValue(calendar);
+                    finished = true;
+                    break;
+                }
+                case LocalDateTime localDateTime -> {
+                    calendar.setTime(Date.from(localDateTime.atZone(zoneId).toInstant()));
+                    anchorCell.setDateValue(calendar);
+                    finished = true;
+                    break;
+                }
+                case Instant instant -> {
+                    calendar.setTime(Date.from(instant));
+                    anchorCell.setDateValue(calendar);
+                    finished = true;
+                    break;
+                }
+                default -> {
+
+                }
+            }
+            if (!finished) {
+                anchorCell.setStringValue(String.valueOf((Object) null));
+            }
+
             return;
         }
 
@@ -258,7 +367,58 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
             log.warn("Table token with no columns {} at {}", anchor.token(), location);
             warningCollector.add("TABLE_TOKEN_INVALID", "Table token has no columns: " + anchor.token(), location);
             applyBaselineStyle(anchorCell, anchor);
-            ValueWriter.writeOdsValue(anchorCell, null, options.zoneId());
+            boolean finished = false;
+            ZoneId zoneId = options.zoneId();
+            Calendar calendar = Calendar.getInstance();
+
+            switch ((Object) null) {
+                case null -> {
+                    anchorCell.setStringValue("");
+                    finished = true;
+                    break;
+                }
+                case Number number -> {
+                    anchorCell.setDoubleValue(number.doubleValue());
+                    finished = true;
+                    break;
+                }
+                case Boolean bool -> {
+                    anchorCell.setBooleanValue(bool);
+                    finished = true;
+                    break;
+                }
+                case Date date -> {
+                    calendar.setTime(date);
+                    anchorCell.setDateValue(calendar);
+                    finished = true;
+                    break;
+                }
+                case LocalDate localDate -> {
+                    calendar.setTime(Date.from(localDate.atStartOfDay(zoneId).toInstant()));
+                    anchorCell.setDateValue(calendar);
+                    finished = true;
+                    break;
+                }
+                case LocalDateTime localDateTime -> {
+                    calendar.setTime(Date.from(localDateTime.atZone(zoneId).toInstant()));
+                    anchorCell.setDateValue(calendar);
+                    finished = true;
+                    break;
+                }
+                case Instant instant -> {
+                    calendar.setTime(Date.from(instant));
+                    anchorCell.setDateValue(calendar);
+                    finished = true;
+                    break;
+                }
+                default -> {
+
+                }
+            }
+            if (!finished) {
+                anchorCell.setStringValue(String.valueOf((Object) null));
+            }
+
             return;
         }
 
@@ -289,7 +449,49 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
                 String column = columns.get(c);
                 OdfTableCell cell = table.getCellByPosition(anchor.colIndex() + c, rowIndex);
                 applyBaselineStyle(cell, anchor);
-                ValueWriter.writeOdsValue(cell, values.get(column), options.zoneId());
+                Object value = values.get(column);
+                ZoneId zoneId = options.zoneId();
+                Calendar calendar = Calendar.getInstance();
+
+                switch (value) {
+                    case null -> {
+                        cell.setStringValue("");
+                        continue;
+                    }
+                    case Number number -> {
+                        cell.setDoubleValue(number.doubleValue());
+                        continue;
+                    }
+                    case Boolean bool -> {
+                        cell.setBooleanValue(bool);
+                        continue;
+                    }
+                    case Date date -> {
+                        calendar.setTime(date);
+                        cell.setDateValue(calendar);
+                        continue;
+                    }
+                    case LocalDate localDate -> {
+                        calendar.setTime(Date.from(localDate.atStartOfDay(zoneId).toInstant()));
+                        cell.setDateValue(calendar);
+                        continue;
+                    }
+                    case LocalDateTime localDateTime -> {
+                        calendar.setTime(Date.from(localDateTime.atZone(zoneId).toInstant()));
+                        cell.setDateValue(calendar);
+                        continue;
+                    }
+                    case Instant instant -> {
+                        calendar.setTime(Date.from(instant));
+                        cell.setDateValue(calendar);
+                        continue;
+                    }
+                    default -> {
+
+                    }
+                }
+
+                cell.setStringValue(String.valueOf(value));
             }
         }
 
@@ -370,7 +572,7 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
         return List.copyOf(ordered);
     }
 
-    private void applyBaselineStyle(OdfTableCell cell, TableAnchor anchor) {
+    private void applyBaselineStyle(OdfTableCell cell, OdsTableAnchor anchor) {
         if (anchor.styleName() != null) {
             cell.getOdfElement().setTableStyleNameAttribute(anchor.styleName());
         }
@@ -383,7 +585,7 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
         cell.setTextWrapped(anchor.wrapped());
     }
 
-    private void applyBaselineHeight(OdfTableRow row, TableAnchor anchor) {
+    private void applyBaselineHeight(OdfTableRow row, OdsTableAnchor anchor) {
         if (row != null && anchor.rowHeight() > 0) {
             row.setHeight(anchor.rowHeight(), anchor.rowOptimalHeight());
         }
@@ -393,7 +595,7 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
         return tableName + "!R" + (rowIndex + 1) + "C" + (colIndex + 1);
     }
 
-    private List<CellReference> collectTokenCellsFromSource(int tableIndex) {
+    private List<OdsCellReference> collectTokenCellsFromSource(int tableIndex) {
         try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(sourceBytes))) {
             ZipEntry entry;
             while ((entry = zipInputStream.getNextEntry()) != null) {
@@ -419,8 +621,8 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
         }
     }
 
-    private List<CellReference> extractTokenCellsFromTableElement(Element tableElement) {
-        List<CellReference> refs = new ArrayList<>();
+    private List<OdsCellReference> extractTokenCellsFromTableElement(Element tableElement) {
+        List<OdsCellReference> refs = new ArrayList<>();
         int rowIndex = 0;
 
         for (Node child = tableElement.getFirstChild(); child != null; child = child.getNextSibling()) {
@@ -452,7 +654,7 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
                     String text = cellElement.getTextContent();
                     String formula = cellElement.getAttributeNS(TABLE_NS, "formula");
                     if (TokenResolver.hasTokens(text) || TokenResolver.hasTokens(formula)) {
-                        refs.add(new CellReference(rowIndex, colIndex, text));
+                        refs.add(new OdsCellReference(rowIndex, colIndex, text));
                     }
                 }
 
@@ -476,20 +678,4 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
         }
     }
 
-    private record TableAnchor(
-        int rowIndex,
-        int colIndex,
-        String token,
-        List<Map<String, Object>> rows,
-        String styleName,
-        String horizontalAlignment,
-        String verticalAlignment,
-        boolean wrapped,
-        long rowHeight,
-        boolean rowOptimalHeight
-    ) {
-    }
-
-    private record CellReference(int rowIndex, int colIndex, String sourceText) {
-    }
 }

@@ -1,4 +1,4 @@
-package com.template.reportgenerator.dto;
+package com.template.reportgenerator.contract;
 
 /**
  * Validated rectangle of a TABLE/COL block.

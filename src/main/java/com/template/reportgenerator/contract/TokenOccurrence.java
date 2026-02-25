@@ -1,4 +1,4 @@
-package com.template.reportgenerator.dto;
+package com.template.reportgenerator.contract;
 
 /**
  * Scalar token found in template and its location.

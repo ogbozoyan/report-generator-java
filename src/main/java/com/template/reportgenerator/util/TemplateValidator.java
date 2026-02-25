@@ -1,10 +1,10 @@
 package com.template.reportgenerator.util;
 
 
-import com.template.reportgenerator.dto.BlockMarker;
-import com.template.reportgenerator.dto.BlockRegion;
-import com.template.reportgenerator.dto.BlockType;
-import com.template.reportgenerator.dto.TemplateScanResult;
+import com.template.reportgenerator.contract.BlockMarker;
+import com.template.reportgenerator.contract.BlockRegion;
+import com.template.reportgenerator.contract.BlockType;
+import com.template.reportgenerator.contract.TemplateScanResult;
 import com.template.reportgenerator.exception.TemplateStructureException;
 import com.template.reportgenerator.exception.TemplateSyntaxException;
 import lombok.experimental.UtilityClass;

@@ -1,4 +1,4 @@
-package com.template.reportgenerator.dto;
+package com.template.reportgenerator.contract;
 
 import java.time.ZoneId;
 import java.util.Locale;

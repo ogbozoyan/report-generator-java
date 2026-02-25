@@ -1,7 +1,7 @@
 package com.template.reportgenerator.processor;
 
-import com.template.reportgenerator.dto.GenerateOptions;
-import com.template.reportgenerator.dto.TemplateScanResult;
+import com.template.reportgenerator.contract.GenerateOptions;
+import com.template.reportgenerator.contract.TemplateScanResult;
 import com.template.reportgenerator.util.WarningCollector;
 
 import java.util.Map;
@@ -19,7 +19,7 @@ public interface WorkbookProcessor extends AutoCloseable {
     /**
      * Applies scalar and table tokens.
      */
-    void applyScalarTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector);
+    void applyTemplateTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector);
 
     /**
      * Recalculates formulas when the format supports it.

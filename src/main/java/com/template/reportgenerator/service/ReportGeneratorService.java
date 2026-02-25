@@ -1,9 +1,9 @@
 package com.template.reportgenerator.service;
 
-import com.template.reportgenerator.dto.GenerateOptions;
-import com.template.reportgenerator.dto.GeneratedReport;
-import com.template.reportgenerator.dto.ReportData;
-import com.template.reportgenerator.dto.TemplateInput;
+import com.template.reportgenerator.contract.GenerateOptions;
+import com.template.reportgenerator.contract.GeneratedReport;
+import com.template.reportgenerator.contract.ReportData;
+import com.template.reportgenerator.contract.TemplateInput;
 
 /**
  * Public service contract for template-based report generation.
@@ -15,7 +15,7 @@ public interface ReportGeneratorService {
      *
      * @param template template file metadata and bytes
      * @param data     token data model; table tokens are provided as
-     *                 {@code List<Map<String, Object>>} values in {@link ReportData#scalars()}
+     *                 {@code List<Map<String, Object>>} values in {@link ReportData#templateTokens()}
      * @param options  generation options; if {@code null}, defaults are used
      * @return generated report
      */

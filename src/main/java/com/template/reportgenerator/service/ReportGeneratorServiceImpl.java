@@ -1,10 +1,10 @@
 package com.template.reportgenerator.service;
 
-import com.template.reportgenerator.dto.GenerateOptions;
-import com.template.reportgenerator.dto.GeneratedReport;
-import com.template.reportgenerator.dto.ReportData;
-import com.template.reportgenerator.dto.TemplateFormat;
-import com.template.reportgenerator.dto.TemplateInput;
+import com.template.reportgenerator.contract.GenerateOptions;
+import com.template.reportgenerator.contract.GeneratedReport;
+import com.template.reportgenerator.contract.ReportData;
+import com.template.reportgenerator.contract.TemplateFormat;
+import com.template.reportgenerator.contract.TemplateInput;
 import com.template.reportgenerator.processor.DocDocumentProcessor;
 import com.template.reportgenerator.processor.DocxDocumentProcessor;
 import com.template.reportgenerator.processor.OdsWorkbookProcessor;
@@ -36,11 +36,11 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
             ? GenerateOptions.defaults()
             : options;
 
-        TemplateFormat format = TemplateFormatDetector.detect(template);
+        TemplateFormat format = TemplateFormatDetector.detectFormat(template);
         WarningCollector warningCollector = new WarningCollector();
 
         try (WorkbookProcessor processor = createProcessor(format, template.bytes())) {
-            processor.applyScalarTokens(data.scalars(), resolvedOptions, warningCollector);
+            processor.applyTemplateTokens(data.templateTokens(), resolvedOptions, warningCollector);
             processor.recalculateFormulas(resolvedOptions);
 
             byte[] output = processor.serialize();

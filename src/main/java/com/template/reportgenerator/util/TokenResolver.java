@@ -1,7 +1,7 @@
 package com.template.reportgenerator.util;
 
-import com.template.reportgenerator.dto.MissingValuePolicy;
-import com.template.reportgenerator.dto.ResolvedText;
+import com.template.reportgenerator.contract.MissingValuePolicy;
+import com.template.reportgenerator.contract.ResolvedText;
 import com.template.reportgenerator.exception.TemplateDataBindingException;
 import lombok.experimental.UtilityClass;
 

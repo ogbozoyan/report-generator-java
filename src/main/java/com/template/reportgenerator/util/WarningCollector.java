@@ -1,7 +1,7 @@
 package com.template.reportgenerator.util;
 
 
-import com.template.reportgenerator.dto.GenerationWarning;
+import com.template.reportgenerator.contract.GenerationWarning;
 
 import java.util.ArrayList;
 import java.util.Collections;

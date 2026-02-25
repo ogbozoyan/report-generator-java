@@ -1,10 +1,10 @@
 package com.template.reportgenerator.util;
 
-import com.template.reportgenerator.dto.BlockMarker;
-import com.template.reportgenerator.dto.BlockType;
-import com.template.reportgenerator.dto.CellPosition;
-import com.template.reportgenerator.dto.TemplateScanResult;
-import com.template.reportgenerator.dto.TokenOccurrence;
+import com.template.reportgenerator.contract.BlockMarker;
+import com.template.reportgenerator.contract.BlockType;
+import com.template.reportgenerator.contract.CellPosition;
+import com.template.reportgenerator.contract.TemplateScanResult;
+import com.template.reportgenerator.contract.TokenOccurrence;
 import lombok.experimental.UtilityClass;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;

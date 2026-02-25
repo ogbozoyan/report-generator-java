@@ -1,9 +1,9 @@
 package com.template.reportgenerator.processor;
 
-import com.template.reportgenerator.dto.GenerateOptions;
-import com.template.reportgenerator.dto.ResolvedText;
-import com.template.reportgenerator.dto.TemplateScanResult;
-import com.template.reportgenerator.dto.TokenOccurrence;
+import com.template.reportgenerator.contract.GenerateOptions;
+import com.template.reportgenerator.contract.ResolvedText;
+import com.template.reportgenerator.contract.TemplateScanResult;
+import com.template.reportgenerator.contract.TokenOccurrence;
 import com.template.reportgenerator.exception.TemplateReadWriteException;
 import com.template.reportgenerator.util.TokenResolver;
 import com.template.reportgenerator.util.WarningCollector;
@@ -44,7 +44,7 @@ public class OdtDocumentProcessor implements WorkbookProcessor {
     }
 
     @Override
-    public void applyScalarTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
+    public void applyTemplateTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
         List<TextPElement> paragraphs = collectParagraphs();
         List<TableAnchor> anchors = new ArrayList<>();
 

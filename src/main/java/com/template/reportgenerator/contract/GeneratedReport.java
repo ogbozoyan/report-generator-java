@@ -1,4 +1,4 @@
-package com.template.reportgenerator.dto;
+package com.template.reportgenerator.contract;
 
 import java.util.Collections;
 import java.util.List;

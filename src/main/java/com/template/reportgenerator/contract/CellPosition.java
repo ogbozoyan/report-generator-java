@@ -1,4 +1,4 @@
-package com.template.reportgenerator.dto;
+package com.template.reportgenerator.contract;
 
 /**
  * Position of a token/marker inside a spreadsheet sheet.

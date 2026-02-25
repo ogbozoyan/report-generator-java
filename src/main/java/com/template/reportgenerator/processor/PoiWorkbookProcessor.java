@@ -1,14 +1,14 @@
 package com.template.reportgenerator.processor;
 
-import com.template.reportgenerator.dto.GenerateOptions;
-import com.template.reportgenerator.dto.MissingValuePolicy;
-import com.template.reportgenerator.dto.ResolvedText;
-import com.template.reportgenerator.dto.TemplateScanResult;
+import com.template.reportgenerator.contract.GenerateOptions;
+import com.template.reportgenerator.contract.MissingValuePolicy;
+import com.template.reportgenerator.contract.PoiTableAnchor;
+import com.template.reportgenerator.contract.ResolvedText;
+import com.template.reportgenerator.contract.TemplateScanResult;
 import com.template.reportgenerator.exception.TemplateDataBindingException;
 import com.template.reportgenerator.exception.TemplateReadWriteException;
 import com.template.reportgenerator.util.TemplateScanner;
 import com.template.reportgenerator.util.TokenResolver;
-import com.template.reportgenerator.util.ValueWriter;
 import com.template.reportgenerator.util.WarningCollector;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
@@ -22,8 +22,13 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +64,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     }
 
     @Override
-    public void applyScalarTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
+    public void applyTemplateTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
         Map<String, Object> context = scalars == null ? Map.of() : scalars;
 
         log.info("Applying scalar tokens to {} sheets with context size: {}",
@@ -70,7 +75,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
             Sheet sheet = workbook.getSheetAt(s);
             String sheetName = sheet.getSheetName();
-            List<TableAnchor> anchors = new ArrayList<>();
+            List<PoiTableAnchor> anchors = new ArrayList<>();
             int processedCells = 0;
             int tableTokensFound = 0;
             int scalarTokensApplied = 0;
@@ -142,7 +147,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                                 log.info("Found table token {} with {} rows at {}",
                                     exactToken, rows.size(), location);
                                 tableTokensFound++;
-                                anchors.add(new TableAnchor(
+                                anchors.add(new PoiTableAnchor(
                                     rowIndex,
                                     colIndex,
                                     exactToken,
@@ -167,13 +172,13 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                 }
             }
 
-            anchors.sort(Comparator.comparingInt(TableAnchor::rowIndex).reversed()
-                .thenComparing(Comparator.comparingInt(TableAnchor::colIndex).reversed()));
+            anchors.sort(Comparator.comparingInt(PoiTableAnchor::rowIndex).reversed()
+                .thenComparing(Comparator.comparingInt(PoiTableAnchor::colIndex).reversed()));
 
             log.info("Sheet '{}': processed {} cells, found {} table tokens, applied {} scalar tokens, inserting {} tables ", sheetName, processedCells, tableTokensFound,
                 scalarTokensApplied, anchors.size());
 
-            for (TableAnchor anchor : anchors) {
+            for (PoiTableAnchor anchor : anchors) {
                 insertTableAtAnchor(sheet, anchor, options, warningCollector);
             }
         }
@@ -236,7 +241,56 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                 return;
             }
             log.info("Writing resolved value for token {} at {}: {}", exactToken, location, resolved);
-            ValueWriter.writePoiValue(cell, resolved, options.zoneId());
+            boolean finished = false;
+            ZoneId zoneId = options.zoneId();
+            switch (resolved) {
+                case null -> {
+                    cell.setBlank();
+                    finished = true;
+                    break;
+                }
+                case Number number -> {
+                    cell.setCellType(CellType.NUMERIC);
+                    cell.setCellValue(number.doubleValue());
+                    finished = true;
+                    break;
+                }
+                case Boolean bool -> {
+                    cell.setCellType(CellType.BOOLEAN);
+                    cell.setCellValue(bool);
+                    finished = true;
+                    break;
+                }
+                case Date date -> {
+                    cell.setCellValue(date);
+                    finished = true;
+                    break;
+                }
+                case LocalDate localDate -> {
+                    Date date = Date.from(localDate.atStartOfDay(zoneId).toInstant());
+                    cell.setCellValue(date);
+                    finished = true;
+                    break;
+                }
+                case LocalDateTime localDateTime -> {
+                    Date date = Date.from(localDateTime.atZone(zoneId).toInstant());
+                    cell.setCellValue(date);
+                    finished = true;
+                    break;
+                }
+                case Instant instant -> {
+                    cell.setCellValue(Date.from(instant));
+                    finished = true;
+                    break;
+                }
+                default -> {
+                }
+            }
+            if (!finished) {
+                cell.setCellType(CellType.STRING);
+                cell.setCellValue(String.valueOf(resolved));
+            }
+
             return;
         }
 
@@ -259,7 +313,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
 
     private void insertTableAtAnchor(
         Sheet sheet,
-        TableAnchor anchor,
+        PoiTableAnchor anchor,
         GenerateOptions options,
         WarningCollector warningCollector
     ) {
@@ -274,7 +328,56 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
             log.warn("Empty table token {} at {}", anchor.token(), location);
             warningCollector.add("TABLE_TOKEN_EMPTY", "Table token has no rows: " + anchor.token(), location);
             applyBaselineStyle(anchorCell, anchor.baselineStyle());
-            ValueWriter.writePoiValue(anchorCell, null, options.zoneId());
+            boolean finished = false;
+            ZoneId zoneId = options.zoneId();
+            switch ((Object) null) {
+                case null -> {
+                    anchorCell.setBlank();
+                    finished = true;
+                    break;
+                }
+                case Number number -> {
+                    anchorCell.setCellType(CellType.NUMERIC);
+                    anchorCell.setCellValue(number.doubleValue());
+                    finished = true;
+                    break;
+                }
+                case Boolean bool -> {
+                    anchorCell.setCellType(CellType.BOOLEAN);
+                    anchorCell.setCellValue(bool);
+                    finished = true;
+                    break;
+                }
+                case Date date -> {
+                    anchorCell.setCellValue(date);
+                    finished = true;
+                    break;
+                }
+                case LocalDate localDate -> {
+                    Date date = Date.from(localDate.atStartOfDay(zoneId).toInstant());
+                    anchorCell.setCellValue(date);
+                    finished = true;
+                    break;
+                }
+                case LocalDateTime localDateTime -> {
+                    Date date = Date.from(localDateTime.atZone(zoneId).toInstant());
+                    anchorCell.setCellValue(date);
+                    finished = true;
+                    break;
+                }
+                case Instant instant -> {
+                    anchorCell.setCellValue(Date.from(instant));
+                    finished = true;
+                    break;
+                }
+                default -> {
+                }
+            }
+            if (!finished) {
+                anchorCell.setCellType(CellType.STRING);
+                anchorCell.setCellValue(String.valueOf((Object) null));
+            }
+
             return;
         }
 
@@ -283,7 +386,56 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
             log.warn("Table token with no columns {} at {}", anchor.token(), location);
             warningCollector.add("TABLE_TOKEN_INVALID", "Table token has no columns: " + anchor.token(), location);
             applyBaselineStyle(anchorCell, anchor.baselineStyle());
-            ValueWriter.writePoiValue(anchorCell, null, options.zoneId());
+            boolean finished = false;
+            ZoneId zoneId = options.zoneId();
+            switch ((Object) null) {
+                case null -> {
+                    anchorCell.setBlank();
+                    finished = true;
+                    break;
+                }
+                case Number number -> {
+                    anchorCell.setCellType(CellType.NUMERIC);
+                    anchorCell.setCellValue(number.doubleValue());
+                    finished = true;
+                    break;
+                }
+                case Boolean bool -> {
+                    anchorCell.setCellType(CellType.BOOLEAN);
+                    anchorCell.setCellValue(bool);
+                    finished = true;
+                    break;
+                }
+                case Date date -> {
+                    anchorCell.setCellValue(date);
+                    finished = true;
+                    break;
+                }
+                case LocalDate localDate -> {
+                    Date date = Date.from(localDate.atStartOfDay(zoneId).toInstant());
+                    anchorCell.setCellValue(date);
+                    finished = true;
+                    break;
+                }
+                case LocalDateTime localDateTime -> {
+                    Date date = Date.from(localDateTime.atZone(zoneId).toInstant());
+                    anchorCell.setCellValue(date);
+                    finished = true;
+                    break;
+                }
+                case Instant instant -> {
+                    anchorCell.setCellValue(Date.from(instant));
+                    finished = true;
+                    break;
+                }
+                default -> {
+                }
+            }
+            if (!finished) {
+                anchorCell.setCellType(CellType.STRING);
+                anchorCell.setCellValue(String.valueOf((Object) null));
+            }
+
             return;
         }
 
@@ -314,7 +466,47 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                 String column = columns.get(c);
                 Cell cell = getOrCreateCell(dataRow, anchor.colIndex() + c);
                 applyBaselineStyle(cell, anchor.baselineStyle());
-                ValueWriter.writePoiValue(cell, values.get(column), options.zoneId());
+                Object value = values.get(column);
+                ZoneId zoneId = options.zoneId();
+                switch (value) {
+                    case null -> {
+                        cell.setBlank();
+                        continue;
+                    }
+                    case Number number -> {
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(number.doubleValue());
+                        continue;
+                    }
+                    case Boolean bool -> {
+                        cell.setCellType(CellType.BOOLEAN);
+                        cell.setCellValue(bool);
+                        continue;
+                    }
+                    case Date date -> {
+                        cell.setCellValue(date);
+                        continue;
+                    }
+                    case LocalDate localDate -> {
+                        Date date = Date.from(localDate.atStartOfDay(zoneId).toInstant());
+                        cell.setCellValue(date);
+                        continue;
+                    }
+                    case LocalDateTime localDateTime -> {
+                        Date date = Date.from(localDateTime.atZone(zoneId).toInstant());
+                        cell.setCellValue(date);
+                        continue;
+                    }
+                    case Instant instant -> {
+                        cell.setCellValue(Date.from(instant));
+                        continue;
+                    }
+                    default -> {
+                    }
+                }
+
+                cell.setCellType(CellType.STRING);
+                cell.setCellValue(String.valueOf(value));
             }
         }
 
@@ -335,7 +527,56 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
             case EMPTY_AND_LOG -> {
                 log.info("Setting empty value for missing token {} at {}", token, location);
                 warningCollector.add("MISSING_TOKEN", "Token not found: " + token, location);
-                ValueWriter.writePoiValue(cell, null, options.zoneId());
+                boolean finished = false;
+                ZoneId zoneId = options.zoneId();
+                switch ((Object) null) {
+                    case null -> {
+                        cell.setBlank();
+                        finished = true;
+                        break;
+                    }
+                    case Number number -> {
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(number.doubleValue());
+                        finished = true;
+                        break;
+                    }
+                    case Boolean bool -> {
+                        cell.setCellType(CellType.BOOLEAN);
+                        cell.setCellValue(bool);
+                        finished = true;
+                        break;
+                    }
+                    case Date date -> {
+                        cell.setCellValue(date);
+                        finished = true;
+                        break;
+                    }
+                    case LocalDate localDate -> {
+                        Date date = Date.from(localDate.atStartOfDay(zoneId).toInstant());
+                        cell.setCellValue(date);
+                        finished = true;
+                        break;
+                    }
+                    case LocalDateTime localDateTime -> {
+                        Date date = Date.from(localDateTime.atZone(zoneId).toInstant());
+                        cell.setCellValue(date);
+                        finished = true;
+                        break;
+                    }
+                    case Instant instant -> {
+                        cell.setCellValue(Date.from(instant));
+                        finished = true;
+                        break;
+                    }
+                    default -> {
+                    }
+                }
+                if (!finished) {
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(String.valueOf((Object) null));
+                }
+
             }
             case LEAVE_TOKEN -> {
                 log.info("Leaving original token {} unchanged at {}", token, location);
@@ -424,13 +665,4 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         return sheet.getSheetName() + "!R" + (rowIndex + 1) + "C" + (colIndex + 1);
     }
 
-    private record TableAnchor(
-        int rowIndex,
-        int colIndex,
-        String token,
-        List<Map<String, Object>> rows,
-        CellStyle baselineStyle,
-        short baselineRowHeight
-    ) {
-    }
 }

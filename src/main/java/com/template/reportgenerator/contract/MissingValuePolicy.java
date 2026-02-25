@@ -1,4 +1,4 @@
-package com.template.reportgenerator.dto;
+package com.template.reportgenerator.contract;
 
 /**
  * Behavior when a template token cannot be resolved from input data.

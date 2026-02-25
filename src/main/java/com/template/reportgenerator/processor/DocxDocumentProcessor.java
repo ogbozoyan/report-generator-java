@@ -1,9 +1,10 @@
 package com.template.reportgenerator.processor;
 
-import com.template.reportgenerator.dto.GenerateOptions;
-import com.template.reportgenerator.dto.ResolvedText;
-import com.template.reportgenerator.dto.TemplateScanResult;
-import com.template.reportgenerator.dto.TokenOccurrence;
+import com.template.reportgenerator.contract.DocxTableAnchor;
+import com.template.reportgenerator.contract.GenerateOptions;
+import com.template.reportgenerator.contract.ResolvedText;
+import com.template.reportgenerator.contract.TemplateScanResult;
+import com.template.reportgenerator.contract.TokenOccurrence;
 import com.template.reportgenerator.exception.TemplateReadWriteException;
 import com.template.reportgenerator.util.TokenResolver;
 import com.template.reportgenerator.util.WarningCollector;
@@ -44,8 +45,8 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
     }
 
     @Override
-    public void applyScalarTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
-        List<TableAnchor> anchors = new ArrayList<>();
+    public void applyTemplateTokens(Map<String, Object> templateTokens, GenerateOptions options, WarningCollector warningCollector) {
+        List<DocxTableAnchor> anchors = new ArrayList<>();
 
         for (XWPFParagraph paragraph : document.getParagraphs()) {
             String text = paragraph.getText();
@@ -55,13 +56,13 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
 
             String exactToken = TokenResolver.getExactToken(text);
             if (exactToken != null) {
-                Object resolved = TokenResolver.resolvePath(scalars, exactToken);
+                Object resolved = TokenResolver.resolvePath(templateTokens, exactToken);
                 if (TokenResolver.isTableValue(resolved)) {
                     List<Map<String, Object>> tableRows = TokenResolver.toTableRows(resolved);
                     if (tableRows == null) {
                         warningCollector.add("TABLE_TOKEN_INVALID", "Table token has invalid structure: " + exactToken, "docx:paragraph");
                     } else {
-                        anchors.add(new TableAnchor(paragraph, exactToken, tableRows));
+                        anchors.add(new DocxTableAnchor(paragraph, exactToken, tableRows));
                     }
                     continue;
                 }
@@ -69,7 +70,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
 
             ResolvedText resolvedText = TokenResolver.resolve(
                 text,
-                scalars,
+                templateTokens,
                 options.missingValuePolicy(),
                 warningCollector,
                 "docx:paragraph",
@@ -80,8 +81,8 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
             }
         }
 
-        anchors.sort(Comparator.comparingInt((TableAnchor anchor) -> document.getPosOfParagraph(anchor.paragraph())).reversed());
-        for (TableAnchor anchor : anchors) {
+        anchors.sort(Comparator.comparingInt((DocxTableAnchor anchor) -> document.getPosOfParagraph(anchor.paragraph())).reversed());
+        for (DocxTableAnchor anchor : anchors) {
             insertTableAtParagraph(anchor, warningCollector);
         }
     }
@@ -105,7 +106,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
         }
     }
 
-    private void insertTableAtParagraph(TableAnchor anchor, WarningCollector warningCollector) {
+    private void insertTableAtParagraph(DocxTableAnchor anchor, WarningCollector warningCollector) {
         List<Map<String, Object>> rows = anchor.rows();
         if (rows.isEmpty()) {
             warningCollector.add("TABLE_TOKEN_EMPTY", "Table token has no rows: " + anchor.token(), "docx:paragraph");
@@ -183,6 +184,4 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
         run.setText(value == null ? "" : value);
     }
 
-    private record TableAnchor(XWPFParagraph paragraph, String token, List<Map<String, Object>> rows) {
-    }
 }

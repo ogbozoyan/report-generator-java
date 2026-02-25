@@ -1,4 +1,4 @@
-package com.template.reportgenerator.dto;
+package com.template.reportgenerator.contract;
 
 import java.util.Collections;
 import java.util.Map;
@@ -6,14 +6,14 @@ import java.util.Map;
 /**
  * Runtime data model used for token resolution.
  * <p>
- * Table tokens are passed via {@link #scalars()} as {@code List<Map<String, Object>>}
+ * Table tokens are passed via {@link #templateTokens()} as {@code List<Map<String, Object>>}
  * values and rendered when the template contains an exact placeholder like
  * {@code {{TABLE_TOKEN}}}.
  */
 public record ReportData(
-    Map<String, Object> scalars
+    Map<String, Object> templateTokens
 ) {
     public ReportData {
-        scalars = scalars == null ? Collections.emptyMap() : scalars;
+        templateTokens = templateTokens == null ? Collections.emptyMap() : templateTokens;
     }
 }

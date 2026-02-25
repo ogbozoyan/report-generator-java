@@ -1,8 +1,8 @@
 package com.template.reportgenerator.processor;
 
-import com.template.reportgenerator.dto.GenerateOptions;
-import com.template.reportgenerator.dto.TemplateScanResult;
-import com.template.reportgenerator.dto.TokenOccurrence;
+import com.template.reportgenerator.contract.GenerateOptions;
+import com.template.reportgenerator.contract.TemplateScanResult;
+import com.template.reportgenerator.contract.TokenOccurrence;
 import com.template.reportgenerator.exception.TemplateReadWriteException;
 import com.template.reportgenerator.util.TokenResolver;
 import com.template.reportgenerator.util.WarningCollector;
@@ -41,7 +41,7 @@ public class DocDocumentProcessor implements WorkbookProcessor {
     }
 
     @Override
-    public void applyScalarTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
+    public void applyTemplateTokens(Map<String, Object> templateToken, GenerateOptions options, WarningCollector warningCollector) {
         Range range = document.getRange();
 
         // Replace exact paragraph placeholders with table blocks.
@@ -59,7 +59,7 @@ public class DocDocumentProcessor implements WorkbookProcessor {
                 continue;
             }
 
-            Object resolved = TokenResolver.resolvePath(scalars, exactToken);
+            Object resolved = TokenResolver.resolvePath(templateToken, exactToken);
             if (!TokenResolver.isTableValue(resolved)) {
                 continue;
             }
@@ -78,8 +78,8 @@ public class DocDocumentProcessor implements WorkbookProcessor {
             paragraph.replaceText(paragraphText, renderTableAsDocText(rows));
         }
 
-        // Scalar replacements for plain tokens.
-        for (Map.Entry<String, Object> entry : scalars.entrySet()) {
+        // token replacements for plain tokens.
+        for (Map.Entry<String, Object> entry : templateToken.entrySet()) {
             String token = "{{" + entry.getKey() + "}}";
             Object value = entry.getValue();
             if (TokenResolver.isTableValue(value)) {
