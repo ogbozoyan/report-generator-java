@@ -1,8 +1,6 @@
 package com.template.reportgenerator.processor;
 
-import com.template.reportgenerator.dto.BlockRegion;
 import com.template.reportgenerator.dto.GenerateOptions;
-import com.template.reportgenerator.dto.ReportData;
 import com.template.reportgenerator.dto.TemplateScanResult;
 import com.template.reportgenerator.dto.TokenOccurrence;
 import com.template.reportgenerator.exception.TemplateReadWriteException;
@@ -52,36 +50,6 @@ abstract class AbstractZipTextProcessor implements WorkbookProcessor {
                 entries.set(i, entry.withBytes(replaced.getBytes(StandardCharsets.UTF_8)));
             }
         }
-    }
-
-    @Override
-    public void expandTableBlocks(
-        List<BlockRegion> tableBlocks,
-        ReportData data,
-        GenerateOptions options,
-        WarningCollector warningCollector
-    ) {
-        // TABLE blocks are spreadsheet-specific.
-    }
-
-    @Override
-    public void expandColumnBlocks(
-        List<BlockRegion> columnBlocks,
-        ReportData data,
-        GenerateOptions options,
-        WarningCollector warningCollector
-    ) {
-        // COL blocks are spreadsheet-specific.
-    }
-
-    @Override
-    public void clearMarkers(List<BlockRegion> blockRegions) {
-        // marker cleaning is handled during plain-text replacement.
-    }
-
-    @Override
-    public void recalculateFormulas(GenerateOptions options) {
-        // no formulas in text documents.
     }
 
     @Override

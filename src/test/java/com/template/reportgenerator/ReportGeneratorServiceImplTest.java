@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -220,6 +221,24 @@ class ReportGeneratorServiceImplTest {
             assertEquals("after", table.getCellByPosition(0, 3).getStringValue());
             assertTrue(table.getColumnByIndex(0).getWidth() > 1200);
             assertEquals("center", table.getCellByPosition(0, 1).getHorizontalAlignment());
+        }
+    }
+
+    @Test
+    void shouldReplaceInlineYearTokenInRealOdsTemplateAtA6() throws Exception {
+        byte[] template = loadResourceBytes("/fixtures/compensation-template.ods");
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.ods", null, template),
+            new ReportData(Map.of("year", "2026")),
+            null
+        );
+
+        try (OdfSpreadsheetDocument document = OdfSpreadsheetDocument.loadDocument(new ByteArrayInputStream(result.bytes()))) {
+            OdfTable table = document.getTableList(false).get(0);
+            String a6 = table.getCellByPosition(0, 5).getStringValue();
+            assertEquals("Январь, 2026", a6);
+            assertFalse(a6.contains("{{year}}"));
         }
     }
 

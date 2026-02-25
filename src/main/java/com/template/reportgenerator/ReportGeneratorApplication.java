@@ -13,7 +13,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -28,32 +27,33 @@ public class ReportGeneratorApplication {
 //        SpringApplication.run(ReportGeneratorApplication.class, args);
         ReportGeneratorService service = new ReportGeneratorServiceImpl();
 
-        byte[] templateBytes = Files.readAllBytes(Path.of("/Users/onbozoyan/Downloads/report-generator/DOC1.docx"));
+        byte[] templateBytes = Files.readAllBytes(Path.of("/Users/onbozoyan/Downloads/report-generator/отчет.xlsx"));
 
         TemplateInput input = new TemplateInput(
-            "DOC1.docx",
+            "отчет.xlsx",
             null,
             templateBytes
         );
 
         ReportData data = new ReportData(
             Map.of(
-                "period", "2026-Q1",
-                "SOME_PLACEHOLDER", "ПУПУПУ",
-                "total", "4550.75",
-                "token", input.toString(),
-                "TABLE_HERE", List.of(
-                    //БАГ, колонки в неправильном порядке
-                    Map.of("name", "North", "amount", 1200.25),
-                    Map.of("name", "South", "amount", 900.00),
-                    Map.of("жопа", "South", "слона", 900.00)
-                ).reversed(),
-                "ANOTHER_TABLE", List.of(
-                    Map.of(
-                        "a", "b", "c", "d"
-                    )
-                ),
-                "mega_test", "mega_value"
+//                "period", "2026-Q1",
+//                "SOME_PLACEHOLDER", "ПУПУПУ",
+//                "total", "4550.75",
+//                "token", input.toString(),
+//                "TABLE_HERE", List.of(
+//                    //БАГ, колонки в неправильном порядке
+//                    Map.of("name", "North", "amount", 1200.25),
+//                    Map.of("name", "South", "amount", 900.00),
+//                    Map.of("жопа", "South", "слона", 900.00)
+//                ).reversed(),
+//                "ANOTHER_TABLE", List.of(
+//                    Map.of(
+//                        "a", "b", "c", "d"
+//                    )
+//                ),
+//                "mega_test", "mega_value",
+                "year", "1999"
             )
         );
 
@@ -67,7 +67,7 @@ public class ReportGeneratorApplication {
         GeneratedReport report = service.generate(input, data, options);
 
         Files.createDirectories(Path.of("out"));
-        Files.write(Path.of("/Users/onbozoyan/Downloads/report-generator/result.docx"), report.bytes());
+        Files.write(Path.of("/Users/onbozoyan/Downloads/report-generator/result_отчет.xlsx"), report.bytes());
 
         for (var warning : report.warnings()) {
             System.out.printf("[%s] %s @ %s%n", warning.code(), warning.message(), warning.location());

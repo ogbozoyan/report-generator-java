@@ -1,13 +1,12 @@
 package com.template.reportgenerator.processor;
 
-import com.template.reportgenerator.dto.BlockRegion;
 import com.template.reportgenerator.dto.GenerateOptions;
-import com.template.reportgenerator.dto.ReportData;
 import com.template.reportgenerator.dto.TemplateScanResult;
 import com.template.reportgenerator.dto.TokenOccurrence;
 import com.template.reportgenerator.exception.TemplateReadWriteException;
 import com.template.reportgenerator.util.TokenResolver;
 import com.template.reportgenerator.util.WarningCollector;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.usermodel.Paragraph;
 import org.apache.poi.hwpf.usermodel.Range;
@@ -23,6 +22,7 @@ import java.util.Map;
  * <p>
  * Table tokens are rendered as tab/newline separated text blocks.
  */
+@Slf4j
 public class DocDocumentProcessor implements WorkbookProcessor {
 
     private final HWPFDocument document;
@@ -90,41 +90,12 @@ public class DocDocumentProcessor implements WorkbookProcessor {
     }
 
     @Override
-    public void expandTableBlocks(
-        List<BlockRegion> tableBlocks,
-        ReportData data,
-        GenerateOptions options,
-        WarningCollector warningCollector
-    ) {
-        // legacy block expansion is not used anymore.
-    }
-
-    @Override
-    public void expandColumnBlocks(
-        List<BlockRegion> columnBlocks,
-        ReportData data,
-        GenerateOptions options,
-        WarningCollector warningCollector
-    ) {
-        // legacy block expansion is not used anymore.
-    }
-
-    @Override
-    public void clearMarkers(List<BlockRegion> blockRegions) {
-        // marker clearing is not required with token-only pipeline.
-    }
-
-    @Override
-    public void recalculateFormulas(GenerateOptions options) {
-        // no formulas in DOC text processing.
-    }
-
-    @Override
     public byte[] serialize() {
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             document.write(output);
             return output.toByteArray();
         } catch (Exception e) {
+            log.debug("Failed to serialize DOC document", e);
             throw new TemplateReadWriteException("Failed to serialize DOC document", e);
         }
     }
@@ -133,7 +104,8 @@ public class DocDocumentProcessor implements WorkbookProcessor {
     public void close() {
         try {
             document.close();
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.debug("Failed to close DOC document", e);
             // no-op
         }
     }

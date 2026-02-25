@@ -1,8 +1,6 @@
 package com.template.reportgenerator.processor;
 
-import com.template.reportgenerator.dto.BlockRegion;
 import com.template.reportgenerator.dto.GenerateOptions;
-import com.template.reportgenerator.dto.ReportData;
 import com.template.reportgenerator.dto.ResolvedText;
 import com.template.reportgenerator.dto.TemplateScanResult;
 import com.template.reportgenerator.dto.TokenOccurrence;
@@ -87,36 +85,6 @@ public class OdtDocumentProcessor implements WorkbookProcessor {
         for (TableAnchor anchor : anchors) {
             insertTableAtParagraph(anchor, warningCollector);
         }
-    }
-
-    @Override
-    public void expandTableBlocks(
-        List<BlockRegion> tableBlocks,
-        ReportData data,
-        GenerateOptions options,
-        WarningCollector warningCollector
-    ) {
-        // legacy block expansion is not used anymore.
-    }
-
-    @Override
-    public void expandColumnBlocks(
-        List<BlockRegion> columnBlocks,
-        ReportData data,
-        GenerateOptions options,
-        WarningCollector warningCollector
-    ) {
-        // legacy block expansion is not used anymore.
-    }
-
-    @Override
-    public void clearMarkers(List<BlockRegion> blockRegions) {
-        // marker clearing is not required with token-only pipeline.
-    }
-
-    @Override
-    public void recalculateFormulas(GenerateOptions options) {
-        // no formulas in ODT text flow.
     }
 
     @Override

@@ -1,8 +1,6 @@
 package com.template.reportgenerator.processor;
 
-import com.template.reportgenerator.dto.BlockRegion;
 import com.template.reportgenerator.dto.GenerateOptions;
-import com.template.reportgenerator.dto.ReportData;
 import com.template.reportgenerator.dto.ResolvedText;
 import com.template.reportgenerator.dto.TemplateScanResult;
 import com.template.reportgenerator.dto.TokenOccurrence;
@@ -51,36 +49,6 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
     @Override
     public void applyScalarTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
         extractedText = replaceTokensWithTables(extractedText == null ? "" : extractedText, scalars, options, warningCollector);
-    }
-
-    @Override
-    public void expandTableBlocks(
-        List<BlockRegion> tableBlocks,
-        ReportData data,
-        GenerateOptions options,
-        WarningCollector warningCollector
-    ) {
-        // TABLE blocks are not supported for PDF templates.
-    }
-
-    @Override
-    public void expandColumnBlocks(
-        List<BlockRegion> columnBlocks,
-        ReportData data,
-        GenerateOptions options,
-        WarningCollector warningCollector
-    ) {
-        // COL blocks are not supported for PDF templates.
-    }
-
-    @Override
-    public void clearMarkers(List<BlockRegion> blockRegions) {
-        // marker cleaning is handled in applyScalarTokens.
-    }
-
-    @Override
-    public void recalculateFormulas(GenerateOptions options) {
-        // no formulas in PDF.
     }
 
     @Override

@@ -1,9 +1,7 @@
 package com.template.reportgenerator.processor;
 
-import com.template.reportgenerator.dto.BlockRegion;
 import com.template.reportgenerator.dto.GenerateOptions;
 import com.template.reportgenerator.dto.MissingValuePolicy;
-import com.template.reportgenerator.dto.ReportData;
 import com.template.reportgenerator.dto.ResolvedText;
 import com.template.reportgenerator.dto.TemplateScanResult;
 import com.template.reportgenerator.exception.TemplateDataBindingException;
@@ -12,6 +10,7 @@ import com.template.reportgenerator.util.TemplateScanner;
 import com.template.reportgenerator.util.TokenResolver;
 import com.template.reportgenerator.util.ValueWriter;
 import com.template.reportgenerator.util.WarningCollector;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
@@ -35,30 +34,51 @@ import java.util.Map;
  * Legacy TABLE/COL DSL expansion is intentionally disabled. Table insertion is
  * based on exact-placeholder tokens where token value is {@code List<Map<...>>}.
  */
+@Slf4j
 public class PoiWorkbookProcessor implements WorkbookProcessor {
 
     private final Workbook workbook;
 
     public PoiWorkbookProcessor(byte[] bytes) {
+        log.info("Initializing POI workbook processor with {} bytes", bytes.length);
         try {
             this.workbook = WorkbookFactory.create(new ByteArrayInputStream(bytes));
+            log.info("Successfully loaded POI workbook with {} sheets", workbook.getNumberOfSheets());
         } catch (Exception e) {
+            log.error("Failed to read XLS/XLSX template: {} bytes", bytes.length, e);
             throw new TemplateReadWriteException("Failed to read XLS/XLSX template", e);
         }
     }
 
     @Override
     public TemplateScanResult scan() {
-        return TemplateScanner.scanPoi(workbook);
+        log.info("Starting POI template scanning");
+        TemplateScanResult result = TemplateScanner.scanPoi(workbook);
+        log.info("POI template scan completed - found tokens across sheets {}", result);
+        return result;
     }
 
     @Override
     public void applyScalarTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
         Map<String, Object> context = scalars == null ? Map.of() : scalars;
 
+        log.info("Applying scalar tokens to {} sheets with context size: {}",
+            workbook.getNumberOfSheets(), context.size());
+        log.info("Processing options: missingValuePolicy={}, zoneId={}, recalculateFormulas={}",
+            options.missingValuePolicy(), options.zoneId(), options.recalculateFormulas());
+
         for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
             Sheet sheet = workbook.getSheetAt(s);
+            String sheetName = sheet.getSheetName();
             List<TableAnchor> anchors = new ArrayList<>();
+            int processedCells = 0;
+            int tableTokensFound = 0;
+            int scalarTokensApplied = 0;
+
+            log.info("Processing sheet '{}' ({}/{}): last row = {}, last cell = {}",
+                sheetName, s + 1, workbook.getNumberOfSheets(),
+                sheet.getLastRowNum(),
+                sheet.getLastRowNum() >= 0 ? sheet.getRow(sheet.getLastRowNum()).getLastCellNum() : 0);
 
             for (int rowIndex = 0; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
                 Row row = sheet.getRow(rowIndex);
@@ -71,6 +91,8 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                     continue;
                 }
 
+                log.info("Processing row {} with {} cells", rowIndex, lastCellNum);
+
                 for (int colIndex = 0; colIndex < lastCellNum; colIndex++) {
                     Cell cell = row.getCell(colIndex);
                     if (cell == null) {
@@ -78,10 +100,12 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                     }
 
                     String location = cellLocation(sheet, rowIndex, colIndex);
+                    processedCells++;
 
                     if (cell.getCellType() == CellType.FORMULA) {
                         String formula = cell.getCellFormula();
                         if (TokenResolver.hasTokens(formula)) {
+                            log.info("Skipping formula token at {}: {}", location, formula);
                             warningCollector.add(
                                 "FORMULA_TOKEN_SKIPPED",
                                 "Formula contains token and was not modified",
@@ -100,18 +124,24 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                         continue;
                     }
 
+                    log.info("Found token in cell {}: {}", location, original);
+
                     String exactToken = TokenResolver.getExactToken(original);
                     if (exactToken != null && !TokenResolver.isItemOrIndexToken(exactToken)) {
                         Object resolved = TokenResolver.resolvePath(context, exactToken);
                         if (TokenResolver.isTableValue(resolved)) {
                             List<Map<String, Object>> rows = TokenResolver.toTableRows(resolved);
                             if (rows == null) {
+                                log.warn("Invalid table structure for token {} at {}", exactToken, location);
                                 warningCollector.add(
                                     "TABLE_TOKEN_INVALID",
                                     "Table token has invalid structure: " + exactToken,
                                     location
                                 );
                             } else {
+                                log.info("Found table token {} with {} rows at {}",
+                                    exactToken, rows.size(), location);
+                                tableTokensFound++;
                                 anchors.add(new TableAnchor(
                                     rowIndex,
                                     colIndex,
@@ -133,68 +163,57 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                         warningCollector,
                         location
                     );
+                    scalarTokensApplied++;
                 }
             }
 
             anchors.sort(Comparator.comparingInt(TableAnchor::rowIndex).reversed()
                 .thenComparing(Comparator.comparingInt(TableAnchor::colIndex).reversed()));
 
+            log.info("Sheet '{}': processed {} cells, found {} table tokens, applied {} scalar tokens, inserting {} tables ", sheetName, processedCells, tableTokensFound,
+                scalarTokensApplied, anchors.size());
+
             for (TableAnchor anchor : anchors) {
                 insertTableAtAnchor(sheet, anchor, options, warningCollector);
             }
         }
-    }
-
-    @Override
-    public void expandTableBlocks(
-        List<BlockRegion> tableBlocks,
-        ReportData data,
-        GenerateOptions options,
-        WarningCollector warningCollector
-    ) {
-        // Legacy TABLE DSL is disabled.
-    }
-
-    @Override
-    public void expandColumnBlocks(
-        List<BlockRegion> columnBlocks,
-        ReportData data,
-        GenerateOptions options,
-        WarningCollector warningCollector
-    ) {
-        // Legacy COL DSL is disabled.
-    }
-
-    @Override
-    public void clearMarkers(List<BlockRegion> blockRegions) {
-        // Marker cleanup is not required in token-only mode.
+        log.info("Completed scalar token application across all sheets");
     }
 
     @Override
     public void recalculateFormulas(GenerateOptions options) {
         if (!options.recalculateFormulas()) {
+            log.info("Formula recalculation skipped as per options");
             return;
         }
+        log.info("Recalculating all formulas in workbook");
         FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
         evaluator.evaluateAll();
+        log.info("Formula recalculation completed");
     }
 
     @Override
     public byte[] serialize() {
+        log.info("Serializing POI workbook");
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             workbook.write(outputStream);
-            return outputStream.toByteArray();
+            byte[] result = outputStream.toByteArray();
+            log.info("Successfully serialized POI workbook: {} bytes", result.length);
+            return result;
         } catch (Exception e) {
+            log.error("Failed to serialize XLS/XLSX document", e);
             throw new TemplateReadWriteException("Failed to serialize XLS/XLSX document", e);
         }
     }
 
     @Override
     public void close() {
+        log.info("Closing POI workbook processor");
         try {
             workbook.close();
-        } catch (Exception ignored) {
-            // no-op
+            log.info("POI workbook closed successfully");
+        } catch (Exception e) {
+            log.warn("Error closing POI workbook", e);
         }
     }
 
@@ -212,9 +231,11 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         if (exactToken != null && !TokenResolver.isItemOrIndexToken(exactToken)) {
             Object resolved = TokenResolver.resolvePath(context, exactToken);
             if (resolved == null) {
+                log.info("Handling missing exact token {} at {}", exactToken, location);
                 handleMissingExactToken(cell, exactToken, policy, warningCollector, location, options);
                 return;
             }
+            log.info("Writing resolved value for token {} at {}: {}", exactToken, location, resolved);
             ValueWriter.writePoiValue(cell, resolved, options.zoneId());
             return;
         }
@@ -229,6 +250,8 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         );
 
         if (resolvedText.changed()) {
+            log.info("Updating cell {} with resolved text: {} -> {}",
+                location, original, resolvedText.value());
             cell.setCellType(CellType.STRING);
             cell.setCellValue(resolvedText.value());
         }
@@ -245,7 +268,10 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         Row anchorRow = getOrCreateRow(sheet, anchor.rowIndex());
         Cell anchorCell = getOrCreateCell(anchorRow, anchor.colIndex());
 
+        log.info("Inserting table '{}' at {} with {} rows", anchor.token(), location, rows.size());
+
         if (rows.isEmpty()) {
+            log.warn("Empty table token {} at {}", anchor.token(), location);
             warningCollector.add("TABLE_TOKEN_EMPTY", "Table token has no rows: " + anchor.token(), location);
             applyBaselineStyle(anchorCell, anchor.baselineStyle());
             ValueWriter.writePoiValue(anchorCell, null, options.zoneId());
@@ -254,14 +280,19 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
 
         List<String> columns = buildColumnOrder(rows);
         if (columns.isEmpty()) {
+            log.warn("Table token with no columns {} at {}", anchor.token(), location);
             warningCollector.add("TABLE_TOKEN_INVALID", "Table token has no columns: " + anchor.token(), location);
             applyBaselineStyle(anchorCell, anchor.baselineStyle());
             ValueWriter.writePoiValue(anchorCell, null, options.zoneId());
             return;
         }
 
+        log.info("Table '{}' structure: {} columns [{}], {} rows",
+            anchor.token(), columns.size(), String.join(",", columns), rows.size());
+
         int dataRowCount = rows.size();
         if (dataRowCount > 0 && anchor.rowIndex() + 1 <= sheet.getLastRowNum()) {
+            log.info("Shifting {} rows starting from row {}", dataRowCount, anchor.rowIndex() + 1);
             sheet.shiftRows(anchor.rowIndex() + 1, sheet.getLastRowNum(), dataRowCount, true, false);
         }
 
@@ -288,6 +319,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         }
 
         autoResizeTableColumns(sheet, anchor.colIndex(), columns, rows);
+        log.info("Completed table insertion for '{}' at {}", anchor.token(), location);
     }
 
     private void handleMissingExactToken(
@@ -298,15 +330,21 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         String location,
         GenerateOptions options
     ) {
+        log.info("Handling missing token '{}' with policy {} at {}", token, policy, location);
         switch (policy) {
             case EMPTY_AND_LOG -> {
+                log.info("Setting empty value for missing token {} at {}", token, location);
                 warningCollector.add("MISSING_TOKEN", "Token not found: " + token, location);
                 ValueWriter.writePoiValue(cell, null, options.zoneId());
             }
             case LEAVE_TOKEN -> {
+                log.info("Leaving original token {} unchanged at {}", token, location);
                 // no-op
             }
-            case FAIL_FAST -> throw new TemplateDataBindingException("Token not found: " + token + " at " + location);
+            case FAIL_FAST -> {
+                log.error("Failing fast for missing token {} at {}", token, location);
+                throw new TemplateDataBindingException("Token not found: " + token + " at " + location);
+            }
         }
     }
 
@@ -316,6 +354,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         List<String> columns,
         List<Map<String, Object>> rows
     ) {
+        log.info("Auto-resizing {} columns starting from index {}", columns.size(), startColumnIndex);
         for (int c = 0; c < columns.size(); c++) {
             String column = columns.get(c);
             int maxLength = column.length();
@@ -325,7 +364,13 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
 
             int desiredWidth = calculateDesiredWidth(maxLength);
             int targetColumn = startColumnIndex + c;
-            if (desiredWidth > sheet.getColumnWidth(targetColumn)) {
+            int currentWidth = sheet.getColumnWidth(targetColumn);
+
+            log.info("Column '{}': max content length={}, current width={}, desired width={}",
+                column, maxLength, currentWidth, desiredWidth);
+
+            if (currentWidth < desiredWidth) {
+                log.info("Resizing column '{}' from {} to {}", column, currentWidth, desiredWidth);
                 sheet.setColumnWidth(targetColumn, desiredWidth);
             }
         }
@@ -360,6 +405,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     private Row getOrCreateRow(Sheet sheet, int rowIndex) {
         Row row = sheet.getRow(rowIndex);
         if (row == null) {
+            log.info("Creating new row at index {}", rowIndex);
             row = sheet.createRow(rowIndex);
         }
         return row;
@@ -368,6 +414,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     private Cell getOrCreateCell(Row row, int colIndex) {
         Cell cell = row.getCell(colIndex);
         if (cell == null) {
+            log.info("Creating new cell at column {}", colIndex);
             cell = row.createCell(colIndex);
         }
         return cell;
