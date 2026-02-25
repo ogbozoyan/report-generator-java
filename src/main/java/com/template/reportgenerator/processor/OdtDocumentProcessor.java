@@ -44,7 +44,7 @@ public class OdtDocumentProcessor implements WorkbookProcessor {
     }
 
     @Override
-    public void applyTemplateTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
+    public void applyTemplateTokens(Map<String, Object> templateToken, GenerateOptions options, WarningCollector warningCollector) {
         List<TextPElement> paragraphs = collectParagraphs();
         List<TableAnchor> anchors = new ArrayList<>();
 
@@ -56,7 +56,7 @@ public class OdtDocumentProcessor implements WorkbookProcessor {
 
             String exactToken = TokenResolver.getExactToken(text);
             if (exactToken != null) {
-                Object resolved = TokenResolver.resolvePath(scalars, exactToken);
+                Object resolved = TokenResolver.resolvePath(templateToken, exactToken);
                 if (TokenResolver.isTableValue(resolved)) {
                     List<Map<String, Object>> rows = TokenResolver.toTableRows(resolved);
                     if (rows == null) {
@@ -70,7 +70,7 @@ public class OdtDocumentProcessor implements WorkbookProcessor {
 
             ResolvedText resolvedText = TokenResolver.resolve(
                 text,
-                scalars,
+                templateToken,
                 options.missingValuePolicy(),
                 warningCollector,
                 "odt:paragraph",

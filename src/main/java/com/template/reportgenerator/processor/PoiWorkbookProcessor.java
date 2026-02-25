@@ -64,8 +64,8 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     }
 
     @Override
-    public void applyTemplateTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
-        Map<String, Object> context = scalars == null ? Map.of() : scalars;
+    public void applyTemplateTokens(Map<String, Object> templateTokens, GenerateOptions options, WarningCollector warningCollector) {
+        Map<String, Object> context = templateTokens == null ? Map.of() : templateTokens;
 
         log.info("Applying scalar tokens to {} sheets with context size: {}",
             workbook.getNumberOfSheets(), context.size());
@@ -78,7 +78,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
             List<PoiTableAnchor> anchors = new ArrayList<>();
             int processedCells = 0;
             int tableTokensFound = 0;
-            int scalarTokensApplied = 0;
+            int templateTokensApplied = 0;
 
             log.info("Processing sheet '{}' ({}/{}): last row = {}, last cell = {}",
                 sheetName, s + 1, workbook.getNumberOfSheets(),
@@ -168,7 +168,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                         warningCollector,
                         location
                     );
-                    scalarTokensApplied++;
+                    templateTokensApplied++;
                 }
             }
 
@@ -176,7 +176,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                 .thenComparing(Comparator.comparingInt(PoiTableAnchor::colIndex).reversed()));
 
             log.info("Sheet '{}': processed {} cells, found {} table tokens, applied {} scalar tokens, inserting {} tables ", sheetName, processedCells, tableTokensFound,
-                scalarTokensApplied, anchors.size());
+                templateTokensApplied, anchors.size());
 
             for (PoiTableAnchor anchor : anchors) {
                 insertTableAtAnchor(sheet, anchor, options, warningCollector);
@@ -334,41 +334,34 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                 case null -> {
                     anchorCell.setBlank();
                     finished = true;
-                    break;
                 }
                 case Number number -> {
                     anchorCell.setCellType(CellType.NUMERIC);
                     anchorCell.setCellValue(number.doubleValue());
                     finished = true;
-                    break;
                 }
                 case Boolean bool -> {
                     anchorCell.setCellType(CellType.BOOLEAN);
                     anchorCell.setCellValue(bool);
                     finished = true;
-                    break;
                 }
                 case Date date -> {
                     anchorCell.setCellValue(date);
                     finished = true;
-                    break;
                 }
                 case LocalDate localDate -> {
                     Date date = Date.from(localDate.atStartOfDay(zoneId).toInstant());
                     anchorCell.setCellValue(date);
                     finished = true;
-                    break;
                 }
                 case LocalDateTime localDateTime -> {
                     Date date = Date.from(localDateTime.atZone(zoneId).toInstant());
                     anchorCell.setCellValue(date);
                     finished = true;
-                    break;
                 }
                 case Instant instant -> {
                     anchorCell.setCellValue(Date.from(instant));
                     finished = true;
-                    break;
                 }
                 default -> {
                 }
@@ -392,41 +385,34 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                 case null -> {
                     anchorCell.setBlank();
                     finished = true;
-                    break;
                 }
                 case Number number -> {
                     anchorCell.setCellType(CellType.NUMERIC);
                     anchorCell.setCellValue(number.doubleValue());
                     finished = true;
-                    break;
                 }
                 case Boolean bool -> {
                     anchorCell.setCellType(CellType.BOOLEAN);
                     anchorCell.setCellValue(bool);
                     finished = true;
-                    break;
                 }
                 case Date date -> {
                     anchorCell.setCellValue(date);
                     finished = true;
-                    break;
                 }
                 case LocalDate localDate -> {
                     Date date = Date.from(localDate.atStartOfDay(zoneId).toInstant());
                     anchorCell.setCellValue(date);
                     finished = true;
-                    break;
                 }
                 case LocalDateTime localDateTime -> {
                     Date date = Date.from(localDateTime.atZone(zoneId).toInstant());
                     anchorCell.setCellValue(date);
                     finished = true;
-                    break;
                 }
                 case Instant instant -> {
                     anchorCell.setCellValue(Date.from(instant));
                     finished = true;
-                    break;
                 }
                 default -> {
                 }

@@ -47,8 +47,8 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
     }
 
     @Override
-    public void applyTemplateTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector) {
-        extractedText = replaceTokensWithTables(extractedText == null ? "" : extractedText, scalars, options, warningCollector);
+    public void applyTemplateTokens(Map<String, Object> templateToken, GenerateOptions options, WarningCollector warningCollector) {
+        extractedText = replaceTokensWithTables(extractedText == null ? "" : extractedText, templateToken, options, warningCollector);
     }
 
     @Override
@@ -184,7 +184,7 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
 
     private String replaceTokensWithTables(
         String source,
-        Map<String, Object> scalars,
+        Map<String, Object> templateTokens,
         GenerateOptions options,
         WarningCollector warningCollector
     ) {
@@ -196,7 +196,7 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
             String line = lines[i];
             String exactToken = TokenResolver.getExactToken(line.trim());
             if (exactToken != null) {
-                Object resolved = TokenResolver.resolvePath(scalars, exactToken);
+                Object resolved = TokenResolver.resolvePath(templateTokens, exactToken);
                 if (TokenResolver.isTableValue(resolved)) {
                     List<Map<String, Object>> rows = TokenResolver.toTableRows(resolved);
                     if (rows == null) {
@@ -215,7 +215,7 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
 
             ResolvedText resolvedText = TokenResolver.resolve(
                 line,
-                scalars,
+                templateTokens,
                 options.missingValuePolicy(),
                 warningCollector,
                 "pdf:line#" + (i + 1),

@@ -206,3 +206,5 @@ GeneratedReport report = service.generate(input, data, GenerateOptions.defaults(
 - УДАЛЯЮТСЯ ОТСТУПЫ В docx формате после вставки placeholderа
 - Не заменяет значения уже в готовой таблице {{mega_test}] из DOC1.docx - надо сделать логику найди все теги и заменяй
   их
+- В формате ODS при отстутвии {{token}} и передачи в reportGenerator сервис с FAIL_FAST не падает
+- В формате ODS не вставляются {{TABLE}}, лог есть, но потом все ломается

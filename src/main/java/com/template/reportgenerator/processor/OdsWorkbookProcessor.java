@@ -227,41 +227,34 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
                 case null -> {
                     cell.setStringValue("");
                     finished = true;
-                    break;
                 }
                 case Number number -> {
                     cell.setDoubleValue(number.doubleValue());
                     finished = true;
-                    break;
                 }
                 case Boolean bool -> {
                     cell.setBooleanValue(bool);
                     finished = true;
-                    break;
                 }
                 case Date date -> {
                     calendar.setTime(date);
                     cell.setDateValue(calendar);
                     finished = true;
-                    break;
                 }
                 case LocalDate localDate -> {
                     calendar.setTime(Date.from(localDate.atStartOfDay(zoneId).toInstant()));
                     cell.setDateValue(calendar);
                     finished = true;
-                    break;
                 }
                 case LocalDateTime localDateTime -> {
                     calendar.setTime(Date.from(localDateTime.atZone(zoneId).toInstant()));
                     cell.setDateValue(calendar);
                     finished = true;
-                    break;
                 }
                 case Instant instant -> {
                     calendar.setTime(Date.from(instant));
                     cell.setDateValue(calendar);
                     finished = true;
-                    break;
                 }
                 default -> {
 
@@ -315,41 +308,34 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
                 case null -> {
                     anchorCell.setStringValue("");
                     finished = true;
-                    break;
                 }
                 case Number number -> {
                     anchorCell.setDoubleValue(number.doubleValue());
                     finished = true;
-                    break;
                 }
                 case Boolean bool -> {
                     anchorCell.setBooleanValue(bool);
                     finished = true;
-                    break;
                 }
                 case Date date -> {
                     calendar.setTime(date);
                     anchorCell.setDateValue(calendar);
                     finished = true;
-                    break;
                 }
                 case LocalDate localDate -> {
                     calendar.setTime(Date.from(localDate.atStartOfDay(zoneId).toInstant()));
                     anchorCell.setDateValue(calendar);
                     finished = true;
-                    break;
                 }
                 case LocalDateTime localDateTime -> {
                     calendar.setTime(Date.from(localDateTime.atZone(zoneId).toInstant()));
                     anchorCell.setDateValue(calendar);
                     finished = true;
-                    break;
                 }
                 case Instant instant -> {
                     calendar.setTime(Date.from(instant));
                     anchorCell.setDateValue(calendar);
                     finished = true;
-                    break;
                 }
                 default -> {
 
@@ -375,41 +361,34 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
                 case null -> {
                     anchorCell.setStringValue("");
                     finished = true;
-                    break;
                 }
                 case Number number -> {
                     anchorCell.setDoubleValue(number.doubleValue());
                     finished = true;
-                    break;
                 }
                 case Boolean bool -> {
                     anchorCell.setBooleanValue(bool);
                     finished = true;
-                    break;
                 }
                 case Date date -> {
                     calendar.setTime(date);
                     anchorCell.setDateValue(calendar);
                     finished = true;
-                    break;
                 }
                 case LocalDate localDate -> {
                     calendar.setTime(Date.from(localDate.atStartOfDay(zoneId).toInstant()));
                     anchorCell.setDateValue(calendar);
                     finished = true;
-                    break;
                 }
                 case LocalDateTime localDateTime -> {
                     calendar.setTime(Date.from(localDateTime.atZone(zoneId).toInstant()));
                     anchorCell.setDateValue(calendar);
                     finished = true;
-                    break;
                 }
                 case Instant instant -> {
                     calendar.setTime(Date.from(instant));
                     anchorCell.setDateValue(calendar);
                     finished = true;
-                    break;
                 }
                 default -> {
 
@@ -564,8 +543,7 @@ public class OdsWorkbookProcessor implements WorkbookProcessor {
     }
 
     private List<String> buildColumnOrder(List<Map<String, Object>> rows) {
-        LinkedHashSet<String> ordered = new LinkedHashSet<>();
-        ordered.addAll(rows.get(0).keySet());
+        LinkedHashSet<String> ordered = new LinkedHashSet<>(rows.getFirst().keySet());
         for (Map<String, Object> row : rows) {
             ordered.addAll(row.keySet());
         }

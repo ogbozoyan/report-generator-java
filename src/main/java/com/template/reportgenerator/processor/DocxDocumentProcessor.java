@@ -167,7 +167,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
     private List<String> buildColumnOrder(List<Map<String, Object>> rows) {
         LinkedHashSet<String> ordered = new LinkedHashSet<>();
         if (!rows.isEmpty()) {
-            ordered.addAll(rows.get(0).keySet());
+            ordered.addAll(rows.getFirst().keySet());
         }
         for (Map<String, Object> row : rows) {
             ordered.addAll(row.keySet());
