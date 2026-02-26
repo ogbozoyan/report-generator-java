@@ -2,9 +2,12 @@ package com.template.reportgenerator;
 
 import com.template.reportgenerator.contract.GeneratedReport;
 import com.template.reportgenerator.contract.ReportData;
+import com.template.reportgenerator.contract.TemplateFormat;
 import com.template.reportgenerator.contract.TemplateInput;
+import com.template.reportgenerator.exception.UnsupportedTemplateFormatException;
 import com.template.reportgenerator.service.ReportGeneratorService;
 import com.template.reportgenerator.service.ReportGeneratorServiceImpl;
+import com.template.reportgenerator.util.DocumentFormatConverter;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -27,21 +30,20 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.jupiter.api.Test;
-import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
-import org.odftoolkit.odfdom.doc.OdfTextDocument;
-import org.odftoolkit.odfdom.doc.table.OdfTable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReportGeneratorServiceImplTest {
@@ -87,24 +89,6 @@ class ReportGeneratorServiceImplTest {
     }
 
     @Test
-    void shouldGenerateOds() throws Exception {
-        byte[] template = createOdsScalarTemplate();
-
-        GeneratedReport result = service.generate(
-            new TemplateInput("report.ods", null, template),
-            new ReportData(Map.of("name", "Carol")),
-            null
-        );
-
-        try (OdfSpreadsheetDocument document = OdfSpreadsheetDocument.loadDocument(new ByteArrayInputStream(result.bytes()))) {
-            OdfTable table = document.getTableList(false).get(0);
-            assertEquals("Carol", table.getCellByPosition(0, 0).getStringValue());
-            assertTrue(Math.abs(3000 - table.getColumnByIndex(0).getWidth()) <= 1);
-            assertEquals("center", table.getCellByPosition(0, 0).getHorizontalAlignment());
-        }
-    }
-
-    @Test
     void shouldInsertTableTokenInXlsx() throws Exception {
         byte[] template = createXlsxTableTemplate();
         List<Map<String, Object>> rows = List.of(
@@ -131,6 +115,30 @@ class ReportGeneratorServiceImplTest {
     }
 
     @Test
+    void shouldInsertTableTokenFromInlineCellAndDropStaticText() throws Exception {
+        byte[] template = createXlsxInlineTableTemplate();
+        List<Map<String, Object>> rows = List.of(
+            row("name", "North", "amount", 1200.25),
+            row("name", "South", "amount", 900.00)
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of("rows", rows)),
+            null
+        );
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertEquals("name", sheet.getRow(0).getCell(0).getStringCellValue());
+            assertEquals("amount", sheet.getRow(0).getCell(1).getStringCellValue());
+            assertEquals("North", sheet.getRow(1).getCell(0).getStringCellValue());
+            assertEquals("after", sheet.getRow(3).getCell(0).getStringCellValue());
+        }
+        assertTrue(result.warnings().stream().anyMatch(w -> "TABLE_TOKEN_INLINE_TEXT_DROPPED".equals(w.code())));
+    }
+
+    @Test
     void shouldAppendNewColumnsFromFollowingRows() throws Exception {
         byte[] template = createXlsxTableTemplate();
         List<Map<String, Object>> rows = new ArrayList<>();
@@ -149,6 +157,32 @@ class ReportGeneratorServiceImplTest {
             assertEquals("amount", sheet.getRow(0).getCell(1).getStringCellValue());
             assertEquals("region", sheet.getRow(0).getCell(2).getStringCellValue());
             assertEquals("RU", sheet.getRow(2).getCell(2).getStringCellValue());
+        }
+    }
+
+    @Test
+    void shouldApplyConfiguredTableColumnOrderForXlsx() throws Exception {
+        byte[] template = createXlsxTableTemplate();
+        List<Map<String, Object>> rows = List.of(
+            Map.of("name", "North", "amount", 1200.25, "жопа", "A", "слона", 1),
+            Map.of("name", "South", "amount", 900.00, "жопа", "B", "слона", 2)
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of(
+                "rows", rows,
+                "rows__columns", List.of("name", "amount", "жопа", "слона")
+            )),
+            null
+        );
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertEquals("name", sheet.getRow(0).getCell(0).getStringCellValue());
+            assertEquals("amount", sheet.getRow(0).getCell(1).getStringCellValue());
+            assertEquals("жопа", sheet.getRow(0).getCell(2).getStringCellValue());
+            assertEquals("слона", sheet.getRow(0).getCell(3).getStringCellValue());
         }
     }
 
@@ -199,50 +233,6 @@ class ReportGeneratorServiceImplTest {
     }
 
     @Test
-    void shouldInsertTableTokenInOds() throws Exception {
-        byte[] template = createOdsTableTemplate();
-        List<Map<String, Object>> rows = List.of(
-            row("name", "North", "amount", 1200.25),
-            row("name", "South", "amount", 900.00)
-        );
-
-        GeneratedReport result = service.generate(
-            new TemplateInput("report.ods", null, template),
-            new ReportData(Map.of("rows", rows)),
-            null
-        );
-
-        try (OdfSpreadsheetDocument document = OdfSpreadsheetDocument.loadDocument(new ByteArrayInputStream(result.bytes()))) {
-            OdfTable table = document.getTableList(false).get(0);
-            assertEquals("name", table.getCellByPosition(0, 0).getStringValue());
-            assertEquals("amount", table.getCellByPosition(1, 0).getStringValue());
-            assertEquals("North", table.getCellByPosition(0, 1).getStringValue());
-            assertEquals("South", table.getCellByPosition(0, 2).getStringValue());
-            assertEquals("after", table.getCellByPosition(0, 3).getStringValue());
-            assertTrue(table.getColumnByIndex(0).getWidth() > 1200);
-            assertEquals("center", table.getCellByPosition(0, 1).getHorizontalAlignment());
-        }
-    }
-
-    @Test
-    void shouldReplaceInlineYearTokenInRealOdsTemplateAtA6() throws Exception {
-        byte[] template = loadResourceBytes("/fixtures/compensation-template.ods");
-
-        GeneratedReport result = service.generate(
-            new TemplateInput("report.ods", null, template),
-            new ReportData(Map.of("year", "2026")),
-            null
-        );
-
-        try (OdfSpreadsheetDocument document = OdfSpreadsheetDocument.loadDocument(new ByteArrayInputStream(result.bytes()))) {
-            OdfTable table = document.getTableList(false).get(0);
-            String a6 = table.getCellByPosition(0, 5).getStringValue();
-            assertEquals("Январь, 2026", a6);
-            assertFalse(a6.contains("{{year}}"));
-        }
-    }
-
-    @Test
     void shouldInsertTableTokenInDocx() throws Exception {
         byte[] template = createDocxTableTemplate();
         List<Map<String, Object>> rows = List.of(
@@ -261,28 +251,6 @@ class ReportGeneratorServiceImplTest {
             assertEquals("name", document.getTables().get(0).getRow(0).getCell(0).getText());
             assertEquals("North", document.getTables().get(0).getRow(1).getCell(0).getText());
             assertTrue(document.getParagraphs().stream().noneMatch(p -> "{{rows}}".equals(p.getText())));
-        }
-    }
-
-    @Test
-    void shouldInsertTableTokenInOdt() throws Exception {
-        byte[] template = createOdtTableTemplate();
-        List<Map<String, Object>> rows = List.of(
-            row("name", "North", "amount", 1200.25),
-            row("name", "South", "amount", 900.00)
-        );
-
-        GeneratedReport result = service.generate(
-            new TemplateInput("report.odt", null, template),
-            new ReportData(Map.of("rows", rows)),
-            null
-        );
-
-        try (OdfTextDocument document = OdfTextDocument.loadDocument(new ByteArrayInputStream(result.bytes()))) {
-            assertEquals(1, document.getTableList(false).size());
-            OdfTable table = document.getTableList(false).get(0);
-            assertEquals("name", table.getCellByPosition(0, 0).getStringValue());
-            assertEquals("South", table.getCellByPosition(0, 2).getStringValue());
         }
     }
 
@@ -333,6 +301,98 @@ class ReportGeneratorServiceImplTest {
     }
 
     @Test
+    void shouldConvertSpreadsheetOutputToOdsWhenRequested() throws Exception {
+        byte[] template = createSimpleXlsx("{{name}}", false);
+        RecordingConverter converter = new RecordingConverter("converted-ods".getBytes(StandardCharsets.UTF_8));
+        ReportGeneratorService convertingService = new ReportGeneratorServiceImpl(converter);
+
+        GeneratedReport result = convertingService.generate(
+            new TemplateInput("report.ods", null, template),
+            new ReportData(Map.of("name", "Alice")),
+            null
+        );
+
+        assertEquals(1, converter.calls);
+        assertEquals(TemplateFormat.XLSX, converter.sourceFormat);
+        assertEquals(TemplateFormat.ODS, converter.targetFormat);
+        assertEquals("report.ods", result.fileName());
+        assertEquals(TemplateFormat.ODS.contentType(), result.contentType());
+        assertArrayEquals("converted-ods".getBytes(StandardCharsets.UTF_8), result.bytes());
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(converter.sourceBytes))) {
+            assertEquals("Alice", workbook.getSheetAt(0).getRow(0).getCell(0).getStringCellValue());
+        }
+    }
+
+    @Test
+    void shouldConvertWordOutputToOdtWhenRequestedByContentType() throws Exception {
+        byte[] template = createDocxScalarTemplate("{{name}}");
+        RecordingConverter converter = new RecordingConverter("converted-odt".getBytes(StandardCharsets.UTF_8));
+        ReportGeneratorService convertingService = new ReportGeneratorServiceImpl(converter);
+
+        GeneratedReport result = convertingService.generate(
+            new TemplateInput("report.docx", TemplateFormat.ODT.contentType(), template),
+            new ReportData(Map.of("name", "Nina")),
+            null
+        );
+
+        assertEquals(1, converter.calls);
+        assertEquals(TemplateFormat.DOCX, converter.sourceFormat);
+        assertEquals(TemplateFormat.ODT, converter.targetFormat);
+        assertEquals("report.odt", result.fileName());
+        assertEquals(TemplateFormat.ODT.contentType(), result.contentType());
+        assertArrayEquals("converted-odt".getBytes(StandardCharsets.UTF_8), result.bytes());
+
+        try (XWPFDocument generatedDoc = new XWPFDocument(new ByteArrayInputStream(converter.sourceBytes))) {
+            assertTrue(generatedDoc.getParagraphs().stream().anyMatch(p -> "Nina".equals(p.getText())));
+        }
+    }
+
+    @Test
+    void shouldNotInvokeConverterWhenOutputMatchesSource() throws Exception {
+        byte[] template = createSimpleXlsx("{{name}}", false);
+        RecordingConverter converter = new RecordingConverter("unused".getBytes(StandardCharsets.UTF_8));
+        ReportGeneratorService convertingService = new ReportGeneratorServiceImpl(converter);
+
+        GeneratedReport result = convertingService.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of("name", "Alice")),
+            null
+        );
+
+        assertEquals(0, converter.calls);
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            assertEquals("Alice", workbook.getSheetAt(0).getRow(0).getCell(0).getStringCellValue());
+        }
+    }
+
+    @Test
+    void shouldRejectOdsSourceTemplates() {
+        UnsupportedTemplateFormatException exception = assertThrows(
+            UnsupportedTemplateFormatException.class,
+            () -> service.generate(
+                new TemplateInput("report.ods", null, new byte[] {1, 2, 3, 4}),
+                new ReportData(Map.of("name", "Alice")),
+                null
+            )
+        );
+        assertTrue(exception.getMessage().contains("ODS/ODT templates are not supported as input"));
+    }
+
+    @Test
+    void shouldRejectOdtSourceTemplates() {
+        UnsupportedTemplateFormatException exception = assertThrows(
+            UnsupportedTemplateFormatException.class,
+            () -> service.generate(
+                new TemplateInput("report.odt", null, new byte[] {1, 2, 3, 4}),
+                new ReportData(Map.of("name", "Alice")),
+                null
+            )
+        );
+        assertTrue(exception.getMessage().contains("ODS/ODT templates are not supported as input"));
+    }
+
+    @Test
     void shouldReplaceMissingTokenWithEmptyAndWarningByDefault() throws Exception {
         byte[] template = createSimpleXlsx("{{missing}}", true);
 
@@ -366,20 +426,6 @@ class ReportGeneratorServiceImplTest {
         }
     }
 
-    private byte[] createOdsScalarTemplate() throws Exception {
-        try (OdfSpreadsheetDocument document = OdfSpreadsheetDocument.newSpreadsheetDocument();
-             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-
-            OdfTable table = document.getTableList(false).get(0);
-            table.getCellByPosition(0, 0).setStringValue("{{name}}");
-            table.getCellByPosition(0, 0).setHorizontalAlignment("center");
-            table.getColumnByIndex(0).setWidth(3000);
-
-            document.save(output);
-            return output.toByteArray();
-        }
-    }
-
     private byte[] createXlsxTableTemplate() throws Exception {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("S");
@@ -404,18 +450,26 @@ class ReportGeneratorServiceImplTest {
         }
     }
 
-    private byte[] createOdsTableTemplate() throws Exception {
-        try (OdfSpreadsheetDocument document = OdfSpreadsheetDocument.newSpreadsheetDocument();
-             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            OdfTable table = document.getTableList(false).get(0);
-            table.getCellByPosition(0, 0).setStringValue("{{rows}}");
-            table.getCellByPosition(0, 0).setHorizontalAlignment("center");
-            table.getCellByPosition(0, 0).setTextWrapped(true);
-            table.getColumnByIndex(0).setWidth(1200);
-            table.getColumnByIndex(1).setWidth(1200);
-            table.getRowByIndex(0).setHeight(1000, false);
-            table.getCellByPosition(0, 1).setStringValue("after");
-            document.save(output);
+    private byte[] createXlsxInlineTableTemplate() throws Exception {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("S");
+            Row markerRow = sheet.createRow(0);
+            Cell markerCell = markerRow.createCell(0);
+            markerCell.setCellValue("{{rows}} год");
+
+            CellStyle style = workbook.createCellStyle();
+            Font font = workbook.createFont();
+            font.setBold(true);
+            style.setFont(font);
+            style.setWrapText(true);
+            style.setAlignment(HorizontalAlignment.CENTER);
+            markerCell.setCellStyle(style);
+
+            sheet.setColumnWidth(0, 1200);
+            sheet.setColumnWidth(1, 1200);
+            sheet.createRow(1).createCell(0).setCellValue("after");
+
+            workbook.write(output);
             return output.toByteArray();
         }
     }
@@ -430,12 +484,11 @@ class ReportGeneratorServiceImplTest {
         }
     }
 
-    private byte[] createOdtTableTemplate() throws Exception {
-        try (OdfTextDocument document = OdfTextDocument.newTextDocument();
+    private byte[] createDocxScalarTemplate(String value) throws Exception {
+        try (XWPFDocument document = new XWPFDocument();
              ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            document.newParagraph("{{rows}}");
-            document.newParagraph("tail");
-            document.save(output);
+            document.createParagraph().createRun().setText(value);
+            document.write(output);
             return output.toByteArray();
         }
     }
@@ -494,5 +547,26 @@ class ReportGeneratorServiceImplTest {
             row.put(String.valueOf(values[i]), values[i + 1]);
         }
         return row;
+    }
+
+    private static final class RecordingConverter implements DocumentFormatConverter {
+        private final byte[] convertedBytes;
+        private int calls;
+        private TemplateFormat sourceFormat;
+        private TemplateFormat targetFormat;
+        private byte[] sourceBytes;
+
+        private RecordingConverter(byte[] convertedBytes) {
+            this.convertedBytes = convertedBytes;
+        }
+
+        @Override
+        public byte[] convert(byte[] sourceBytes, TemplateFormat sourceFormat, TemplateFormat targetFormat) {
+            this.calls++;
+            this.sourceBytes = sourceBytes;
+            this.sourceFormat = sourceFormat;
+            this.targetFormat = targetFormat;
+            return convertedBytes;
+        }
     }
 }

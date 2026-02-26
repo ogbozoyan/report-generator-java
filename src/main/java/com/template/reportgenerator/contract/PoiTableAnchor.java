@@ -11,6 +11,7 @@ public record PoiTableAnchor(
     String token,
     List<Map<String, Object>> rows,
     CellStyle baselineStyle,
-    short baselineRowHeight
+    short baselineRowHeight,
+    List<String> configuredColumnOrder
 ) {
 }

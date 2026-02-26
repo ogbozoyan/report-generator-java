@@ -3,15 +3,20 @@ package com.template.reportgenerator.util;
 import com.template.reportgenerator.contract.TemplateFormat;
 import com.template.reportgenerator.contract.TemplateInput;
 import com.template.reportgenerator.exception.UnsupportedTemplateFormatException;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static com.template.reportgenerator.util.TemplateFormatDetector.detectFormat;
+import static com.template.reportgenerator.util.TemplateFormatDetector.detectRequestedOutputFormat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TemplateFormatDetectorTest {
@@ -46,9 +51,42 @@ class TemplateFormatDetectorTest {
     }
 
     @Test
+    void shouldDetectOle2DocAndXlsByContainerEntries() throws Exception {
+        byte[] docBytes = loadResourceBytes("/fixtures/doc-table-template.doc");
+        assertEquals(TemplateFormat.DOC, detectFormat(new TemplateInput("unknown.bin", null, docBytes)));
+
+        byte[] xlsBytes;
+        try (Workbook workbook = new HSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            workbook.createSheet("S");
+            workbook.write(output);
+            xlsBytes = output.toByteArray();
+        }
+        assertEquals(TemplateFormat.XLS, detectFormat(new TemplateInput("unknown.bin", null, xlsBytes)));
+    }
+
+    @Test
+    void shouldDetectRequestedOutputFormatWithoutReadingMagicBytes() {
+        assertEquals(
+            TemplateFormat.ODS,
+            detectRequestedOutputFormat(new TemplateInput("report.ods", null, new byte[] {1, 2, 3, 4}))
+        );
+        assertEquals(
+            TemplateFormat.ODT,
+            detectRequestedOutputFormat(new TemplateInput("report.docx", TemplateFormat.ODT.contentType(), new byte[] {1, 2, 3, 4}))
+        );
+    }
+
+    @Test
     void shouldThrowOnUnknown() {
         TemplateInput input = new TemplateInput("report.abc", "text/plain", new byte[] {1, 2, 3, 4});
         assertThrows(UnsupportedTemplateFormatException.class, () -> detectFormat(input));
+    }
+
+    private byte[] loadResourceBytes(String path) throws Exception {
+        try (InputStream stream = getClass().getResourceAsStream(path)) {
+            assertNotNull(stream, "Missing test resource: " + path);
+            return stream.readAllBytes();
+        }
     }
 
     private byte[] zipWithEntries(String... entryNames) {

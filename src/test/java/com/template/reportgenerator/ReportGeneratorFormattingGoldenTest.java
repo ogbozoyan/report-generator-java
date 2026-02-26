@@ -15,8 +15,6 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
-import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
-import org.odftoolkit.odfdom.doc.table.OdfTable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -68,35 +66,6 @@ class ReportGeneratorFormattingGoldenTest {
         }
     }
 
-    @Test
-    void shouldPreserveStylesAndWidthsForInsertedTableInOds() throws Exception {
-        byte[] template = createOdsFormattingTemplate();
-        List<Map<String, Object>> rows = List.of(
-            row("name", "North region with long content", "amount", 100),
-            row("name", "South", "amount", 200)
-        );
-
-        GeneratedReport result = service.generate(
-            new TemplateInput("table-format.ods", null, template),
-            new ReportData(Map.of("rows", rows)),
-            null
-        );
-
-        try (OdfSpreadsheetDocument document = OdfSpreadsheetDocument.loadDocument(new ByteArrayInputStream(result.bytes()))) {
-            OdfTable table = document.getTableList(false).get(0);
-
-            assertEquals("name", table.getCellByPosition(1, 0).getStringValue());
-            assertEquals("North region with long content", table.getCellByPosition(1, 1).getStringValue());
-            assertEquals("South", table.getCellByPosition(1, 2).getStringValue());
-
-            assertEquals("center", table.getCellByPosition(1, 1).getHorizontalAlignment());
-            assertTrue(table.getCellByPosition(1, 1).isTextWrapped());
-            assertEquals(table.getRowByIndex(0).getHeight(), table.getRowByIndex(1).getHeight());
-            assertTrue(table.getColumnByIndex(1).getWidth() > 1500);
-            assertEquals("static", table.getCellByPosition(1, 3).getStringValue());
-        }
-    }
-
     private byte[] createXlsxFormattingTemplate() throws Exception {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("S");
@@ -123,22 +92,6 @@ class ReportGeneratorFormattingGoldenTest {
             sheet.addMergedRegion(new CellRangeAddress(1, 1, 1, 2));
 
             workbook.write(output);
-            return output.toByteArray();
-        }
-    }
-
-    private byte[] createOdsFormattingTemplate() throws Exception {
-        try (OdfSpreadsheetDocument document = OdfSpreadsheetDocument.newSpreadsheetDocument();
-             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            OdfTable table = document.getTableList(false).get(0);
-            table.getCellByPosition(1, 0).setStringValue("{{rows}}");
-            table.getCellByPosition(1, 0).setHorizontalAlignment("center");
-            table.getCellByPosition(1, 0).setTextWrapped(true);
-            table.getRowByIndex(0).setHeight(1600, false);
-            table.getColumnByIndex(1).setWidth(1500);
-            table.getCellByPosition(1, 1).setStringValue("static");
-
-            document.save(output);
             return output.toByteArray();
         }
     }

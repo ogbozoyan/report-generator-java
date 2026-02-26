@@ -36,9 +36,17 @@ public class ReportSerializer {
             || lower.endsWith(".docx")
             || lower.endsWith(".odt")
             || lower.endsWith(".pdf")) {
-            return fileName;
+            return replaceExtension(fileName, format.extension());
         }
 
         return fileName + format.extension();
+    }
+
+    private static String replaceExtension(String fileName, String extension) {
+        int dot = fileName.lastIndexOf('.');
+        if (dot < 0) {
+            return fileName + extension;
+        }
+        return fileName.substring(0, dot) + extension;
     }
 }

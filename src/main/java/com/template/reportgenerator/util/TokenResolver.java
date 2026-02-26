@@ -39,6 +39,25 @@ public class TokenResolver {
         return matcher.group(1);
     }
 
+    /**
+     * Returns token name when text contains exactly one {@code {{token}}} occurrence.
+     * If there are multiple tokens, returns {@code null}.
+     */
+    public static String getSingleToken(String value) {
+        if (value == null) {
+            return null;
+        }
+        Matcher matcher = TOKEN_PATTERN.matcher(value);
+        String token = null;
+        while (matcher.find()) {
+            if (token != null) {
+                return null;
+            }
+            token = matcher.group(1);
+        }
+        return token;
+    }
+
     public static ResolvedText resolve(
         String text,
         Map<String, Object> context,
@@ -69,7 +88,7 @@ public class TokenResolver {
                     case EMPTY_AND_LOG -> {
                         warningCollector.add(
                             "MISSING_TOKEN",
-                            "Token not found: " + token,
+                            "Token not found in file but was present in template: " + token,
                             location
                         );
                         yield "";
