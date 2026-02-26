@@ -6,6 +6,7 @@ import com.template.reportgenerator.contract.CellPosition;
 import com.template.reportgenerator.contract.TemplateScanResult;
 import com.template.reportgenerator.contract.TokenOccurrence;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -24,12 +25,14 @@ import java.util.regex.Pattern;
  * Scans spreadsheet templates and collects DSL markers and scalar tokens.
  */
 @UtilityClass
+@Slf4j
 public class TemplateScanner {
 
     private static final Pattern BLOCK_PATTERN = Pattern.compile("^\\[\\[\\s*(TABLE_START|TABLE_END|COL_START|COL_END)\\s*:\\s*([a-zA-Z0-9_.-]+)\\s*]]$");
     private static final Pattern TOKEN_PATTERN = TokenResolver.TOKEN_PATTERN;
 
     public static TemplateScanResult scanPoi(Workbook workbook) {
+        log.info("scanPoi() - start: sheetCount={}", workbook == null ? null : workbook.getNumberOfSheets());
         List<BlockMarker> markers = new ArrayList<>();
         List<TokenOccurrence> tokens = new ArrayList<>();
 
@@ -47,10 +50,13 @@ public class TemplateScanner {
             }
         }
 
-        return new TemplateScanResult(markers, tokens);
+        TemplateScanResult result = new TemplateScanResult(markers, tokens);
+        log.info("scanPoi() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
+        return result;
     }
 
     public static TemplateScanResult scanOds(OdfDocument document) {
+        log.info("scanOds() - start: tableCount={}", document == null ? null : document.getTableList(false).size());
         List<BlockMarker> markers = new ArrayList<>();
         List<TokenOccurrence> tokens = new ArrayList<>();
 
@@ -74,7 +80,9 @@ public class TemplateScanner {
             }
         }
 
-        return new TemplateScanResult(markers, tokens);
+        TemplateScanResult result = new TemplateScanResult(markers, tokens);
+        log.info("scanOds() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
+        return result;
     }
 
     private int detectUsedColumns(OdfTable table) {

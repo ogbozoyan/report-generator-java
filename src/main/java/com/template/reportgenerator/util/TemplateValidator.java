@@ -8,6 +8,7 @@ import com.template.reportgenerator.contract.TemplateScanResult;
 import com.template.reportgenerator.exception.TemplateStructureException;
 import com.template.reportgenerator.exception.TemplateSyntaxException;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,9 +19,12 @@ import java.util.Map;
  * Validates block markers and builds executable block regions.
  */
 @UtilityClass
+@Slf4j
 public class TemplateValidator {
 
     public static List<BlockRegion> validateAndBuildRegions(TemplateScanResult scanResult) {
+        log.info("validateAndBuildRegions() - start: markers={}",
+            scanResult == null || scanResult.markers() == null ? null : scanResult.markers().size());
         Map<MarkerKey, List<BlockMarker>> grouped = new HashMap<>();
 
         for (BlockMarker marker : scanResult.markers()) {
@@ -84,6 +88,7 @@ public class TemplateValidator {
         }
 
         validateNoOverlaps(regions);
+        log.info("validateAndBuildRegions() - end: regions={}", regions.size());
         return regions;
     }
 

@@ -7,6 +7,7 @@ import com.template.reportgenerator.contract.TokenOccurrence;
 import com.template.reportgenerator.exception.TemplateReadWriteException;
 import com.template.reportgenerator.util.TokenResolver;
 import com.template.reportgenerator.util.WarningCollector;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -28,31 +29,45 @@ import java.util.Map;
  * Implementation note: PDFs are immutable for in-place text editing in this service.
  * The processor extracts text, replaces scalar tokens, and writes a new text PDF.
  */
+@Slf4j
 public class PdfDocumentProcessor implements WorkbookProcessor {
 
     private String extractedText;
 
     public PdfDocumentProcessor(byte[] bytes) {
+        log.info("PdfDocumentProcessor() - start: bytesLength={}", bytes == null ? null : bytes.length);
         try (PDDocument document = Loader.loadPDF(bytes)) {
             PDFTextStripper textStripper = new PDFTextStripper();
             extractedText = textStripper.getText(document);
+            log.info("PdfDocumentProcessor() - end: extractedTextLength={}, pageCount={}",
+                extractedText == null ? 0 : extractedText.length(),
+                document.getNumberOfPages());
         } catch (Exception e) {
+            log.error("PdfDocumentProcessor() - end with error: bytesLength={}", bytes == null ? null : bytes.length, e);
             throw new TemplateReadWriteException("Failed to read PDF template", e);
         }
     }
 
     @Override
     public TemplateScanResult scan() {
-        return new TemplateScanResult(List.of(), List.<TokenOccurrence>of());
+        log.info("scan() - start");
+        TemplateScanResult result = new TemplateScanResult(List.of(), List.<TokenOccurrence>of());
+        log.info("scan() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
+        return result;
     }
 
     @Override
     public void applyTemplateTokens(Map<String, Object> templateToken, GenerateOptions options, WarningCollector warningCollector) {
+        log.info("applyTemplateTokens() - start: tokenCount={}, extractedTextLength={}",
+            templateToken == null ? null : templateToken.size(),
+            extractedText == null ? 0 : extractedText.length());
         extractedText = replaceTokensWithTables(extractedText == null ? "" : extractedText, templateToken, options, warningCollector);
+        log.info("applyTemplateTokens() - end: extractedTextLength={}", extractedText == null ? 0 : extractedText.length());
     }
 
     @Override
     public byte[] serialize() {
+        log.info("serialize() - start: extractedTextLength={}", extractedText == null ? 0 : extractedText.length());
         try (PDDocument document = new PDDocument();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
@@ -102,8 +117,11 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
             contentStream.close();
 
             document.save(outputStream);
-            return outputStream.toByteArray();
+            byte[] bytes = outputStream.toByteArray();
+            log.info("serialize() - end: bytesLength={}", bytes.length);
+            return bytes;
         } catch (Exception e) {
+            log.error("serialize() - end with error", e);
             throw new TemplateReadWriteException("Failed to serialize PDF document", e);
         }
     }
@@ -188,9 +206,14 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
         GenerateOptions options,
         WarningCollector warningCollector
     ) {
+        log.info("replaceTokensWithTables() - start: sourceLength={}, tokenCount={}",
+            source == null ? 0 : source.length(),
+            templateTokens == null ? null : templateTokens.size());
         String normalized = source.replace("\r\n", "\n").replace('\r', '\n');
         String[] lines = normalized.split("\n", -1);
         StringBuilder result = new StringBuilder();
+        int tableInsertions = 0;
+        int scalarReplacements = 0;
 
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
@@ -205,6 +228,7 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
                         warningCollector.add("TABLE_TOKEN_EMPTY", "Table token has no rows: " + exactToken, "pdf:line#" + (i + 1));
                     } else {
                         result.append(renderAsciiTable(rows));
+                        tableInsertions++;
                     }
                     if (i < lines.length - 1) {
                         result.append('\n');
@@ -222,11 +246,17 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
                 false
             );
             result.append(resolvedText.value());
+            if (resolvedText.changed()) {
+                scalarReplacements++;
+            }
             if (i < lines.length - 1) {
                 result.append('\n');
             }
         }
-        return result.toString();
+        String output = result.toString();
+        log.info("replaceTokensWithTables() - end: outputLength={}, tableInsertions={}, scalarReplacements={}",
+            output.length(), tableInsertions, scalarReplacements);
+        return output;
     }
 
     private String renderAsciiTable(List<Map<String, Object>> rows) {

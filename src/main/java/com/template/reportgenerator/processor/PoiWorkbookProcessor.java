@@ -44,21 +44,21 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     private final Workbook workbook;
 
     public PoiWorkbookProcessor(byte[] bytes) {
-        log.info("Initializing POI workbook processor with {} bytes", bytes.length);
+        log.info("PoiWorkbookProcessor() - start: bytesLength={}", bytes.length);
         try {
             this.workbook = WorkbookFactory.create(new ByteArrayInputStream(bytes));
-            log.info("Successfully loaded POI workbook with {} sheets", workbook.getNumberOfSheets());
+            log.info("PoiWorkbookProcessor() - end: sheetCount={}", workbook.getNumberOfSheets());
         } catch (Exception e) {
-            log.error("Failed to read XLS/XLSX template: {} bytes", bytes.length, e);
+            log.error("PoiWorkbookProcessor() - end with error: bytesLength={}", bytes.length, e);
             throw new TemplateReadWriteException("Failed to read XLS/XLSX template", e);
         }
     }
 
     @Override
     public TemplateScanResult scan() {
-        log.info("Starting POI template scanning");
+        log.info("scan() - start: sheetCount={}", workbook.getNumberOfSheets());
         TemplateScanResult result = TemplateScanner.scanPoi(workbook);
-        log.info("POI template scan completed - found tokens across sheets {}", result);
+        log.info("scan() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
         return result;
     }
 
@@ -67,16 +67,16 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         Map<String, Object> context = templateTokens == null ? Map.of() : templateTokens;
         int sheetCount = workbook.getNumberOfSheets();
 
-        log.info("Applying scalar tokens to {} sheets with context size: {}",
+        log.info("applyTemplateTokens() - start: sheetCount={}, tokenCount={}",
             sheetCount, context.size());
-        log.info("Processing options: missingValuePolicy={}, zoneId={}, recalculateFormulas={}",
+        log.info("applyTemplateTokens() - options: missingValuePolicy={}, zoneId={}, recalculateFormulas={}",
             options.missingValuePolicy(), options.zoneId(), options.recalculateFormulas());
 
         for (int s = 0; s < sheetCount; s++) {
             Sheet sheet = workbook.getSheetAt(s);
             processSheetTokens(sheet, s, sheetCount, context, options, warningCollector);
         }
-        log.info("Completed scalar token application across all sheets");
+        log.info("applyTemplateTokens() - end: sheetCount={}", sheetCount);
     }
 
     private void processSheetTokens(
@@ -90,7 +90,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         SheetProcessingState state = new SheetProcessingState();
         String sheetName = sheet.getSheetName();
 
-        log.info("Processing sheet '{}' ({}/{}): last row = {}, last cell = {}",
+        log.info("processSheetTokens() - start: sheetName={}, sheetIndex={}, sheetCount={}, lastRow={}, lastCell={}",
             sheetName,
             sheetIndex + 1,
             sheetCount,
@@ -107,7 +107,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         state.anchors.sort(Comparator.comparingInt(PoiTableAnchor::rowIndex).reversed()
             .thenComparing(Comparator.comparingInt(PoiTableAnchor::colIndex).reversed()));
 
-        log.info("Sheet '{}': processed {} cells, found {} table tokens, applied {} scalar tokens, inserting {} tables ",
+        log.info("processSheetTokens() - end: sheetName={}, processedCells={}, tableTokensFound={}, scalarTokensApplied={}, tableInsertions={}",
             sheetName, state.processedCells, state.tableTokensFound, state.scalarTokensApplied, state.anchors.size());
 
         for (PoiTableAnchor anchor : state.anchors) {
@@ -124,10 +124,11 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         SheetProcessingState state
     ) {
         int rowIndex = row.getRowNum();
-        log.info("Processing row {} with {} cells", rowIndex, row.getLastCellNum());
+        log.info("processRowTokens() - start: rowIndex={}, cellCount={}", rowIndex, row.getLastCellNum());
         for (Cell cell : row) {
             processCellToken(sheet, row, cell, context, options, warningCollector, state);
         }
+        log.info("processRowTokens() - end: rowIndex={}", rowIndex);
     }
 
     private void processCellToken(
@@ -156,7 +157,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
             return;
         }
 
-        log.info("Found token in cell {}: {}", location, original);
+        log.info("processCellToken() - tokenFound: location={}, tokenText={}", location, original);
         if (tryAddTableAnchor(row, rowIndex, colIndex, cell, original, context, warningCollector, location, state)) {
             return;
         }
@@ -197,7 +198,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
 
         List<Map<String, Object>> rows = TokenResolver.toTableRows(resolved);
         if (rows == null) {
-            log.warn("Invalid table structure for token {} at {}", tableAnchorToken, location);
+            log.warn("tryAddTableAnchor() - invalidTableStructure: token={}, location={}", tableAnchorToken, location);
             warningCollector.add(
                 "TABLE_TOKEN_INVALID",
                 "Table token has invalid structure: " + tableAnchorToken,
@@ -214,7 +215,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
             );
         }
 
-        log.info("Found table token {} with {} rows at {}", tableAnchorToken, rows.size(), location);
+        log.info("tryAddTableAnchor() - tableTokenFound: token={}, rowCount={}, location={}", tableAnchorToken, rows.size(), location);
         state.tableTokensFound++;
         state.anchors.add(new PoiTableAnchor(
             rowIndex,
@@ -234,7 +235,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         }
         String formula = cell.getCellFormula();
         if (TokenResolver.hasTokens(formula)) {
-            log.info("Skipping formula token at {}: {}", location, formula);
+            log.info("isFormulaTokenCell() - formulaTokenSkipped: location={}, formula={}", location, formula);
             warningCollector.add(
                 "FORMULA_TOKEN_SKIPPED",
                 "Formula contains token and was not modified",
@@ -255,37 +256,37 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     @Override
     public void recalculateFormulas(GenerateOptions options) {
         if (!options.recalculateFormulas()) {
-            log.info("Formula recalculation skipped as per options");
+            log.info("recalculateFormulas() - end: recalculated=false");
             return;
         }
-        log.info("Recalculating all formulas in workbook");
+        log.info("recalculateFormulas() - start: recalculated=true");
         FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
         evaluator.evaluateAll();
-        log.info("Formula recalculation completed");
+        log.info("recalculateFormulas() - end: recalculated=true");
     }
 
     @Override
     public byte[] serialize() {
-        log.info("Serializing POI workbook");
+        log.info("serialize() - start");
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             workbook.write(outputStream);
             byte[] result = outputStream.toByteArray();
-            log.info("Successfully serialized POI workbook: {} bytes", result.length);
+            log.info("serialize() - end: bytesLength={}", result.length);
             return result;
         } catch (Exception e) {
-            log.error("Failed to serialize XLS/XLSX document", e);
+            log.error("serialize() - end with error", e);
             throw new TemplateReadWriteException("Failed to serialize XLS/XLSX document", e);
         }
     }
 
     @Override
     public void close() {
-        log.info("Closing POI workbook processor");
+        log.info("close() - start");
         try {
             workbook.close();
-            log.info("POI workbook closed successfully");
+            log.info("close() - end: closed=true");
         } catch (Exception e) {
-            log.warn("Error closing POI workbook", e);
+            log.warn("close() - end with warning: failedToClose=true", e);
         }
     }
 
@@ -303,11 +304,11 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         if (exactToken != null && !TokenResolver.isItemOrIndexToken(exactToken)) {
             Object resolved = TokenResolver.resolvePath(context, exactToken);
             if (resolved == null) {
-                log.info("Handling missing exact token {} at {}", exactToken, location);
+                log.info("applyTokenToCell() - missingExactToken: token={}, location={}", exactToken, location);
                 handleMissingExactToken(cell, exactToken, policy, warningCollector, location, options);
                 return;
             }
-            log.info("Writing resolved value for token {} at {}: {}", exactToken, location, resolved);
+            log.info("applyTokenToCell() - exactTokenResolved: token={}, location={}, value={}", exactToken, location, resolved);
             writeValueToCell(cell, resolved, options.zoneId());
             return;
         }
@@ -322,7 +323,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         );
 
         if (resolvedText.changed()) {
-            log.info("Updating cell {} with resolved text: {} -> {}",
+            log.info("applyTokenToCell() - inlineTokenResolved: location={}, from={}, to={}",
                 location, original, resolvedText.value());
             cell.setCellType(CellType.STRING);
             cell.setCellValue(resolvedText.value());
@@ -340,10 +341,10 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         Row anchorRow = getOrCreateRow(sheet, anchor.rowIndex());
         Cell anchorCell = getOrCreateCell(anchorRow, anchor.colIndex());
 
-        log.info("Inserting table '{}' at {} with {} rows", anchor.token(), location, rows.size());
+        log.info("insertTableAtAnchor() - start: token={}, location={}, rowCount={}", anchor.token(), location, rows.size());
 
         if (rows.isEmpty()) {
-            log.warn("Empty table token {} at {}", anchor.token(), location);
+            log.warn("insertTableAtAnchor() - emptyTable: token={}, location={}", anchor.token(), location);
             warningCollector.add("TABLE_TOKEN_EMPTY", "Table token has no rows: " + anchor.token(), location);
             applyBaselineStyle(anchorCell, anchor.baselineStyle());
             writeValueToCell(anchorCell, null, options.zoneId());
@@ -352,19 +353,19 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
 
         List<String> columns = buildColumnOrder(rows, anchor.configuredColumnOrder());
         if (columns.isEmpty()) {
-            log.warn("Table token with no columns {} at {}", anchor.token(), location);
+            log.warn("insertTableAtAnchor() - emptyColumns: token={}, location={}", anchor.token(), location);
             warningCollector.add("TABLE_TOKEN_INVALID", "Table token has no columns: " + anchor.token(), location);
             applyBaselineStyle(anchorCell, anchor.baselineStyle());
             writeValueToCell(anchorCell, null, options.zoneId());
             return;
         }
 
-        log.info("Table '{}' structure: {} columns [{}], {} rows",
+        log.info("insertTableAtAnchor() - structure: token={}, columnCount={}, columns={}, rowCount={}",
             anchor.token(), columns.size(), String.join(",", columns), rows.size());
 
         int dataRowCount = rows.size();
         if (dataRowCount > 0 && anchor.rowIndex() + 1 <= sheet.getLastRowNum()) {
-            log.info("Shifting {} rows starting from row {}", dataRowCount, anchor.rowIndex() + 1);
+            log.info("insertTableAtAnchor() - shiftRows: shiftCount={}, startRow={}", dataRowCount, anchor.rowIndex() + 1);
             sheet.shiftRows(anchor.rowIndex() + 1, sheet.getLastRowNum(), dataRowCount, true, false);
         }
 
@@ -392,7 +393,8 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         }
 
         autoResizeTableColumns(sheet, anchor.colIndex(), columns, rows);
-        log.info("Completed table insertion for '{}' at {}", anchor.token(), location);
+        log.info("insertTableAtAnchor() - end: token={}, location={}, columnCount={}, rowCount={}",
+            anchor.token(), location, columns.size(), rows.size());
     }
 
     private void handleMissingExactToken(
@@ -403,22 +405,23 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         String location,
         GenerateOptions options
     ) {
-        log.info("Handling missing token '{}' with policy {} at {}", token, policy, location);
+        log.info("handleMissingExactToken() - start: token={}, policy={}, location={}", token, policy, location);
         switch (policy) {
             case EMPTY_AND_LOG -> {
-                log.info("Setting empty value for missing token {} at {}", token, location);
+                log.info("handleMissingExactToken() - action: setBlank, token={}, location={}", token, location);
                 warningCollector.add("MISSING_TOKEN", "Token not found: " + token, location);
                 writeValueToCell(cell, null, options.zoneId());
             }
             case LEAVE_TOKEN -> {
-                log.info("Leaving original token {} unchanged at {}", token, location);
+                log.info("handleMissingExactToken() - action: leaveToken, token={}, location={}", token, location);
                 // no-op
             }
             case FAIL_FAST -> {
-                log.error("Failing fast for missing token {} at {}", token, location);
+                log.error("handleMissingExactToken() - action: failFast, token={}, location={}", token, location);
                 throw new TemplateDataBindingException("Token not found: " + token + " at " + location);
             }
         }
+        log.info("handleMissingExactToken() - end: token={}, policy={}, location={}", token, policy, location);
     }
 
     private void autoResizeTableColumns(
@@ -427,7 +430,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         List<String> columns,
         List<Map<String, Object>> rows
     ) {
-        log.info("Auto-resizing {} columns starting from index {}", columns.size(), startColumnIndex);
+        log.info("autoResizeTableColumns() - start: columnCount={}, startColumnIndex={}", columns.size(), startColumnIndex);
         for (int c = 0; c < columns.size(); c++) {
             String column = columns.get(c);
             int maxLength = column.length();
@@ -439,14 +442,15 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
             int targetColumn = startColumnIndex + c;
             int currentWidth = sheet.getColumnWidth(targetColumn);
 
-            log.info("Column '{}': max content length={}, current width={}, desired width={}",
+            log.info("autoResizeTableColumns() - evaluateColumn: column={}, maxContentLength={}, currentWidth={}, desiredWidth={}",
                 column, maxLength, currentWidth, desiredWidth);
 
             if (currentWidth < desiredWidth) {
-                log.info("Resizing column '{}' from {} to {}", column, currentWidth, desiredWidth);
+                log.info("autoResizeTableColumns() - resizeColumn: column={}, from={}, to={}", column, currentWidth, desiredWidth);
                 sheet.setColumnWidth(targetColumn, desiredWidth);
             }
         }
+        log.info("autoResizeTableColumns() - end: columnCount={}", columns.size());
     }
 
     private int calculateDesiredWidth(int maxLength) {
@@ -535,7 +539,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     private Row getOrCreateRow(Sheet sheet, int rowIndex) {
         Row row = sheet.getRow(rowIndex);
         if (row == null) {
-            log.info("Creating new row at index {}", rowIndex);
+            log.info("getOrCreateRow() - create: rowIndex={}", rowIndex);
             row = sheet.createRow(rowIndex);
         }
         return row;
@@ -544,7 +548,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     private Cell getOrCreateCell(Row row, int colIndex) {
         Cell cell = row.getCell(colIndex);
         if (cell == null) {
-            log.info("Creating new cell at column {}", colIndex);
+            log.info("getOrCreateCell() - create: columnIndex={}", colIndex);
             cell = row.createCell(colIndex);
         }
         return cell;

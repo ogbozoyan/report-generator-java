@@ -8,6 +8,7 @@ import com.template.reportgenerator.contract.TokenOccurrence;
 import com.template.reportgenerator.exception.TemplateReadWriteException;
 import com.template.reportgenerator.util.TokenResolver;
 import com.template.reportgenerator.util.WarningCollector;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
@@ -27,26 +28,37 @@ import java.util.Map;
 /**
  * DOCX processor with scalar replacement and table-token insertion.
  */
+@Slf4j
 public class DocxDocumentProcessor implements WorkbookProcessor {
 
     private final XWPFDocument document;
 
     public DocxDocumentProcessor(byte[] bytes) {
+        log.info("DocxDocumentProcessor() - start: bytesLength={}", bytes == null ? null : bytes.length);
         try {
             this.document = new XWPFDocument(new ByteArrayInputStream(bytes));
+            log.info("DocxDocumentProcessor() - end: paragraphs={}", this.document.getParagraphs().size());
         } catch (Exception e) {
+            log.error("DocxDocumentProcessor() - end with error: bytesLength={}", bytes == null ? null : bytes.length, e);
             throw new TemplateReadWriteException("Failed to read DOCX template", e);
         }
     }
 
     @Override
     public TemplateScanResult scan() {
-        return new TemplateScanResult(List.of(), List.<TokenOccurrence>of());
+        log.info("scan() - start");
+        TemplateScanResult result = new TemplateScanResult(List.of(), List.<TokenOccurrence>of());
+        log.info("scan() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
+        return result;
     }
 
     @Override
     public void applyTemplateTokens(Map<String, Object> templateTokens, GenerateOptions options, WarningCollector warningCollector) {
+        log.info("applyTemplateTokens() - start: tokenCount={}, paragraphs={}",
+            templateTokens == null ? null : templateTokens.size(),
+            document.getParagraphs().size());
         List<DocxTableAnchor> anchors = new ArrayList<>();
+        int scalarReplacements = 0;
 
         for (XWPFParagraph paragraph : document.getParagraphs()) {
             String text = paragraph.getText();
@@ -78,6 +90,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
             );
             if (resolvedText.changed()) {
                 replaceParagraphText(paragraph, resolvedText.value());
+                scalarReplacements++;
             }
         }
 
@@ -85,32 +98,42 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
         for (DocxTableAnchor anchor : anchors) {
             insertTableAtParagraph(anchor, warningCollector);
         }
+        log.info("applyTemplateTokens() - end: tableInsertions={}, scalarReplacements={}", anchors.size(), scalarReplacements);
     }
 
     @Override
     public byte[] serialize() {
+        log.info("serialize() - start");
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             document.write(outputStream);
-            return outputStream.toByteArray();
+            byte[] bytes = outputStream.toByteArray();
+            log.info("serialize() - end: bytesLength={}", bytes.length);
+            return bytes;
         } catch (Exception e) {
+            log.error("serialize() - end with error", e);
             throw new TemplateReadWriteException("Failed to serialize DOCX document", e);
         }
     }
 
     @Override
     public void close() {
+        log.info("close() - start");
         try {
             document.close();
+            log.info("close() - end: closed=true");
         } catch (Exception ignored) {
+            log.warn("close() - end with warning: failedToClose=true");
             // no-op
         }
     }
 
     private void insertTableAtParagraph(DocxTableAnchor anchor, WarningCollector warningCollector) {
+        log.info("insertTableAtParagraph() - start: token={}, rowCount={}", anchor.token(), anchor.rows().size());
         List<Map<String, Object>> rows = anchor.rows();
         if (rows.isEmpty()) {
             warningCollector.add("TABLE_TOKEN_EMPTY", "Table token has no rows: " + anchor.token(), "docx:paragraph");
             replaceParagraphText(anchor.paragraph(), "");
+            log.info("insertTableAtParagraph() - end: inserted=false, reason=emptyRows");
             return;
         }
 
@@ -118,6 +141,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
         if (columns.isEmpty()) {
             warningCollector.add("TABLE_TOKEN_INVALID", "Table token has no columns: " + anchor.token(), "docx:paragraph");
             replaceParagraphText(anchor.paragraph(), "");
+            log.info("insertTableAtParagraph() - end: inserted=false, reason=emptyColumns");
             return;
         }
 
@@ -129,6 +153,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
         if (paragraphPos >= 0) {
             document.removeBodyElement(paragraphPos);
         }
+        log.info("insertTableAtParagraph() - end: inserted=true, columns={}", columns.size());
     }
 
     private void writeTable(XWPFTable table, List<String> columns, List<Map<String, Object>> rows) {

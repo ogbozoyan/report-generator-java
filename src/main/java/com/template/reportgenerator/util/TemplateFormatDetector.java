@@ -32,65 +32,24 @@ public class TemplateFormatDetector {
     private static final int OLE2_SIGNATURE_3 = 0xE0;
 
     public static TemplateFormat detectRequestedOutputFormat(TemplateInput input) {
-        if (input.contentType() != null) {
-            String contentType = input.contentType().toLowerCase(Locale.ROOT);
-            if (contentType.contains("spreadsheetml")) {
-                return TemplateFormat.XLSX;
-            }
-            if (contentType.contains("ms-excel")) {
-                return TemplateFormat.XLS;
-            }
-            if (contentType.contains("oasis.opendocument.spreadsheet")) {
-                return TemplateFormat.ODS;
-            }
-            if (contentType.contains("msword")) {
-                return TemplateFormat.DOC;
-            }
-            if (contentType.contains("wordprocessingml.document")) {
-                return TemplateFormat.DOCX;
-            }
-            if (contentType.contains("oasis.opendocument.text")) {
-                return TemplateFormat.ODT;
-            }
-            if (contentType.contains("application/pdf")) {
-                return TemplateFormat.PDF;
-            }
+        log.info("detectRequestedOutputFormat() - start: fileName={}, contentType={}",
+            input == null ? null : input.fileName(),
+            input == null ? null : input.contentType());
+        TemplateFormat result = detectByContentType(input == null ? null : input.contentType());
+        if (result == null) {
+            result = detectByFileName(input == null ? null : input.fileName());
         }
-
-        if (input.fileName() != null) {
-            String name = input.fileName().toLowerCase(Locale.ROOT);
-            if (name.endsWith(".xlsx")) {
-                return TemplateFormat.XLSX;
-            }
-            if (name.endsWith(".xls")) {
-                return TemplateFormat.XLS;
-            }
-            if (name.endsWith(".ods")) {
-                return TemplateFormat.ODS;
-            }
-            if (name.endsWith(".doc")) {
-                return TemplateFormat.DOC;
-            }
-            if (name.endsWith(".docx")) {
-                return TemplateFormat.DOCX;
-            }
-            if (name.endsWith(".odt")) {
-                return TemplateFormat.ODT;
-            }
-            if (name.endsWith(".pdf")) {
-                return TemplateFormat.PDF;
-            }
-        }
-
-
-        return null;
+        log.info("detectRequestedOutputFormat() - end: format={}", result);
+        return result;
     }
 
     public static TemplateFormat detectFormat(TemplateInput input) {
-        log.debug("detectFormat() - start: input {}", input);
+        log.info("detectFormat() - start: fileName={}, contentType={}, bytesLength={}",
+            input == null ? null : input.fileName(),
+            input == null ? null : input.contentType(),
+            input == null || input.bytes() == null ? null : input.bytes().length);
         byte[] bytes = input.bytes();
         if (bytes.length >= 4) {
-            log.debug("detectFormat() - bytes length: {}", bytes.length);
             int b0 = bytes[0] & 0xFF;
             int b1 = bytes[1] & 0xFF;
             int b2 = bytes[2] & 0xFF;
@@ -100,6 +59,7 @@ public class TemplateFormatDetector {
             if (b0 == ZIP_SIGNATURE_0 && b1 == ZIP_SIGNATURE_1 && b2 == ZIP_SIGNATURE_2 && b3 == ZIP_SIGNATURE_3) {
                 TemplateFormat zipFormat = detectZipContainer(bytes);
                 if (zipFormat != null) {
+                    log.info("detectFormat() - end: format={}", zipFormat);
                     return zipFormat;
                 }
             }
@@ -108,71 +68,35 @@ public class TemplateFormatDetector {
             if (b0 == OLE2_SIGNATURE_0 && b1 == OLE2_SIGNATURE_1 && b2 == OLE2_SIGNATURE_2 && b3 == OLE2_SIGNATURE_3) {
                 TemplateFormat ole2Format = detectOle2Container(bytes, input);
                 if (ole2Format != null) {
+                    log.info("detectFormat() - end: format={}", ole2Format);
                     return ole2Format;
                 }
             }
 
             // PDF signature (%PDF)
             if (b0 == 0x25 && b1 == 0x50 && b2 == 0x44 && b3 == 0x46) {
+                log.info("detectFormat() - end: format={}", TemplateFormat.PDF);
                 return TemplateFormat.PDF;
             }
         }
 
-        if (input.contentType() != null) {
-            log.debug("detectFormat() - contentType: {}", input.contentType());
-            String contentType = input.contentType().toLowerCase(Locale.ROOT);
-            if (contentType.contains("spreadsheetml")) {
-                return TemplateFormat.XLSX;
-            }
-            if (contentType.contains("ms-excel")) {
-                return TemplateFormat.XLS;
-            }
-            if (contentType.contains("oasis.opendocument.spreadsheet")) {
-                return TemplateFormat.ODS;
-            }
-            if (contentType.contains("msword")) {
-                return TemplateFormat.DOC;
-            }
-            if (contentType.contains("wordprocessingml.document")) {
-                return TemplateFormat.DOCX;
-            }
-            if (contentType.contains("oasis.opendocument.text")) {
-                return TemplateFormat.ODT;
-            }
-            if (contentType.contains("application/pdf")) {
-                return TemplateFormat.PDF;
-            }
+        TemplateFormat contentTypeFormat = detectByContentType(input.contentType());
+        if (contentTypeFormat != null) {
+            log.info("detectFormat() - end: format={}", contentTypeFormat);
+            return contentTypeFormat;
         }
-        if (input.fileName() != null) {
-            log.debug("detectFormat() - fileName: {}", input.fileName());
-            String name = input.fileName().toLowerCase(Locale.ROOT);
-            if (name.endsWith(".xlsx")) {
-                return TemplateFormat.XLSX;
-            }
-            if (name.endsWith(".xls")) {
-                return TemplateFormat.XLS;
-            }
-            if (name.endsWith(".ods")) {
-                return TemplateFormat.ODS;
-            }
-            if (name.endsWith(".doc")) {
-                return TemplateFormat.DOC;
-            }
-            if (name.endsWith(".docx")) {
-                return TemplateFormat.DOCX;
-            }
-            if (name.endsWith(".odt")) {
-                return TemplateFormat.ODT;
-            }
-            if (name.endsWith(".pdf")) {
-                return TemplateFormat.PDF;
-            }
+        TemplateFormat fileNameFormat = detectByFileName(input.fileName());
+        if (fileNameFormat != null) {
+            log.info("detectFormat() - end: format={}", fileNameFormat);
+            return fileNameFormat;
         }
 
+        log.error("detectFormat() - end with error: unsupportedFormat, fileName={}", input.fileName());
         throw new UnsupportedTemplateFormatException("Unsupported template format for file: " + input.fileName());
     }
 
     private static TemplateFormat detectZipContainer(byte[] bytes) {
+        log.info("detectZipContainer() - start: bytesLength={}", bytes == null ? null : bytes.length);
         boolean hasWordFolder = false;
         boolean hasExcelFolder = false;
         boolean hasOdfSpreadsheetMime = false;
@@ -203,46 +127,119 @@ public class TemplateFormatDetector {
                 }
             }
         } catch (Exception ignored) {
+            log.warn("detectZipContainer() - end with warning: parseFailed=true");
             return null;
         }
 
         if (hasOdfSpreadsheetMime) {
+            log.info("detectZipContainer() - end: format={}", TemplateFormat.ODS);
             return TemplateFormat.ODS;
         }
         if (hasOdfTextMime) {
+            log.info("detectZipContainer() - end: format={}", TemplateFormat.ODT);
             return TemplateFormat.ODT;
         }
         if (hasWordFolder) {
+            log.info("detectZipContainer() - end: format={}", TemplateFormat.DOCX);
             return TemplateFormat.DOCX;
         }
         if (hasExcelFolder) {
+            log.info("detectZipContainer() - end: format={}", TemplateFormat.XLSX);
             return TemplateFormat.XLSX;
         }
+        log.info("detectZipContainer() - end: format=unknown");
         return null;
     }
 
     private static TemplateFormat detectOle2Container(byte[] bytes, TemplateInput input) {
+        log.info("detectOle2Container() - start: bytesLength={}, fileName={}, contentType={}",
+            bytes == null ? null : bytes.length,
+            input == null ? null : input.fileName(),
+            input == null ? null : input.contentType());
         try (POIFSFileSystem fileSystem = new POIFSFileSystem(new ByteArrayInputStream(bytes))) {
             DirectoryNode root = fileSystem.getRoot();
             if (root.hasEntry("WordDocument")) {
+                log.info("detectOle2Container() - end: format={}", TemplateFormat.DOC);
                 return TemplateFormat.DOC;
             }
             if (root.hasEntry("Workbook") || root.hasEntry("Book")) {
+                log.info("detectOle2Container() - end: format={}", TemplateFormat.XLS);
                 return TemplateFormat.XLS;
             }
         } catch (Exception ignored) {
-            // fallback to metadata hints below
+            log.warn("detectOle2Container() - warning: failedToInspectOle2=true");
         }
 
         if (hasDocHint(input)) {
+            log.info("detectOle2Container() - end: format={}", TemplateFormat.DOC);
             return TemplateFormat.DOC;
         }
         if (hasXlsHint(input)) {
+            log.info("detectOle2Container() - end: format={}", TemplateFormat.XLS);
             return TemplateFormat.XLS;
         }
 
         // keep backward-compatible default for unknown OLE2 containers
+        log.info("detectOle2Container() - end: format={}", TemplateFormat.XLS);
         return TemplateFormat.XLS;
+    }
+
+    private static TemplateFormat detectByContentType(String contentType) {
+        if (contentType == null) {
+            return null;
+        }
+        String lower = contentType.toLowerCase(Locale.ROOT);
+        if (lower.contains("spreadsheetml")) {
+            return TemplateFormat.XLSX;
+        }
+        if (lower.contains("ms-excel")) {
+            return TemplateFormat.XLS;
+        }
+        if (lower.contains("oasis.opendocument.spreadsheet")) {
+            return TemplateFormat.ODS;
+        }
+        if (lower.contains("msword")) {
+            return TemplateFormat.DOC;
+        }
+        if (lower.contains("wordprocessingml.document")) {
+            return TemplateFormat.DOCX;
+        }
+        if (lower.contains("oasis.opendocument.text")) {
+            return TemplateFormat.ODT;
+        }
+        if (lower.contains("application/pdf")) {
+            return TemplateFormat.PDF;
+        }
+        return null;
+    }
+
+    private static TemplateFormat detectByFileName(String fileName) {
+        if (fileName == null) {
+            return null;
+        }
+        String lower = fileName.toLowerCase(Locale.ROOT);
+        if (lower.endsWith(".xlsx")) {
+            return TemplateFormat.XLSX;
+        }
+        if (lower.endsWith(".xls")) {
+            return TemplateFormat.XLS;
+        }
+        if (lower.endsWith(".ods")) {
+            return TemplateFormat.ODS;
+        }
+        if (lower.endsWith(".doc")) {
+            return TemplateFormat.DOC;
+        }
+        if (lower.endsWith(".docx")) {
+            return TemplateFormat.DOCX;
+        }
+        if (lower.endsWith(".odt")) {
+            return TemplateFormat.ODT;
+        }
+        if (lower.endsWith(".pdf")) {
+            return TemplateFormat.PDF;
+        }
+        return null;
     }
 
     private static boolean hasDocHint(TemplateInput input) {

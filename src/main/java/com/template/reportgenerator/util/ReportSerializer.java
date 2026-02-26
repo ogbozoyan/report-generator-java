@@ -4,12 +4,14 @@ import com.template.reportgenerator.contract.GeneratedReport;
 import com.template.reportgenerator.contract.TemplateFormat;
 import com.template.reportgenerator.contract.TemplateInput;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 /**
  * Serializes generation result with normalized filename and content type.
  */
 @UtilityClass
+@Slf4j
 public class ReportSerializer {
 
     public static GeneratedReport serialize(
@@ -18,9 +20,17 @@ public class ReportSerializer {
         byte[] bytes,
         WarningCollector warningCollector
     ) {
+        log.info("serialize() - start: inputFileName={}, format={}, bytesLength={}, warnings={}",
+            input == null ? null : input.fileName(),
+            format,
+            bytes == null ? null : bytes.length,
+            warningCollector == null ? null : warningCollector.asList().size());
         String fileName = normalizeFileName(input.fileName(), format);
         String contentType = format.contentType();
-        return new GeneratedReport(fileName, contentType, bytes, warningCollector.asList());
+        GeneratedReport report = new GeneratedReport(fileName, contentType, bytes, warningCollector.asList());
+        log.info("serialize() - end: outputFileName={}, contentType={}, warnings={}",
+            report.fileName(), report.contentType(), report.warnings().size());
+        return report;
     }
 
     private static String normalizeFileName(String fileName, TemplateFormat format) {

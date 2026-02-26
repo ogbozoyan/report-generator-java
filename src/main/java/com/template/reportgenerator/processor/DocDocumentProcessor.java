@@ -28,21 +28,32 @@ public class DocDocumentProcessor implements WorkbookProcessor {
     private final HWPFDocument document;
 
     public DocDocumentProcessor(byte[] bytes) {
+        log.info("DocDocumentProcessor() - start: bytesLength={}", bytes == null ? null : bytes.length);
         try {
             this.document = new HWPFDocument(new ByteArrayInputStream(bytes));
+            log.info("DocDocumentProcessor() - end: paragraphs={}", this.document.getRange().numParagraphs());
         } catch (Exception e) {
+            log.error("DocDocumentProcessor() - end with error: bytesLength={}", bytes == null ? null : bytes.length, e);
             throw new TemplateReadWriteException("Failed to read DOC template", e);
         }
     }
 
     @Override
     public TemplateScanResult scan() {
-        return new TemplateScanResult(List.of(), List.<TokenOccurrence>of());
+        log.info("scan() - start");
+        TemplateScanResult result = new TemplateScanResult(List.of(), List.<TokenOccurrence>of());
+        log.info("scan() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
+        return result;
     }
 
     @Override
     public void applyTemplateTokens(Map<String, Object> templateToken, GenerateOptions options, WarningCollector warningCollector) {
+        log.info("applyTemplateTokens() - start: tokenCount={}, missingValuePolicy={}",
+            templateToken == null ? null : templateToken.size(),
+            options == null ? null : options.missingValuePolicy());
         Range range = document.getRange();
+        int tableInsertions = 0;
+        int scalarReplacements = 0;
 
         // Replace exact paragraph placeholders with table blocks.
         for (int i = 0; i < range.numParagraphs(); i++) {
@@ -76,6 +87,7 @@ public class DocDocumentProcessor implements WorkbookProcessor {
             }
 
             paragraph.replaceText(paragraphText, renderTableAsDocText(rows));
+            tableInsertions++;
         }
 
         // token replacements for plain tokens.
@@ -86,26 +98,33 @@ public class DocDocumentProcessor implements WorkbookProcessor {
                 continue;
             }
             range.replaceText(token, value == null ? "" : String.valueOf(value));
+            scalarReplacements++;
         }
+        log.info("applyTemplateTokens() - end: tableInsertions={}, scalarReplacements={}", tableInsertions, scalarReplacements);
     }
 
     @Override
     public byte[] serialize() {
+        log.info("serialize() - start");
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             document.write(output);
-            return output.toByteArray();
+            byte[] bytes = output.toByteArray();
+            log.info("serialize() - end: bytesLength={}", bytes.length);
+            return bytes;
         } catch (Exception e) {
-            log.debug("Failed to serialize DOC document", e);
+            log.error("serialize() - end with error", e);
             throw new TemplateReadWriteException("Failed to serialize DOC document", e);
         }
     }
 
     @Override
     public void close() {
+        log.info("close() - start");
         try {
             document.close();
+            log.info("close() - end: closed=true");
         } catch (Exception e) {
-            log.debug("Failed to close DOC document", e);
+            log.warn("close() - end with warning: failedToClose=true", e);
             // no-op
         }
     }
