@@ -31,6 +31,12 @@ public class TemplateScanner {
     private static final Pattern BLOCK_PATTERN = Pattern.compile("^\\[\\[\\s*(TABLE_START|TABLE_END|COL_START|COL_END)\\s*:\\s*([a-zA-Z0-9_.-]+)\\s*]]$");
     private static final Pattern TOKEN_PATTERN = TokenResolver.TOKEN_PATTERN;
 
+    /**
+     * Scans POI workbook for legacy block markers and scalar token occurrences.
+     *
+     * @param workbook workbook to scan
+     * @return scan result
+     */
     public static TemplateScanResult scanPoi(Workbook workbook) {
         log.info("scanPoi() - start: sheetCount={}", workbook == null ? null : workbook.getNumberOfSheets());
         List<BlockMarker> markers = new ArrayList<>();
@@ -55,6 +61,14 @@ public class TemplateScanner {
         return result;
     }
 
+    /**
+     * Scans ODS document for markers and scalar tokens.
+     *
+     * <p>Retained for compatibility with legacy ODS scanner path.
+     *
+     * @param document ODS document
+     * @return scan result
+     */
     public static TemplateScanResult scanOds(OdfDocument document) {
         log.info("scanOds() - start: tableCount={}", document == null ? null : document.getTableList(false).size());
         List<BlockMarker> markers = new ArrayList<>();
@@ -85,6 +99,12 @@ public class TemplateScanner {
         return result;
     }
 
+    /**
+     * Heuristically detects used ODS column range to avoid full-grid traversal.
+     *
+     * @param table ODS table
+     * @return detected column bound
+     */
     private int detectUsedColumns(OdfTable table) {
         int probeLimit = Math.min(table.getColumnCount(), 1024);
         int maxDetected = 0;
@@ -107,6 +127,13 @@ public class TemplateScanner {
         return Math.max(maxDetected, Math.min(table.getColumnCount(), 128));
     }
 
+    /**
+     * Heuristically detects used ODS row range to avoid full-grid traversal.
+     *
+     * @param table   ODS table
+     * @param maxCols max columns to probe
+     * @return detected row bound
+     */
     private int detectUsedRows(OdfTable table, int maxCols) {
         int probeLimit = Math.min(table.getRowCount(), 20000);
         int maxDetected = 0;
@@ -137,6 +164,14 @@ public class TemplateScanner {
         return Math.max(maxDetected, Math.min(table.getRowCount(), 512));
     }
 
+    /**
+     * Collects markers/tokens from single text node.
+     *
+     * @param text source text
+     * @param position token position
+     * @param markers destination marker list
+     * @param tokens destination token list
+     */
     private void collectFromText(
         String text,
         CellPosition position,
@@ -170,6 +205,12 @@ public class TemplateScanner {
         }
     }
 
+    /**
+     * Reads cell content as text for scanner purposes.
+     *
+     * @param cell source cell
+     * @return string content or {@code null}
+     */
     private String readCellAsText(Cell cell) {
         if (cell == null) {
             return null;

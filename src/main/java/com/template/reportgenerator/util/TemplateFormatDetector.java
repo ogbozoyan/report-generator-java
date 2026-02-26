@@ -31,6 +31,15 @@ public class TemplateFormatDetector {
     private static final int OLE2_SIGNATURE_2 = 0x11;
     private static final int OLE2_SIGNATURE_3 = 0xE0;
 
+    /**
+     * Detects requested output format from user-facing hints only.
+     *
+     * <p>This method intentionally does not inspect bytes and is used to resolve
+     * output format preference from file name/content type.
+     *
+     * @param input template input with fileName/contentType hints
+     * @return requested output format or {@code null} when no explicit hint is present
+     */
     public static TemplateFormat detectRequestedOutputFormat(TemplateInput input) {
         log.info("detectRequestedOutputFormat() - start: fileName={}, contentType={}",
             input == null ? null : input.fileName(),
@@ -43,6 +52,13 @@ public class TemplateFormatDetector {
         return result;
     }
 
+    /**
+     * Detects actual source format using magic bytes, container signatures and fallback hints.
+     *
+     * @param input template input with bytes and optional hints
+     * @return detected source format
+     * @throws UnsupportedTemplateFormatException when format cannot be detected
+     */
     public static TemplateFormat detectFormat(TemplateInput input) {
         log.info("detectFormat() - start: fileName={}, contentType={}, bytesLength={}",
             input == null ? null : input.fileName(),
@@ -95,6 +111,12 @@ public class TemplateFormatDetector {
         throw new UnsupportedTemplateFormatException("Unsupported template format for file: " + input.fileName());
     }
 
+    /**
+     * Detects ZIP-based formats by inspecting container entries.
+     *
+     * @param bytes source bytes with ZIP signature
+     * @return detected format or {@code null} when container cannot be recognized
+     */
     private static TemplateFormat detectZipContainer(byte[] bytes) {
         log.info("detectZipContainer() - start: bytesLength={}", bytes == null ? null : bytes.length);
         boolean hasWordFolder = false;
@@ -151,6 +173,13 @@ public class TemplateFormatDetector {
         return null;
     }
 
+    /**
+     * Detects OLE2 formats by root entries with fallback to metadata hints.
+     *
+     * @param bytes source OLE2 bytes
+     * @param input original input for filename/content-type hints
+     * @return detected format (defaults to {@link TemplateFormat#XLS} for backward compatibility)
+     */
     private static TemplateFormat detectOle2Container(byte[] bytes, TemplateInput input) {
         log.info("detectOle2Container() - start: bytesLength={}, fileName={}, contentType={}",
             bytes == null ? null : bytes.length,
@@ -184,6 +213,12 @@ public class TemplateFormatDetector {
         return TemplateFormat.XLS;
     }
 
+    /**
+     * Detects format by MIME content type hint.
+     *
+     * @param contentType MIME content type
+     * @return detected format or {@code null}
+     */
     private static TemplateFormat detectByContentType(String contentType) {
         if (contentType == null) {
             return null;
@@ -213,6 +248,12 @@ public class TemplateFormatDetector {
         return null;
     }
 
+    /**
+     * Detects format by file extension.
+     *
+     * @param fileName file name
+     * @return detected format or {@code null}
+     */
     private static TemplateFormat detectByFileName(String fileName) {
         if (fileName == null) {
             return null;
@@ -242,6 +283,12 @@ public class TemplateFormatDetector {
         return null;
     }
 
+    /**
+     * Checks whether input metadata hints DOC format.
+     *
+     * @param input template input
+     * @return {@code true} when metadata points to DOC
+     */
     private static boolean hasDocHint(TemplateInput input) {
         if (input.contentType() != null && input.contentType().toLowerCase(Locale.ROOT).contains("msword")) {
             return true;
@@ -249,6 +296,12 @@ public class TemplateFormatDetector {
         return input.fileName() != null && input.fileName().toLowerCase(Locale.ROOT).endsWith(".doc");
     }
 
+    /**
+     * Checks whether input metadata hints XLS format.
+     *
+     * @param input template input
+     * @return {@code true} when metadata points to XLS
+     */
     private static boolean hasXlsHint(TemplateInput input) {
         if (input.contentType() != null && input.contentType().toLowerCase(Locale.ROOT).contains("ms-excel")) {
             return true;

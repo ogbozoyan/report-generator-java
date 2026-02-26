@@ -28,12 +28,20 @@ import java.util.Map;
  * <p>
  * Implementation note: PDFs are immutable for in-place text editing in this service.
  * The processor extracts text, replaces scalar tokens, and writes a new text PDF.
+ *
+ * <p>Table tokens are rendered as ASCII grid text blocks.
  */
 @Slf4j
 public class PdfDocumentProcessor implements WorkbookProcessor {
 
     private String extractedText;
 
+    /**
+     * Creates processor and extracts text from source PDF.
+     *
+     * @param bytes source PDF bytes
+     * @throws TemplateReadWriteException when source PDF cannot be parsed
+     */
     public PdfDocumentProcessor(byte[] bytes) {
         log.info("PdfDocumentProcessor() - start: bytesLength={}", bytes == null ? null : bytes.length);
         try (PDDocument document = Loader.loadPDF(bytes)) {
@@ -48,6 +56,117 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
         }
     }
 
+    /**
+     * Splits text into logical paragraphs by newline boundaries.
+     *
+     * @param text source text
+     * @return paragraph lines preserving empty lines
+     */
+    private static List<String> splitParagraphs(String text) {
+        if (text == null || text.isEmpty()) {
+            return List.of("");
+        }
+        return List.of(text.replace("\r\n", "\n").replace('\r', '\n').split("\n", -1));
+    }
+
+    /**
+     * Wraps single line to fit page width in points.
+     *
+     * @param text source line
+     * @param font target font
+     * @param fontSize font size in points
+     * @param maxWidth max line width in points
+     * @return wrapped lines
+     * @throws Exception when font metrics cannot be evaluated
+     */
+    private static List<String> wrapLine(String text, PDType1Font font, float fontSize, float maxWidth) throws Exception {
+        if (text == null || text.isEmpty()) {
+            return List.of("");
+        }
+
+        List<String> lines = new ArrayList<>();
+        String[] words = text.split("\\s+");
+        StringBuilder current = new StringBuilder();
+
+        for (String word : words) {
+            String candidate = current.isEmpty() ? word : current + " " + word;
+            float width = font.getStringWidth(sanitizeForPdf(candidate)) / 1000f * fontSize;
+
+            if (width <= maxWidth) {
+                current.setLength(0);
+                current.append(candidate);
+                continue;
+            }
+
+            if (!current.isEmpty()) {
+                lines.add(current.toString());
+                current.setLength(0);
+            }
+
+            // hard-wrap very long words
+            String remainder = word;
+            while (!remainder.isEmpty()) {
+                int splitAt = findSplitIndex(remainder, font, fontSize, maxWidth);
+                lines.add(remainder.substring(0, splitAt));
+                remainder = remainder.substring(splitAt);
+            }
+        }
+
+        if (!current.isEmpty()) {
+            lines.add(current.toString());
+        }
+        return lines;
+    }
+
+    /**
+     * Finds longest prefix that fits max width for hard-wrap scenario.
+     *
+     * @param text source text
+     * @param font target font
+     * @param fontSize font size
+     * @param maxWidth max width in points
+     * @return split index, always at least {@code 1}
+     * @throws Exception when font metrics cannot be evaluated
+     */
+    private static int findSplitIndex(String text, PDType1Font font, float fontSize, float maxWidth) throws Exception {
+        int split = Math.max(1, text.length());
+        while (split > 1) {
+            String candidate = sanitizeForPdf(text.substring(0, split));
+            float width = font.getStringWidth(candidate) / 1000f * fontSize;
+            if (width <= maxWidth) {
+                return split;
+            }
+            split--;
+        }
+        return 1;
+    }
+
+    /**
+     * Converts unsupported glyphs to printable ASCII subset.
+     *
+     * @param text source text
+     * @return sanitized text
+     */
+    private static String sanitizeForPdf(String text) {
+        StringBuilder sanitized = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            if (ch >= 32 && ch <= 126) {
+                sanitized.append(ch);
+            } else if (Character.isWhitespace(ch)) {
+                sanitized.append(' ');
+            } else {
+                sanitized.append('?');
+            }
+        }
+        return sanitized.toString();
+    }
+
+    /**
+     * Returns empty scan result because PDF path currently performs direct apply phase.
+     *
+     * @return empty scan result
+     */
     @Override
     public TemplateScanResult scan() {
         log.info("scan() - start");
@@ -56,6 +175,13 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
         return result;
     }
 
+    /**
+     * Applies token replacement to extracted text representation.
+     *
+     * @param templateToken    token map
+     * @param options          generation options
+     * @param warningCollector collector for non-fatal warnings
+     */
     @Override
     public void applyTemplateTokens(Map<String, Object> templateToken, GenerateOptions options, WarningCollector warningCollector) {
         log.info("applyTemplateTokens() - start: tokenCount={}, extractedTextLength={}",
@@ -65,6 +191,11 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
         log.info("applyTemplateTokens() - end: extractedTextLength={}", extractedText == null ? 0 : extractedText.length());
     }
 
+    /**
+     * Serializes processed text into a newly constructed PDF.
+     *
+     * @return generated PDF bytes
+     */
     @Override
     public byte[] serialize() {
         log.info("serialize() - start: extractedTextLength={}", extractedText == null ? 0 : extractedText.length());
@@ -126,80 +257,18 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
         }
     }
 
-    private static List<String> splitParagraphs(String text) {
-        if (text == null || text.isEmpty()) {
-            return List.of("");
-        }
-        return List.of(text.replace("\r\n", "\n").replace('\r', '\n').split("\n", -1));
-    }
-
-    private static List<String> wrapLine(String text, PDType1Font font, float fontSize, float maxWidth) throws Exception {
-        if (text == null || text.isEmpty()) {
-            return List.of("");
-        }
-
-        List<String> lines = new ArrayList<>();
-        String[] words = text.split("\\s+");
-        StringBuilder current = new StringBuilder();
-
-        for (String word : words) {
-            String candidate = current.isEmpty() ? word : current + " " + word;
-            float width = font.getStringWidth(sanitizeForPdf(candidate)) / 1000f * fontSize;
-
-            if (width <= maxWidth) {
-                current.setLength(0);
-                current.append(candidate);
-                continue;
-            }
-
-            if (!current.isEmpty()) {
-                lines.add(current.toString());
-                current.setLength(0);
-            }
-
-            // hard-wrap very long words
-            String remainder = word;
-            while (!remainder.isEmpty()) {
-                int splitAt = findSplitIndex(remainder, font, fontSize, maxWidth);
-                lines.add(remainder.substring(0, splitAt));
-                remainder = remainder.substring(splitAt);
-            }
-        }
-
-        if (!current.isEmpty()) {
-            lines.add(current.toString());
-        }
-        return lines;
-    }
-
-    private static int findSplitIndex(String text, PDType1Font font, float fontSize, float maxWidth) throws Exception {
-        int split = Math.max(1, text.length());
-        while (split > 1) {
-            String candidate = sanitizeForPdf(text.substring(0, split));
-            float width = font.getStringWidth(candidate) / 1000f * fontSize;
-            if (width <= maxWidth) {
-                return split;
-            }
-            split--;
-        }
-        return 1;
-    }
-
-    private static String sanitizeForPdf(String text) {
-        StringBuilder sanitized = new StringBuilder(text.length());
-        for (int i = 0; i < text.length(); i++) {
-            char ch = text.charAt(i);
-            if (ch >= 32 && ch <= 126) {
-                sanitized.append(ch);
-            } else if (Character.isWhitespace(ch)) {
-                sanitized.append(' ');
-            } else {
-                sanitized.append('?');
-            }
-        }
-        return sanitized.toString();
-    }
-
+    /**
+     * Replaces scalar/table tokens in extracted text representation.
+     *
+     * <p>For exact-placeholder table tokens this method renders ASCII grid table and replaces
+     * whole line with rendered block.
+     *
+     * @param source extracted source text
+     * @param templateTokens token map
+     * @param options generation options
+     * @param warningCollector warning collector
+     * @return transformed text
+     */
     private String replaceTokensWithTables(
         String source,
         Map<String, Object> templateTokens,
@@ -259,6 +328,12 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
         return output;
     }
 
+    /**
+     * Renders rows as ASCII grid table.
+     *
+     * @param rows normalized table rows
+     * @return rendered table text
+     */
     private String renderAsciiTable(List<Map<String, Object>> rows) {
         List<String> columns = buildColumnOrder(rows);
         int[] widths = new int[columns.size()];
@@ -291,6 +366,12 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
         return sb.toString();
     }
 
+    /**
+     * Builds separator line for ASCII table.
+     *
+     * @param widths per-column widths
+     * @return separator line
+     */
     private String buildSeparator(int[] widths) {
         StringBuilder sb = new StringBuilder();
         for (int width : widths) {
@@ -302,6 +383,13 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
         return sb.toString();
     }
 
+    /**
+     * Builds padded row line for ASCII table.
+     *
+     * @param cells row cell values
+     * @param widths per-column widths
+     * @return row line
+     */
     private String buildRow(List<String> cells, int[] widths) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < cells.size(); i++) {
@@ -313,6 +401,13 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
         return sb.toString();
     }
 
+    /**
+     * Right-pads value to fixed length.
+     *
+     * @param value source value
+     * @param length target length
+     * @return padded string
+     */
     private String padRight(String value, int length) {
         String source = value == null ? "" : value;
         if (source.length() >= length) {
@@ -321,6 +416,12 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
         return source + " ".repeat(length - source.length());
     }
 
+    /**
+     * Builds stable column order: first-row keys, then new keys in encounter order.
+     *
+     * @param rows table rows
+     * @return ordered columns
+     */
     private List<String> buildColumnOrder(List<Map<String, Object>> rows) {
         LinkedHashSet<String> ordered = new LinkedHashSet<>();
         if (!rows.isEmpty()) {

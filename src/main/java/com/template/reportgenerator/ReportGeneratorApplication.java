@@ -27,6 +27,11 @@ import java.util.Map;
 @SpringBootApplication
 public class ReportGeneratorApplication {
 
+    /**
+     * Local manual runner for quick integration checks.
+     *
+     * @param args command-line arguments
+     */
     @SneakyThrows
     static void main(String[] args) {
 //        SpringApplication.run(ReportGeneratorApplication.class, args);
@@ -42,6 +47,13 @@ public class ReportGeneratorApplication {
         }
     }
 
+    /**
+     * Generates DOCX sample report used for local smoke testing.
+     *
+     * @param service report generator service
+     * @return generated report
+     * @throws IOException when template/result file I/O fails
+     */
     private static GeneratedReport docx(ReportGeneratorService service) throws IOException {
         String fileName = "DOC1.docx";
         String resultFileName = "DOC1_result.docx";
@@ -92,6 +104,13 @@ public class ReportGeneratorApplication {
         return report;
     }
 
+    /**
+     * Generates XLSX sample report used for local smoke testing.
+     *
+     * @param service report generator service
+     * @return generated report
+     * @throws IOException when template/result file I/O fails
+     */
     private static @NonNull GeneratedReport xlsx(ReportGeneratorService service) throws IOException {
         byte[] templateBytes = Files.readAllBytes(Path.of("/Users/onbozoyan/Downloads/report-generator/TABLE_BOOK.xlsx"));
 

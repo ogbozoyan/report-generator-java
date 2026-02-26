@@ -21,13 +21,29 @@ import java.util.regex.Pattern;
 @UtilityClass
 public class TokenResolver {
 
+    /**
+     * Pattern for token occurrence detection.
+     */
     public static final Pattern TOKEN_PATTERN = Pattern.compile("\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*}}");
+    /** Pattern for exact placeholder detection (whole value is one token). */
     public static final Pattern EXACT_TOKEN_PATTERN = Pattern.compile("^\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*}}$");
 
+    /**
+     * Checks whether string contains at least one token expression.
+     *
+     * @param value source text
+     * @return {@code true} when token is present
+     */
     public static boolean hasTokens(String value) {
         return value != null && TOKEN_PATTERN.matcher(value).find();
     }
 
+    /**
+     * Returns token name if value is exact placeholder.
+     *
+     * @param value source value
+     * @return token name or {@code null}
+     */
     public static String getExactToken(String value) {
         if (value == null) {
             return null;
@@ -42,6 +58,9 @@ public class TokenResolver {
     /**
      * Returns token name when text contains exactly one {@code {{token}}} occurrence.
      * If there are multiple tokens, returns {@code null}.
+     *
+     * @param value source value
+     * @return single token name or {@code null}
      */
     public static String getSingleToken(String value) {
         if (value == null) {
@@ -58,6 +77,20 @@ public class TokenResolver {
         return token;
     }
 
+    /**
+     * Resolves token expressions in free-form text.
+     *
+     * <p>Missing token behavior is controlled by {@link MissingValuePolicy}. Table values are not
+     * expanded inline and produce warning instead.
+     *
+     * @param text source text
+     * @param context token context
+     * @param policy missing token policy
+     * @param warningCollector warning collector
+     * @param location diagnostic location
+     * @param allowItemTokens whether {@code index}/{@code item.*} placeholders are allowed
+     * @return resolved text and changed flag
+     */
     public static ResolvedText resolve(
         String text,
         Map<String, Object> context,
@@ -122,6 +155,15 @@ public class TokenResolver {
         return new ResolvedText(sb.toString(), changed);
     }
 
+    /**
+     * Resolves dotted path against token context.
+     *
+     * <p>Supports direct key lookup and dotted traversal through map/object getters.
+     *
+     * @param context root context
+     * @param path token path
+     * @return resolved value or {@code null}
+     */
     public static Object resolvePath(Map<String, Object> context, String path) {
         if (context == null || path == null || path.isBlank()) {
             return null;
@@ -143,6 +185,9 @@ public class TokenResolver {
 
     /**
      * Checks whether token value can be treated as table payload.
+     *
+     * @param value token value
+     * @return {@code true} when value is {@code List<Map<...>>}
      */
     public static boolean isTableValue(Object value) {
         return toTableRows(value) != null;
@@ -151,6 +196,7 @@ public class TokenResolver {
     /**
      * Safely converts a value to table rows.
      *
+     * @param value source token value
      * @return ordered rows or {@code null} when structure is not {@code List<Map<...>>}
      */
     public static List<Map<String, Object>> toTableRows(Object value) {
@@ -173,10 +219,23 @@ public class TokenResolver {
         return rows;
     }
 
+    /**
+     * Checks whether token is special context token used in legacy item expansion flow.
+     *
+     * @param token token name
+     * @return {@code true} for {@code index} or {@code item.*}
+     */
     public static boolean isItemOrIndexToken(String token) {
         return "index".equals(token) || token.startsWith("item.");
     }
 
+    /**
+     * Resolves child property from map key or JavaBean getter.
+     *
+     * @param current current object
+     * @param key property key
+     * @return child value or {@code null}
+     */
     private Object getChild(Object current, String key) {
         if (current instanceof Map<?, ?> map) {
             return map.get(key);
@@ -191,6 +250,12 @@ public class TokenResolver {
         }
     }
 
+    /**
+     * Converts resolved value to string replacement.
+     *
+     * @param value resolved value
+     * @return replacement text
+     */
     private String stringify(Object value) {
         if (value == null) {
             return "";

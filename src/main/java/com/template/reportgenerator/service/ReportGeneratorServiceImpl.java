@@ -22,7 +22,17 @@ import org.springframework.stereotype.Service;
 import java.util.Objects;
 
 /**
- * Default implementation of the report generation pipeline.
+ * Default implementation of report generation pipeline.
+ *
+ * <p>Lifecycle:
+ * <ol>
+ *     <li>detect source template format,</li>
+ *     <li>resolve requested output format,</li>
+ *     <li>validate conversion route,</li>
+ *     <li>apply tokens in format-specific processor,</li>
+ *     <li>recalculate formulas where supported,</li>
+ *     <li>optionally convert output bytes to requested format.</li>
+ * </ol>
  */
 @Service
 @Slf4j
@@ -30,11 +40,19 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
 
     private final DocumentFormatConverter formatConverter;
 
+    /**
+     * Creates service with default LibreOffice-based converter.
+     */
     public ReportGeneratorServiceImpl() {
         this(new LibreOfficeDocumentFormatConverter());
         log.info("ReportGeneratorServiceImpl() - end: converter={}", this.formatConverter.getClass().getSimpleName());
     }
 
+    /**
+     * Creates service with explicit output converter.
+     *
+     * @param formatConverter converter for post-processing output formats
+     */
     public ReportGeneratorServiceImpl(DocumentFormatConverter formatConverter) {
         log.info("ReportGeneratorServiceImpl(DocumentFormatConverter) - start: converterClass={}",
             formatConverter == null ? null : formatConverter.getClass().getName());
@@ -43,6 +61,18 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
             this.formatConverter.getClass().getName());
     }
 
+    /**
+     * Generates final report bytes from template and token data.
+     *
+     * <p>When {@code options} is {@code null}, {@link GenerateOptions#defaults()} is used.
+     *
+     * @param template template descriptor with source bytes
+     * @param data     unified token map
+     * @param options  generation options, nullable
+     * @return generated report with output metadata and warnings
+     * @throws IllegalArgumentException           when template or data is {@code null}
+     * @throws UnsupportedTemplateFormatException when input/output format route is not supported
+     */
     @Override
     public GeneratedReport generate(TemplateInput template, ReportData data, GenerateOptions options) {
         log.info("generate() - start: fileName={}, contentType={}, bytesLength={}, scalarTokens={}, requestedOptionsPresent={}",
@@ -89,6 +119,13 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
         }
     }
 
+    /**
+     * Creates format-specific processor for input template format.
+     *
+     * @param format detected source format
+     * @param bytes source template bytes
+     * @return processor implementation for the format
+     */
     private WorkbookProcessor createProcessor(TemplateFormat format, byte[] bytes) {
         log.info("createProcessor() - start: format={}, bytesLength={}", format, bytes == null ? null : bytes.length);
         WorkbookProcessor processor = switch (format) {
@@ -105,6 +142,11 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
         return processor;
     }
 
+    /**
+     * Validates that source format can be used as template input.
+     *
+     * @param sourceFormat detected source template format
+     */
     private void validateSourceTemplateFormat(TemplateFormat sourceFormat) {
         log.info("validateSourceTemplateFormat() - start: sourceFormat={}", sourceFormat);
         if (sourceFormat == TemplateFormat.ODS || sourceFormat == TemplateFormat.ODT) {
@@ -116,6 +158,19 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
         log.info("validateSourceTemplateFormat() - end: sourceFormat={}", sourceFormat);
     }
 
+    /**
+     * Validates requested output conversion route.
+     *
+     * <p>Allowed routes:
+     * <ul>
+     *     <li>same format (no conversion),</li>
+     *     <li>{@code XLS/XLSX -> ODS},</li>
+     *     <li>{@code DOC/DOCX -> ODT}.</li>
+     * </ul>
+     *
+     * @param sourceFormat source processing format
+     * @param outputFormat requested output format
+     */
     private void validateOutputFormatConversion(TemplateFormat sourceFormat, TemplateFormat outputFormat) {
         log.info("validateOutputFormatConversion() - start: sourceFormat={}, outputFormat={}", sourceFormat, outputFormat);
         if (sourceFormat == outputFormat) {
@@ -137,10 +192,22 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
         );
     }
 
+    /**
+     * Checks whether format belongs to spreadsheet family.
+     *
+     * @param format format to inspect
+     * @return {@code true} for {@code XLS}/{@code XLSX}
+     */
     private boolean isSpreadsheet(TemplateFormat format) {
         return format == TemplateFormat.XLS || format == TemplateFormat.XLSX;
     }
 
+    /**
+     * Checks whether format belongs to word-processing family.
+     *
+     * @param format format to inspect
+     * @return {@code true} for {@code DOC}/{@code DOCX}
+     */
     private boolean isWord(TemplateFormat format) {
         return format == TemplateFormat.DOC || format == TemplateFormat.DOCX;
     }

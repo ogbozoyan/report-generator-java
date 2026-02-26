@@ -29,6 +29,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -251,6 +253,45 @@ class ReportGeneratorServiceImplTest {
             assertEquals("name", document.getTables().get(0).getRow(0).getCell(0).getText());
             assertEquals("North", document.getTables().get(0).getRow(1).getCell(0).getText());
             assertTrue(document.getParagraphs().stream().noneMatch(p -> "{{rows}}".equals(p.getText())));
+        }
+    }
+
+    @Test
+    void shouldInsertTableTokenInsideExistingDocxTableCell() throws Exception {
+        byte[] template = createDocxNestedTableTokenTemplate();
+        List<Map<String, Object>> innerRows = List.of(
+            row("name", "North", "amount", 1200.25),
+            row("name", "South", "amount", 900.00)
+        );
+        List<Map<String, Object>> megaRows = List.of(
+            row("code", "M-1", "value", "OK"),
+            row("code", "M-2", "value", "DONE")
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.docx", null, template),
+            new ReportData(Map.of(
+                "inner_table", innerRows,
+                "mega_test", megaRows
+            )),
+            null
+        );
+
+        try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(result.bytes()))) {
+            assertEquals(1, document.getTables().size());
+            XWPFTable outerTable = document.getTables().get(0);
+
+            XWPFTableCell innerTableCell = outerTable.getRow(0).getCell(0);
+            assertEquals(1, innerTableCell.getTables().size());
+            XWPFTable innerTable = innerTableCell.getTables().get(0);
+            assertEquals("name", innerTable.getRow(0).getCell(0).getText());
+            assertEquals("North", innerTable.getRow(1).getCell(0).getText());
+
+            XWPFTableCell megaTableCell = outerTable.getRow(0).getCell(1);
+            assertEquals(1, megaTableCell.getTables().size());
+            XWPFTable megaTable = megaTableCell.getTables().get(0);
+            assertEquals("code", megaTable.getRow(0).getCell(0).getText());
+            assertEquals("M-1", megaTable.getRow(1).getCell(0).getText());
         }
     }
 
@@ -482,6 +523,24 @@ class ReportGeneratorServiceImplTest {
             document.write(output);
             return output.toByteArray();
         }
+    }
+
+    private byte[] createDocxNestedTableTokenTemplate() throws Exception {
+        try (XWPFDocument document = new XWPFDocument();
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            XWPFTable table = document.createTable(1, 2);
+            putCellToken(table.getRow(0).getCell(0), "{{inner_table}}");
+            putCellToken(table.getRow(0).getCell(1), "{{mega_test}}");
+            document.write(output);
+            return output.toByteArray();
+        }
+    }
+
+    private void putCellToken(XWPFTableCell cell, String token) {
+        for (int i = cell.getParagraphs().size() - 1; i >= 0; i--) {
+            cell.removeParagraph(i);
+        }
+        cell.addParagraph().createRun().setText(token);
     }
 
     private byte[] createDocxScalarTemplate(String value) throws Exception {

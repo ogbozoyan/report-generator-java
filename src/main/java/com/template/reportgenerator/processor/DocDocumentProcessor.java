@@ -18,15 +18,30 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Basic DOC processor based on HWPF.
- * <p>
- * Table tokens are rendered as tab/newline separated text blocks.
+ * Basic {@code .doc} processor based on Apache POI HWPF.
+ *
+ * <p>The format has limited structural editing support, therefore table tokens are rendered
+ * as text-grid blocks ({@code \\t} for columns and {@code \\r} for rows).
+ *
+ * <p>Example:
+ * <pre>{@code
+ * try (DocDocumentProcessor processor = new DocDocumentProcessor(bytes)) {
+ *     processor.applyTemplateTokens(tokens, GenerateOptions.defaults(), warningCollector);
+ *     byte[] output = processor.serialize();
+ * }
+ * }</pre>
  */
 @Slf4j
 public class DocDocumentProcessor implements WorkbookProcessor {
 
     private final HWPFDocument document;
 
+    /**
+     * Creates processor and parses source DOC bytes.
+     *
+     * @param bytes source DOC template bytes
+     * @throws TemplateReadWriteException when document cannot be parsed
+     */
     public DocDocumentProcessor(byte[] bytes) {
         log.info("DocDocumentProcessor() - start: bytesLength={}", bytes == null ? null : bytes.length);
         try {
@@ -38,6 +53,11 @@ public class DocDocumentProcessor implements WorkbookProcessor {
         }
     }
 
+    /**
+     * Returns empty scan result because DOC path currently does not use marker scan stage.
+     *
+     * @return empty scan result
+     */
     @Override
     public TemplateScanResult scan() {
         log.info("scan() - start");
@@ -46,6 +66,19 @@ public class DocDocumentProcessor implements WorkbookProcessor {
         return result;
     }
 
+    /**
+     * Applies scalar and table tokens to DOC range.
+     *
+     * <p>Algorithm:
+     * <ul>
+     *     <li>paragraph pass for exact table placeholders,</li>
+     *     <li>global scalar replacement pass for remaining scalar tokens.</li>
+     * </ul>
+     *
+     * @param templateToken    token map
+     * @param options          generation options
+     * @param warningCollector collector for non-fatal warnings
+     */
     @Override
     public void applyTemplateTokens(Map<String, Object> templateToken, GenerateOptions options, WarningCollector warningCollector) {
         log.info("applyTemplateTokens() - start: tokenCount={}, missingValuePolicy={}",
@@ -103,6 +136,11 @@ public class DocDocumentProcessor implements WorkbookProcessor {
         log.info("applyTemplateTokens() - end: tableInsertions={}, scalarReplacements={}", tableInsertions, scalarReplacements);
     }
 
+    /**
+     * Serializes modified DOC back to bytes.
+     *
+     * @return generated DOC bytes
+     */
     @Override
     public byte[] serialize() {
         log.info("serialize() - start");
@@ -117,6 +155,9 @@ public class DocDocumentProcessor implements WorkbookProcessor {
         }
     }
 
+    /**
+     * Closes underlying HWPF document.
+     */
     @Override
     public void close() {
         log.info("close() - start");
@@ -129,6 +170,12 @@ public class DocDocumentProcessor implements WorkbookProcessor {
         }
     }
 
+    /**
+     * Normalizes HWPF paragraph text by removing control markers and trimming spaces.
+     *
+     * @param text source paragraph text
+     * @return normalized text
+     */
     private String normalizeParagraphText(String text) {
         if (text == null) {
             return "";
@@ -136,6 +183,14 @@ public class DocDocumentProcessor implements WorkbookProcessor {
         return text.replace("\u0007", "").replace("\r", "").trim();
     }
 
+    /**
+     * Renders table payload as DOC-compatible text grid.
+     *
+     * <p>First row is header, followed by data rows.
+     *
+     * @param rows normalized table rows
+     * @return grid text with {@code \\t} and {@code \\r} separators
+     */
     private String renderTableAsDocText(List<Map<String, Object>> rows) {
         List<String> columns = buildColumnOrder(rows);
         StringBuilder sb = new StringBuilder();
@@ -153,6 +208,12 @@ public class DocDocumentProcessor implements WorkbookProcessor {
         return sb.toString();
     }
 
+    /**
+     * Builds stable column order: first-row keys, then new keys in encounter order.
+     *
+     * @param rows table rows
+     * @return ordered column names
+     */
     private List<String> buildColumnOrder(List<Map<String, Object>> rows) {
         LinkedHashSet<String> ordered = new LinkedHashSet<>();
         if (!rows.isEmpty()) {

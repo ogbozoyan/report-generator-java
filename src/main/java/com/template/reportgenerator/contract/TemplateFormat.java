@@ -20,10 +20,20 @@ public enum TemplateFormat {
         this.extension = extension;
     }
 
+    /**
+     * Returns canonical MIME type for the format.
+     *
+     * @return MIME content type
+     */
     public String contentType() {
         return contentType;
     }
 
+    /**
+     * Returns file extension including leading dot.
+     *
+     * @return format extension, for example {@code .xlsx}
+     */
     public String extension() {
         return extension;
     }

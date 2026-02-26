@@ -22,6 +22,14 @@ import java.util.Map;
 @Slf4j
 public class TemplateValidator {
 
+    /**
+     * Validates scanned markers and builds block regions.
+     *
+     * @param scanResult scanner output
+     * @return validated non-overlapping block regions
+     * @throws TemplateSyntaxException    when markers are unpaired or form invalid rectangles
+     * @throws TemplateStructureException when regions overlap
+     */
     public static List<BlockRegion> validateAndBuildRegions(TemplateScanResult scanResult) {
         log.info("validateAndBuildRegions() - start: markers={}",
             scanResult == null || scanResult.markers() == null ? null : scanResult.markers().size());
@@ -92,6 +100,11 @@ public class TemplateValidator {
         return regions;
     }
 
+    /**
+     * Ensures validated regions do not overlap on same sheet.
+     *
+     * @param regions validated regions
+     */
     private void validateNoOverlaps(List<BlockRegion> regions) {
         for (int i = 0; i < regions.size(); i++) {
             for (int j = i + 1; j < regions.size(); j++) {
@@ -116,6 +129,13 @@ public class TemplateValidator {
         }
     }
 
+    /**
+     * Compound key for grouping markers by logical block identity.
+     *
+     * @param sheetIndex sheet index
+     * @param blockType block type
+     * @param key block key
+     */
     private record MarkerKey(int sheetIndex, BlockType blockType, String key) {
 
         @Override
