@@ -2,7 +2,8 @@
 
 `report-generator` — библиотека генерации документов по шаблонам с маркерами `{{TOKEN}}`.
 
-Библиотека предназначена для использования как service-layer (без REST): вы передаёте байты шаблона, данные токенов и
+Библиотека предназначена для использования как io.github.ogbozoyan.service-layer (без REST): вы передаёте байты шаблона,
+данные токенов и
 опции генерации, на выходе получаете готовый файл и список предупреждений.
 
 ## Что умеет
@@ -31,7 +32,9 @@
 ## Quickstart
 
 ```java
-ReportGeneratorService service = new ReportGeneratorServiceImpl();
+ReportGeneratorService io.github.ogbozoyan.service =new
+
+ReportGeneratorServiceImpl();
 
 TemplateInput input = new TemplateInput("sales-report.xlsx", null, templateBytes);
 
@@ -45,7 +48,7 @@ ReportData data = new ReportData(Map.of(
 ));
 
 GenerateOptions options = GenerateOptions.defaults();
-GeneratedReport report = service.generate(input, data, options);
+GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, options);
 ```
 
 ## Частые ошибки

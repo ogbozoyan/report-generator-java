@@ -9,7 +9,7 @@
 
 ## 2. Pipeline генерации
 
-Класс: `com.template.reportgenerator.service.ReportGeneratorServiceImpl`
+Класс: `com.template.reportgenerator.io.github.ogbozoyan.service.ReportGeneratorServiceImpl`
 
 Поток `generate(...)`:
 
@@ -54,12 +54,12 @@
 
 ## 4. Карта модулей и ответственности
 
-### 4.1 `service/*`
+### 4.1 `io.github.ogbozoyan.service/*`
 
 - `ReportGeneratorService`: публичный API генерации.
 - `ReportGeneratorServiceImpl`: orchestration и маршрутизация по форматам.
 
-### 4.2 `processor/*`
+### 4.2 `io.github.ogbozoyan.processor/*`
 
 - `WorkbookProcessor`: единый lifecycle-контракт форматных обработчиков.
 - `PoiWorkbookProcessor`: `XLS/XLSX` таблицы, типизированная запись значений, auto-width, формулы.
@@ -67,7 +67,7 @@
 - `DocDocumentProcessor`: basic text-table в `.doc`.
 - `PdfDocumentProcessor`: text reconstruction и ASCII-grid таблицы.
 
-### 4.3 `util/*`
+### 4.3 `io.github.ogbozoyan.util/*`
 
 - `TemplateFormatDetector`: format detection по magic bytes/extension/MIME.
 - `TokenResolver`: поиск/резолв токенов и table-typing.
@@ -196,7 +196,9 @@
 ### 7.1 XLSX с table token
 
 ```java
-ReportGeneratorService service = new ReportGeneratorServiceImpl();
+ReportGeneratorService io.github.ogbozoyan.service =new
+
+ReportGeneratorServiceImpl();
 
 TemplateInput input = new TemplateInput("TABLE_BOOK.xlsx", null, xlsxTemplateBytes);
 ReportData data = new ReportData(Map.of(
@@ -208,7 +210,7 @@ ReportData data = new ReportData(Map.of(
         "Table_2__columns", List.of("name", "amount")
 ));
 
-GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
+GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
 ```
 
 ### 7.2 DOCX: table token внутри существующей таблицы
@@ -228,14 +230,14 @@ ReportData data = new ReportData(Map.of(
         )
 ));
 
-GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
+GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
 ```
 
 ### 7.3 XLSX -> ODS
 
 ```java
 TemplateInput input = new TemplateInput("sales-report.ods", null, xlsxTemplateBytes);
-GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
+GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
 ```
 
 ### 7.4 DOCX -> ODT
@@ -246,29 +248,29 @@ TemplateInput input = new TemplateInput(
         "application/vnd.oasis.opendocument.text",
         docxTemplateBytes
 );
-GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
+GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
 ```
 
 ## 8. Связь решений с тестами
 
 Ключевые тестовые наборы и что они подтверждают:
 
-- `src/test/java/com/template/reportgenerator/ReportGeneratorServiceImplTest.java`
+- `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.ReportGeneratorServiceImplTest.java`
   - сервисный pipeline;
   - вставка таблиц в `XLS/XLSX` и non-spreadsheet форматах;
   - порядок колонок;
   - inline/exact-placeholder поведение;
   - поддерживаемые маршруты post-convert.
 
-- `src/test/java/com/template/reportgenerator/ReportGeneratorFormattingGoldenTest.java`
+- `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.ReportGeneratorFormattingGoldenTest.java`
   - регрессионная проверка форматирования spreadsheet при table insertion.
 
-- `src/test/java/com/template/reportgenerator/util/TemplateFormatDetectorTest.java`
+- `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.util/TemplateFormatDetectorTest.java`
   - детект формата по magic bytes/content-type/extension;
   - различение OLE2 (`DOC` vs `XLS`);
   - маршрутизация requested output format.
 
-- `src/test/java/com/template/reportgenerator/util/TemplateValidatorTest.java`
+- `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.util/TemplateValidatorTest.java`
   - корректность scan/validation helper-логики для block-маркеров.
 
 ## 9. Почему разделены `README.md` и `docs.md`
