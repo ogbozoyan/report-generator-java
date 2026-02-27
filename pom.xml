@@ -13,7 +13,7 @@
 
     <scm>
         <url>https://github.com/ogbozoyan/report-generator-java</url>
-        <connection>scm:git:ssh://git@github.com/ogbozoyan/report-generator-java.git</connection>
+        <connection>scm:git:git://github.com/ogbozoyan/report-generator-java.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/ogbozoyan/report-generator-java.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
@@ -21,8 +21,7 @@
     <licenses>
         <license>
             <name>MIT License</name>
-            <url>https://opensource.org/licenses/MIT</url>
-            <distribution>repo</distribution>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
         </license>
     </licenses>
 
@@ -30,6 +29,8 @@
         <developer>
             <name>Oganes Bozoyan</name>
             <email>oganes.bozoyan@mail.ru</email>
+            <organization>ogbozoyan</organization>
+            <organizationUrl>https://github.com/ogbozoyan</organizationUrl>
         </developer>
     </developers>
 
@@ -88,14 +89,6 @@
         </dependency>
     </dependencies>
 
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub ogbozoyan Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/ogbozoyan/report-generator-java</url>
-        </repository>
-    </distributionManagement>
-
     <build>
         <plugins>
             <plugin>
@@ -121,12 +114,48 @@
             <plugin>
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
-                <version>0.7.0</version>
+                <version>0.10.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                    <waitUntil>published</waitUntil>
                 </configuration>
             </plugin>
+            <!-- Sources JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Javadoc JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.11.2</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <doclint>none</doclint>
+                </configuration>
+            </plugin>
+
+            <!-- GPG Signing -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
@@ -140,6 +169,14 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <keyname>${gpg.keyname}</keyname>
+                    <passphrase>${gpg.passphrase}</passphrase>
+                    <gpgArguments>
+                        <arg>--pinentry-mode</arg>
+                        <arg>loopback</arg>
+                    </gpgArguments>
+                </configuration>
             </plugin>
         </plugins>
     </build>
