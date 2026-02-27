@@ -8,6 +8,8 @@ public enum BlockType {
      * Row-expansion block.
      */
     TABLE,
-    /** Column-expansion block. */
+    /**
+     * Column-expansion block.
+     */
     COL
 }

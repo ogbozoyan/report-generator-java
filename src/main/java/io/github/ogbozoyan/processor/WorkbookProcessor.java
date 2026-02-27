@@ -30,9 +30,9 @@ public interface WorkbookProcessor extends AutoCloseable {
     /**
      * Applies scalar and table tokens.
      *
-     * @param scalars unified token map; table token values are expected as
-     *                {@code List<Map<String, Object>>}
-     * @param options generation options
+     * @param scalars          unified token map; table token values are expected as
+     *                         {@code List<Map<String, Object>>}
+     * @param options          generation options
      * @param warningCollector collector for non-fatal generation warnings
      */
     void applyTemplateTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector);

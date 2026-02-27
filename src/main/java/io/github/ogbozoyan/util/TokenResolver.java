@@ -26,7 +26,9 @@ public class TokenResolver {
      * Pattern for token occurrence detection.
      */
     public static final Pattern TOKEN_PATTERN = Pattern.compile("\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*}}");
-    /** Pattern for exact placeholder detection (whole value is one token). */
+    /**
+     * Pattern for exact placeholder detection (whole value is one token).
+     */
     public static final Pattern EXACT_TOKEN_PATTERN = Pattern.compile("^\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*}}$");
 
     /**
@@ -84,12 +86,12 @@ public class TokenResolver {
      * <p>Missing token behavior is controlled by {@link MissingValuePolicy}. Table values are not
      * expanded inline and produce warning instead.
      *
-     * @param text source text
-     * @param context token context
-     * @param policy missing token policy
+     * @param text             source text
+     * @param context          token context
+     * @param policy           missing token policy
      * @param warningCollector warning collector
-     * @param location diagnostic location
-     * @param allowItemTokens whether {@code index}/{@code item.*} placeholders are allowed
+     * @param location         diagnostic location
+     * @param allowItemTokens  whether {@code index}/{@code item.*} placeholders are allowed
      * @return resolved text and changed flag
      */
     public static ResolvedText resolve(
@@ -162,7 +164,7 @@ public class TokenResolver {
      * <p>Supports direct key lookup and dotted traversal through map/object getters.
      *
      * @param context root context
-     * @param path token path
+     * @param path    token path
      * @return resolved value or {@code null}
      */
     public static Object resolvePath(Map<String, Object> context, String path) {
@@ -234,7 +236,7 @@ public class TokenResolver {
      * Resolves child property from map key or JavaBean getter.
      *
      * @param current current object
-     * @param key property key
+     * @param key     property key
      * @return child value or {@code null}
      */
     private Object getChild(Object current, String key) {

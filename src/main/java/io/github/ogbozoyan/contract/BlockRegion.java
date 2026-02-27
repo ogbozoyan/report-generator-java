@@ -3,14 +3,14 @@ package io.github.ogbozoyan.contract;
 /**
  * Validated rectangular region for a legacy TABLE/COL block.
  *
- * @param blockType block type
- * @param key logical block key
+ * @param blockType  block type
+ * @param key        logical block key
  * @param sheetIndex zero-based sheet index
- * @param sheetName sheet name
- * @param startRow zero-based start row (inclusive)
- * @param startCol zero-based start column (inclusive)
- * @param endRow zero-based end row (inclusive)
- * @param endCol zero-based end column (inclusive)
+ * @param sheetName  sheet name
+ * @param startRow   zero-based start row (inclusive)
+ * @param startCol   zero-based start column (inclusive)
+ * @param endRow     zero-based end row (inclusive)
+ * @param endCol     zero-based end column (inclusive)
  */
 public record BlockRegion(
     BlockType blockType,

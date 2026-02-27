@@ -7,10 +7,10 @@ import java.util.Objects;
 /**
  * Generated artifact with output metadata and warnings.
  *
- * @param fileName output file name
+ * @param fileName    output file name
  * @param contentType output MIME type
- * @param bytes generated file bytes
- * @param warnings non-fatal generation warnings
+ * @param bytes       generated file bytes
+ * @param warnings    non-fatal generation warnings
  */
 public record GeneratedReport(
     String fileName,

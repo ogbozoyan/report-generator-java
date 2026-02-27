@@ -8,8 +8,12 @@ public enum MissingValuePolicy {
      * Replace unresolved token with empty string and collect warning.
      */
     EMPTY_AND_LOG,
-    /** Keep unresolved token text unchanged in output. */
+    /**
+     * Keep unresolved token text unchanged in output.
+     */
     LEAVE_TOKEN,
-    /** Stop generation immediately with {@code TemplateDataBindingException}. */
+    /**
+     * Stop generation immediately with {@code TemplateDataBindingException}.
+     */
     FAIL_FAST
 }

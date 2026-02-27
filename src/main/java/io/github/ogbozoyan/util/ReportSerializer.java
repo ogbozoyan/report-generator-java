@@ -49,7 +49,7 @@ public class ReportSerializer {
      * Normalizes output file name to target format extension.
      *
      * @param fileName requested file name
-     * @param format output format
+     * @param format   output format
      * @return normalized file name
      */
     private static String normalizeFileName(String fileName, TemplateFormat format) {
@@ -74,7 +74,7 @@ public class ReportSerializer {
     /**
      * Replaces current extension with target extension.
      *
-     * @param fileName file name
+     * @param fileName  file name
      * @param extension target extension with leading dot
      * @return file name with replaced extension
      */

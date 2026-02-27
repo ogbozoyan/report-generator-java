@@ -188,12 +188,12 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     /**
      * Processes all physical cells in one row.
      *
-     * @param sheet current sheet
-     * @param row current row
-     * @param context token context
-     * @param options generation options
+     * @param sheet            current sheet
+     * @param row              current row
+     * @param context          token context
+     * @param options          generation options
      * @param warningCollector warning collector
-     * @param state mutable sheet processing state
+     * @param state            mutable sheet processing state
      */
     private void processRowTokens(
         Sheet sheet,
@@ -214,13 +214,13 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     /**
      * Processes single cell and routes to table-anchor or scalar replacement flow.
      *
-     * @param sheet current sheet
-     * @param row current row
-     * @param cell current cell
-     * @param context token context
-     * @param options generation options
+     * @param sheet            current sheet
+     * @param row              current row
+     * @param cell             current cell
+     * @param context          token context
+     * @param options          generation options
      * @param warningCollector warning collector
-     * @param state mutable sheet processing state
+     * @param state            mutable sheet processing state
      */
     private void processCellToken(
         Sheet sheet,
@@ -329,8 +329,8 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     /**
      * Detects formula cells and emits warning when formula contains token syntax.
      *
-     * @param cell source cell
-     * @param location diagnostic location
+     * @param cell             source cell
+     * @param location         diagnostic location
      * @param warningCollector warning collector
      * @return {@code true} when caller must skip further token replacement
      */
@@ -425,12 +425,12 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
      *
      * <p>Exact token replacement preserves semantic type. Inline replacement writes string value.
      *
-     * @param cell destination cell
-     * @param context token context
-     * @param policy unresolved token policy
-     * @param options generation options
+     * @param cell             destination cell
+     * @param context          token context
+     * @param policy           unresolved token policy
+     * @param options          generation options
      * @param warningCollector warning collector
-     * @param location diagnostic location
+     * @param location         diagnostic location
      */
     private void applyTokenToCell(
         Cell cell,
@@ -553,12 +553,12 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     /**
      * Handles unresolved exact token according to missing-value policy.
      *
-     * @param cell destination cell
-     * @param token unresolved token name
-     * @param policy missing-value policy
+     * @param cell             destination cell
+     * @param token            unresolved token name
+     * @param policy           missing-value policy
      * @param warningCollector warning collector
-     * @param location diagnostic location
-     * @param options generation options
+     * @param location         diagnostic location
+     * @param options          generation options
      */
     private void handleMissingExactToken(
         Cell cell,
@@ -651,7 +651,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
      * <p>Configured order is used as base when provided, then unseen keys are appended
      * in row encounter order.
      *
-     * @param rows normalized table rows
+     * @param rows                  normalized table rows
      * @param configuredColumnOrder optional explicit column order
      * @return ordered column names
      */
@@ -724,36 +724,32 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
             cell.setBlank();
             return;
         }
-        switch (value) {
-            case Number number -> {
-                cell.setCellType(CellType.NUMERIC);
-                cell.setCellValue(number.doubleValue());
-            }
-            case Boolean bool -> {
-                cell.setCellType(CellType.BOOLEAN);
-                cell.setCellValue(bool);
-            }
-            case Date date -> cell.setCellValue(date);
-            case LocalDate localDate -> {
-                Date date = Date.from(localDate.atStartOfDay(zoneId).toInstant());
-                cell.setCellValue(date);
-            }
-            case LocalDateTime localDateTime -> {
-                Date date = Date.from(localDateTime.atZone(zoneId).toInstant());
-                cell.setCellValue(date);
-            }
-            case Instant instant -> cell.setCellValue(Date.from(instant));
-            default -> {
-                cell.setCellType(CellType.STRING);
-                cell.setCellValue(String.valueOf(value));
-            }
+        if (value instanceof Number number) {
+            cell.setCellType(CellType.NUMERIC);
+            cell.setCellValue(number.doubleValue());
+        } else if (value instanceof Boolean bool) {
+            cell.setCellType(CellType.BOOLEAN);
+            cell.setCellValue(bool);
+        } else if (value instanceof Date date) {
+            cell.setCellValue(date);
+        } else if (value instanceof LocalDate localDate) {
+            Date date = Date.from(localDate.atStartOfDay(zoneId).toInstant());
+            cell.setCellValue(date);
+        } else if (value instanceof LocalDateTime localDateTime) {
+            Date date = Date.from(localDateTime.atZone(zoneId).toInstant());
+            cell.setCellValue(date);
+        } else if (value instanceof Instant instant) {
+            cell.setCellValue(Date.from(instant));
+        } else {
+            cell.setCellType(CellType.STRING);
+            cell.setCellValue(String.valueOf(value));
         }
     }
 
     /**
      * Applies baseline style to cell when style is available.
      *
-     * @param cell destination cell
+     * @param cell          destination cell
      * @param baselineStyle style copied from marker cell
      */
     private void applyBaselineStyle(Cell cell, CellStyle baselineStyle) {
@@ -765,7 +761,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     /**
      * Returns row by index or creates missing row.
      *
-     * @param sheet target sheet
+     * @param sheet    target sheet
      * @param rowIndex zero-based row index
      * @return existing or new row
      */
@@ -781,7 +777,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     /**
      * Returns cell by index or creates missing cell.
      *
-     * @param row target row
+     * @param row      target row
      * @param colIndex zero-based column index
      * @return existing or new cell
      */
@@ -797,7 +793,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     /**
      * Builds one-based cell location for diagnostics.
      *
-     * @param sheet source sheet
+     * @param sheet    source sheet
      * @param rowIndex zero-based row index
      * @param colIndex zero-based column index
      * @return location string

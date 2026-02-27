@@ -3,9 +3,9 @@ package io.github.ogbozoyan.contract;
 /**
  * Position of a token/marker inside spreadsheet coordinates.
  *
- * @param sheetIndex zero-based sheet index
- * @param sheetName sheet name
- * @param rowIndex zero-based row index
+ * @param sheetIndex  zero-based sheet index
+ * @param sheetName   sheet name
+ * @param rowIndex    zero-based row index
  * @param columnIndex zero-based column index
  */
 public record CellPosition(int sheetIndex, String sheetName, int rowIndex, int columnIndex) {

@@ -4,7 +4,6 @@ import io.github.ogbozoyan.contract.DocxTableAnchor;
 import io.github.ogbozoyan.contract.GenerateOptions;
 import io.github.ogbozoyan.contract.ResolvedText;
 import io.github.ogbozoyan.contract.TemplateScanResult;
-import io.github.ogbozoyan.contract.TokenOccurrence;
 import io.github.ogbozoyan.exception.TemplateReadWriteException;
 import io.github.ogbozoyan.util.TokenResolver;
 import io.github.ogbozoyan.util.WarningCollector;
@@ -72,7 +71,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
     @Override
     public TemplateScanResult scan() {
         log.info("scan() - start");
-        TemplateScanResult result = new TemplateScanResult(List.of(), List.<TokenOccurrence>of());
+        TemplateScanResult result = new TemplateScanResult(List.of(), List.of());
         log.info("scan() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
         return result;
     }
@@ -181,7 +180,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
     /**
      * Inserts table at placeholder paragraph and removes placeholder paragraph.
      *
-     * @param anchor insertion anchor
+     * @param anchor           insertion anchor
      * @param warningCollector collector for non-fatal warnings
      */
     private void insertTableAtParagraph(DocxTableAnchor anchor, WarningCollector warningCollector) {
@@ -214,9 +213,9 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
     /**
      * Writes header and data rows into newly created DOCX table.
      *
-     * @param table destination table
+     * @param table   destination table
      * @param columns ordered columns
-     * @param rows table payload rows
+     * @param rows    table payload rows
      */
     private void writeTable(XWPFTable table, List<String> columns, List<Map<String, Object>> rows) {
         XWPFTableRow headerRow = getOrCreateFirstRow(table);
@@ -238,7 +237,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
     /**
      * Ensures row has at least requested number of cells.
      *
-     * @param row table row
+     * @param row   table row
      * @param count minimum cell count
      */
     private void ensureCells(XWPFTableRow row, int count) {
@@ -271,7 +270,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
     /**
      * Replaces cell paragraphs with single paragraph containing provided value.
      *
-     * @param cell destination cell
+     * @param cell  destination cell
      * @param value text value
      */
     private void setCellText(XWPFTableCell cell, String value) {
@@ -293,7 +292,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
     private List<String> buildColumnOrder(List<Map<String, Object>> rows) {
         LinkedHashSet<String> ordered = new LinkedHashSet<>();
         if (!rows.isEmpty()) {
-            ordered.addAll(rows.getFirst().keySet());
+            ordered.addAll(rows.get(0).keySet());
         }
         for (Map<String, Object> row : rows) {
             ordered.addAll(row.keySet());
@@ -305,7 +304,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
      * Replaces paragraph content with a single run.
      *
      * @param paragraph paragraph to rewrite
-     * @param value replacement text
+     * @param value     replacement text
      */
     private void replaceParagraphText(XWPFParagraph paragraph, String value) {
         int runs = paragraph.getRuns().size();

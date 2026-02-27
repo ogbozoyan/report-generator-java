@@ -2,7 +2,6 @@ package io.github.ogbozoyan.processor;
 
 import io.github.ogbozoyan.contract.GenerateOptions;
 import io.github.ogbozoyan.contract.TemplateScanResult;
-import io.github.ogbozoyan.contract.TokenOccurrence;
 import io.github.ogbozoyan.exception.TemplateReadWriteException;
 import io.github.ogbozoyan.util.TokenResolver;
 import io.github.ogbozoyan.util.WarningCollector;
@@ -61,7 +60,7 @@ public class DocDocumentProcessor implements WorkbookProcessor {
     @Override
     public TemplateScanResult scan() {
         log.info("scan() - start");
-        TemplateScanResult result = new TemplateScanResult(List.of(), List.<TokenOccurrence>of());
+        TemplateScanResult result = new TemplateScanResult(List.of(), List.of());
         log.info("scan() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
         return result;
     }
@@ -217,7 +216,7 @@ public class DocDocumentProcessor implements WorkbookProcessor {
     private List<String> buildColumnOrder(List<Map<String, Object>> rows) {
         LinkedHashSet<String> ordered = new LinkedHashSet<>();
         if (!rows.isEmpty()) {
-            ordered.addAll(rows.getFirst().keySet());
+            ordered.addAll(rows.get(0).keySet());
         }
         for (Map<String, Object> row : rows) {
             ordered.addAll(row.keySet());

@@ -168,10 +168,10 @@ public class TemplateScanner {
     /**
      * Collects markers/tokens from single text node.
      *
-     * @param text source text
+     * @param text     source text
      * @param position token position
-     * @param markers destination marker list
-     * @param tokens destination token list
+     * @param markers  destination marker list
+     * @param tokens   destination token list
      */
     private void collectFromText(
         String text,

@@ -6,10 +6,10 @@ import java.util.Locale;
 /**
  * Generation options controlling token fallback behavior and localization.
  *
- * @param missingValuePolicy policy for unresolved tokens
+ * @param missingValuePolicy  policy for unresolved tokens
  * @param recalculateFormulas {@code true} to evaluate spreadsheet formulas after token application
- * @param locale locale hint for locale-sensitive formatting
- * @param zoneId time-zone used for date/time conversions
+ * @param locale              locale hint for locale-sensitive formatting
+ * @param zoneId              time-zone used for date/time conversions
  */
 public record GenerateOptions(
     MissingValuePolicy missingValuePolicy,

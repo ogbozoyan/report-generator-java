@@ -133,8 +133,8 @@ public class TemplateValidator {
      * Compound key for grouping markers by logical block identity.
      *
      * @param sheetIndex sheet index
-     * @param blockType block type
-     * @param key block key
+     * @param blockType  block type
+     * @param key        block key
      */
     private record MarkerKey(int sheetIndex, BlockType blockType, String key) {
 
@@ -143,12 +143,13 @@ public class TemplateValidator {
             if (this == obj) {
                 return true;
             }
-            if (!(obj instanceof MarkerKey(int index, BlockType type, String key1))) {
+
+            if (!(obj instanceof MarkerKey other)) {
                 return false;
             }
-            return sheetIndex == index
-                   && blockType == type
-                   && key.equals(key1);
+            return sheetIndex == other.sheetIndex
+                   && blockType == other.blockType
+                   && key.equals(other.key);
         }
 
         @Override

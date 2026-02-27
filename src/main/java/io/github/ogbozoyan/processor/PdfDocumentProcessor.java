@@ -3,7 +3,6 @@ package io.github.ogbozoyan.processor;
 import io.github.ogbozoyan.contract.GenerateOptions;
 import io.github.ogbozoyan.contract.ResolvedText;
 import io.github.ogbozoyan.contract.TemplateScanResult;
-import io.github.ogbozoyan.contract.TokenOccurrence;
 import io.github.ogbozoyan.exception.TemplateReadWriteException;
 import io.github.ogbozoyan.util.TokenResolver;
 import io.github.ogbozoyan.util.WarningCollector;
@@ -72,8 +71,8 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
     /**
      * Wraps single line to fit page width in points.
      *
-     * @param text source line
-     * @param font target font
+     * @param text     source line
+     * @param font     target font
      * @param fontSize font size in points
      * @param maxWidth max line width in points
      * @return wrapped lines
@@ -121,8 +120,8 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
     /**
      * Finds longest prefix that fits max width for hard-wrap scenario.
      *
-     * @param text source text
-     * @param font target font
+     * @param text     source text
+     * @param font     target font
      * @param fontSize font size
      * @param maxWidth max width in points
      * @return split index, always at least {@code 1}
@@ -170,7 +169,7 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
     @Override
     public TemplateScanResult scan() {
         log.info("scan() - start");
-        TemplateScanResult result = new TemplateScanResult(List.of(), List.<TokenOccurrence>of());
+        TemplateScanResult result = new TemplateScanResult(List.of(), List.of());
         log.info("scan() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
         return result;
     }
@@ -263,9 +262,9 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
      * <p>For exact-placeholder table tokens this method renders ASCII grid table and replaces
      * whole line with rendered block.
      *
-     * @param source extracted source text
-     * @param templateTokens token map
-     * @param options generation options
+     * @param source           extracted source text
+     * @param templateTokens   token map
+     * @param options          generation options
      * @param warningCollector warning collector
      * @return transformed text
      */
@@ -386,7 +385,7 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
     /**
      * Builds padded row line for ASCII table.
      *
-     * @param cells row cell values
+     * @param cells  row cell values
      * @param widths per-column widths
      * @return row line
      */
@@ -404,7 +403,7 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
     /**
      * Right-pads value to fixed length.
      *
-     * @param value source value
+     * @param value  source value
      * @param length target length
      * @return padded string
      */
