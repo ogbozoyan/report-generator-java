@@ -1,11 +1,11 @@
 package io.github.ogbozoyan;
 
-import io.github.ogbozoyan.contract.GenerateOptions;
-import io.github.ogbozoyan.contract.GeneratedReport;
-import io.github.ogbozoyan.contract.GenerationWarning;
-import io.github.ogbozoyan.contract.MissingValuePolicy;
-import io.github.ogbozoyan.contract.ReportData;
-import io.github.ogbozoyan.contract.TemplateInput;
+import io.github.ogbozoyan.data.GenerateOptions;
+import io.github.ogbozoyan.data.GeneratedReport;
+import io.github.ogbozoyan.data.GenerationWarning;
+import io.github.ogbozoyan.data.MissingValuePolicy;
+import io.github.ogbozoyan.data.ReportData;
+import io.github.ogbozoyan.data.TemplateInput;
 import io.github.ogbozoyan.service.ReportGeneratorService;
 import io.github.ogbozoyan.service.ReportGeneratorServiceImpl;
 import lombok.NonNull;

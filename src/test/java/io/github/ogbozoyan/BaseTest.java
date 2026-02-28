@@ -1,8 +1,8 @@
 package io.github.ogbozoyan;
 
-import io.github.ogbozoyan.contract.GenerateOptions;
-import io.github.ogbozoyan.contract.MissingValuePolicy;
-import io.github.ogbozoyan.contract.TemplateFormat;
+import io.github.ogbozoyan.data.GenerateOptions;
+import io.github.ogbozoyan.data.MissingValuePolicy;
+import io.github.ogbozoyan.data.TemplateFormat;
 import io.github.ogbozoyan.service.ReportGeneratorService;
 import io.github.ogbozoyan.service.ReportGeneratorServiceImpl;
 import io.github.ogbozoyan.util.DocumentFormatConverter;

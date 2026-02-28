@@ -1,4 +1,4 @@
-package io.github.ogbozoyan.contract;
+package io.github.ogbozoyan.data;
 
 /**
  * Supported template formats and their output metadata.

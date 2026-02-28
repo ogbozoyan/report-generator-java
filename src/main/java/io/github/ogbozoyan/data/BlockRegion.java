@@ -1,4 +1,4 @@
-package io.github.ogbozoyan.contract;
+package io.github.ogbozoyan.data;
 
 /**
  * Validated rectangular region for a legacy TABLE/COL block.

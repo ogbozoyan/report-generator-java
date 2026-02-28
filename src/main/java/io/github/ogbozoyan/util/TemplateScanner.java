@@ -1,11 +1,11 @@
 package io.github.ogbozoyan.util;
 
 
-import io.github.ogbozoyan.contract.BlockMarker;
-import io.github.ogbozoyan.contract.BlockType;
-import io.github.ogbozoyan.contract.CellPosition;
-import io.github.ogbozoyan.contract.TemplateScanResult;
-import io.github.ogbozoyan.contract.TokenOccurrence;
+import io.github.ogbozoyan.data.BlockMarker;
+import io.github.ogbozoyan.data.BlockType;
+import io.github.ogbozoyan.data.CellPosition;
+import io.github.ogbozoyan.data.TemplateScanResult;
+import io.github.ogbozoyan.data.TokenOccurrence;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;

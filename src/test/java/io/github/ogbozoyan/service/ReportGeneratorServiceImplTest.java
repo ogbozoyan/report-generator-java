@@ -1,10 +1,10 @@
 package io.github.ogbozoyan.service;
 
 import io.github.ogbozoyan.BaseTest;
-import io.github.ogbozoyan.contract.GeneratedReport;
-import io.github.ogbozoyan.contract.ReportData;
-import io.github.ogbozoyan.contract.TemplateFormat;
-import io.github.ogbozoyan.contract.TemplateInput;
+import io.github.ogbozoyan.data.GeneratedReport;
+import io.github.ogbozoyan.data.ReportData;
+import io.github.ogbozoyan.data.TemplateFormat;
+import io.github.ogbozoyan.data.TemplateInput;
 import io.github.ogbozoyan.exception.UnsupportedTemplateFormatException;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;

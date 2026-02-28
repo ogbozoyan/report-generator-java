@@ -1,10 +1,10 @@
 package io.github.ogbozoyan.util;
 
 
-import io.github.ogbozoyan.contract.BlockMarker;
-import io.github.ogbozoyan.contract.BlockRegion;
-import io.github.ogbozoyan.contract.BlockType;
-import io.github.ogbozoyan.contract.TemplateScanResult;
+import io.github.ogbozoyan.data.BlockMarker;
+import io.github.ogbozoyan.data.BlockRegion;
+import io.github.ogbozoyan.data.BlockType;
+import io.github.ogbozoyan.data.TemplateScanResult;
 import io.github.ogbozoyan.exception.TemplateStructureException;
 import io.github.ogbozoyan.exception.TemplateSyntaxException;
 import lombok.experimental.UtilityClass;

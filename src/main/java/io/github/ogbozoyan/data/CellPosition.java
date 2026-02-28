@@ -1,4 +1,4 @@
-package io.github.ogbozoyan.contract;
+package io.github.ogbozoyan.data;
 
 /**
  * Position of a token/marker inside spreadsheet coordinates.

@@ -1,4 +1,4 @@
-package io.github.ogbozoyan.contract;
+package io.github.ogbozoyan.data;
 
 import java.time.ZoneId;
 import java.util.Locale;

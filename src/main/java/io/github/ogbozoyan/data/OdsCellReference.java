@@ -1,4 +1,4 @@
-package io.github.ogbozoyan.contract;
+package io.github.ogbozoyan.data;
 
 /**
  * Lightweight ODS cell reference used by ODS-specific scanner code.

@@ -1,7 +1,7 @@
 package io.github.ogbozoyan.util;
 
-import io.github.ogbozoyan.contract.TemplateFormat;
-import io.github.ogbozoyan.contract.TemplateInput;
+import io.github.ogbozoyan.data.TemplateFormat;
+import io.github.ogbozoyan.data.TemplateInput;
 import io.github.ogbozoyan.exception.TemplateInputException;
 import io.github.ogbozoyan.exception.UnsupportedTemplateFormatException;
 import lombok.experimental.UtilityClass;

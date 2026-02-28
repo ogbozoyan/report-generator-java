@@ -1,9 +1,9 @@
 package io.github.ogbozoyan.service;
 
-import io.github.ogbozoyan.contract.GenerateOptions;
-import io.github.ogbozoyan.contract.GeneratedReport;
-import io.github.ogbozoyan.contract.ReportData;
-import io.github.ogbozoyan.contract.TemplateInput;
+import io.github.ogbozoyan.data.GenerateOptions;
+import io.github.ogbozoyan.data.GeneratedReport;
+import io.github.ogbozoyan.data.ReportData;
+import io.github.ogbozoyan.data.TemplateInput;
 
 /**
  * Public io.github.ogbozoyan.service contract for template-based report generation.

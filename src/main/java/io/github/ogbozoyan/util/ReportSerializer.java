@@ -1,9 +1,9 @@
 package io.github.ogbozoyan.util;
 
 
-import io.github.ogbozoyan.contract.GeneratedReport;
-import io.github.ogbozoyan.contract.TemplateFormat;
-import io.github.ogbozoyan.contract.TemplateInput;
+import io.github.ogbozoyan.data.GeneratedReport;
+import io.github.ogbozoyan.data.TemplateFormat;
+import io.github.ogbozoyan.data.TemplateInput;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

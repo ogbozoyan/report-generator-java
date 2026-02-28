@@ -1,8 +1,8 @@
 package io.github.ogbozoyan.util;
 
 import io.github.ogbozoyan.BaseTest;
-import io.github.ogbozoyan.contract.TemplateFormat;
-import io.github.ogbozoyan.contract.TemplateInput;
+import io.github.ogbozoyan.data.TemplateFormat;
+import io.github.ogbozoyan.data.TemplateInput;
 import io.github.ogbozoyan.exception.UnsupportedTemplateFormatException;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;

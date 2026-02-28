@@ -1,7 +1,7 @@
 package io.github.ogbozoyan.processor;
 
-import io.github.ogbozoyan.contract.GenerateOptions;
-import io.github.ogbozoyan.contract.TemplateScanResult;
+import io.github.ogbozoyan.data.GenerateOptions;
+import io.github.ogbozoyan.data.TemplateScanResult;
 import io.github.ogbozoyan.util.WarningCollector;
 
 import java.util.Map;

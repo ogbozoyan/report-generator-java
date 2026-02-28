@@ -1,7 +1,7 @@
 package io.github.ogbozoyan.util;
 
 
-import io.github.ogbozoyan.contract.TemplateFormat;
+import io.github.ogbozoyan.data.TemplateFormat;
 
 /**
  * Converts generated document bytes between output formats.

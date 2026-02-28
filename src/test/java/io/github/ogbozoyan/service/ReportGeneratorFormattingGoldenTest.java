@@ -1,9 +1,9 @@
 package io.github.ogbozoyan.service;
 
 import io.github.ogbozoyan.BaseTest;
-import io.github.ogbozoyan.contract.GeneratedReport;
-import io.github.ogbozoyan.contract.ReportData;
-import io.github.ogbozoyan.contract.TemplateInput;
+import io.github.ogbozoyan.data.GeneratedReport;
+import io.github.ogbozoyan.data.ReportData;
+import io.github.ogbozoyan.data.TemplateInput;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;

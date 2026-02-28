@@ -1,8 +1,8 @@
 package io.github.ogbozoyan.util;
 
 
-import io.github.ogbozoyan.contract.MissingValuePolicy;
-import io.github.ogbozoyan.contract.ResolvedText;
+import io.github.ogbozoyan.data.MissingValuePolicy;
+import io.github.ogbozoyan.data.ResolvedText;
 import io.github.ogbozoyan.exception.TemplateDataBindingException;
 import lombok.experimental.UtilityClass;
 

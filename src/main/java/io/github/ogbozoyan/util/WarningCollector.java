@@ -1,7 +1,7 @@
 package io.github.ogbozoyan.util;
 
 
-import io.github.ogbozoyan.contract.GenerationWarning;
+import io.github.ogbozoyan.data.GenerationWarning;
 
 import java.util.ArrayList;
 import java.util.Collections;
