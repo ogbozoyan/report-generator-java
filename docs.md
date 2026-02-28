@@ -43,13 +43,16 @@
 
 - `templateTokens`: единая карта данных `Map<String, Object>`.
 - scalar token: любое строковое/числовое/дата-значение.
-- table token: `List<Map<String, Object>>`.
+- table token (default mode): `List<Map<String, Object>>`.
+- table token (rows-only mode): `List<Object[]>`.
 - optional порядок колонок: `TOKEN__columns` (или `TOKEN_columns`, `TOKEN.columns`).
 
 ### 3.3 `GenerateOptions`
 
 - `missingValuePolicy`: поведение при отсутствии токена.
 - `recalculateFormulas`: пересчёт формул для spreadsheet.
+- `rowsOnlyTableTokens`: глобальный rows-only режим вставки table token для `XLS/XLSX`
+  (без header-строки, ожидается `List<Object[]>`).
 - `locale`, `zoneId`: локализация и time-zone для записи дат.
 
 ## 4. Карта модулей и ответственности
@@ -106,6 +109,9 @@
 - sparse traversal: обход только физически существующих строк/ячеек.
 - anchor-first strategy: сначала сбор якорей таблиц, потом вставка.
 - reverse apply: вставка таблиц снизу вверх по листу.
+- dual table modes:
+  - default: header + data;
+  - rows-only (`GenerateOptions.rowsOnlyTableTokens=true`): только data-строки из `List<Object[]>`.
 - style baseline: reuse стиля маркерной ячейки для header/data.
 - auto-width: ширины меняются только у вставленных колонок.
 - formula policy: формулы с токенами не переписываются, только warning.
@@ -114,6 +120,7 @@
 
 - sparse traversal устраняет зависания на больших разреженных листах;
 - reverse apply делает множественные вставки детерминированными при `shiftRows`;
+- rows-only режим позволяет использовать отдельную строку descriptor/маппинга без дублирования заголовка;
 - baseline style минимизирует визуальные регрессии шаблонов;
 - локальный auto-width не ломает внешний layout листа;
 - пропуск formula-токенов безопаснее, чем риск повреждения формульного синтаксиса.
@@ -175,9 +182,13 @@
 - `MISSING_TOKEN`:
   - токен отсутствует в `templateTokens`; проверьте ключи и `missingValuePolicy`.
 - `TABLE_TOKEN_INVALID`:
-  - значение токена не является `List<Map<String,Object>>`.
+  - в default mode значение токена не является `List<Map<String,Object>>`;
+  - в rows-only mode значение токена не является `List<Object[]>`.
 - `TABLE_TOKEN_EMPTY`:
   - таблица передана как пустой список.
+- `GenerateOptions.rowsOnlyTableTokens=true`:
+  - включён rows-only режим для `XLS/XLSX`: marker row становится первой data-строкой;
+  - payload токена должен быть `List<Object[]>`.
 - `TABLE_TOKEN_INLINE_IGNORED`:
   - table token найден inline и не вставлен как таблица.
 - `TABLE_TOKEN_INLINE_TEXT_DROPPED`:
@@ -210,7 +221,15 @@ ReportData data = new ReportData(Map.of(
         "Table_2__columns", List.of("name", "amount")
 ));
 
-GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
+GenerateOptions options = new GenerateOptions(
+        MissingValuePolicy.EMPTY_AND_LOG,
+        true,
+        Locale.getDefault(),
+        ZoneId.systemDefault(),
+        false
+);
+
+GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, options);
 ```
 
 ### 7.2 DOCX: table token внутри существующей таблицы
@@ -255,14 +274,14 @@ GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, Gener
 
 Ключевые тестовые наборы и что они подтверждают:
 
-- `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.ReportGeneratorServiceImplTest.java`
+- `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.service.ReportGeneratorServiceImplTest.java`
   - сервисный pipeline;
   - вставка таблиц в `XLS/XLSX` и non-spreadsheet форматах;
   - порядок колонок;
   - inline/exact-placeholder поведение;
   - поддерживаемые маршруты post-convert.
 
-- `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.ReportGeneratorFormattingGoldenTest.java`
+- `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.service.ReportGeneratorFormattingGoldenTest.java`
   - регрессионная проверка форматирования spreadsheet при table insertion.
 
 - `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.util/TemplateFormatDetectorTest.java`

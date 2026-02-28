@@ -2,6 +2,7 @@ package io.github.ogbozoyan.util;
 
 import io.github.ogbozoyan.contract.TemplateFormat;
 import io.github.ogbozoyan.contract.TemplateInput;
+import io.github.ogbozoyan.exception.TemplateInputException;
 import io.github.ogbozoyan.exception.UnsupportedTemplateFormatException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -41,14 +42,14 @@ public class TemplateFormatDetector {
      * @return requested output format or {@code null} when no explicit hint is present
      */
     public static TemplateFormat detectRequestedOutputFormat(TemplateInput input) {
-        log.info("detectRequestedOutputFormat() - start: fileName={}, contentType={}",
+        log.debug("detectRequestedOutputFormat() - start: fileName={}, contentType={}",
             input == null ? null : input.fileName(),
             input == null ? null : input.contentType());
         TemplateFormat result = detectByContentType(input == null ? null : input.contentType());
         if (result == null) {
             result = detectByFileName(input == null ? null : input.fileName());
         }
-        log.info("detectRequestedOutputFormat() - end: format={}", result);
+        log.debug("detectRequestedOutputFormat() - end: format={}", result);
         return result;
     }
 
@@ -58,12 +59,17 @@ public class TemplateFormatDetector {
      * @param input template input with bytes and optional hints
      * @return detected source format
      * @throws UnsupportedTemplateFormatException when format cannot be detected
+     * @throws TemplateInputException             when input is null
      */
     public static TemplateFormat detectFormat(TemplateInput input) {
-        log.info("detectFormat() - start: fileName={}, contentType={}, bytesLength={}",
-            input == null ? null : input.fileName(),
-            input == null ? null : input.contentType(),
-            input == null || input.bytes() == null ? null : input.bytes().length);
+        if (input == null || input.bytes() == null) {
+            throw new TemplateInputException("Input is empty or input bytes is empty");
+        }
+
+        log.trace("detectFormat() - start: fileName={}, contentType={}, bytesLength={}",
+            input.fileName(),
+            input.contentType(),
+            input.bytes().length);
         byte[] bytes = input.bytes();
         if (bytes.length >= 4) {
             int b0 = bytes[0] & 0xFF;
@@ -75,7 +81,7 @@ public class TemplateFormatDetector {
             if (b0 == ZIP_SIGNATURE_0 && b1 == ZIP_SIGNATURE_1 && b2 == ZIP_SIGNATURE_2 && b3 == ZIP_SIGNATURE_3) {
                 TemplateFormat zipFormat = detectZipContainer(bytes);
                 if (zipFormat != null) {
-                    log.info("detectFormat() - end: format={}", zipFormat);
+                    log.trace("detectFormat() - end: format={}", zipFormat);
                     return zipFormat;
                 }
             }
@@ -84,26 +90,26 @@ public class TemplateFormatDetector {
             if (b0 == OLE2_SIGNATURE_0 && b1 == OLE2_SIGNATURE_1 && b2 == OLE2_SIGNATURE_2 && b3 == OLE2_SIGNATURE_3) {
                 TemplateFormat ole2Format = detectOle2Container(bytes, input);
                 if (ole2Format != null) {
-                    log.info("detectFormat() - end: format={}", ole2Format);
+                    log.trace("detectFormat() - end: format={}", ole2Format);
                     return ole2Format;
                 }
             }
 
             // PDF signature (%PDF)
             if (b0 == 0x25 && b1 == 0x50 && b2 == 0x44 && b3 == 0x46) {
-                log.info("detectFormat() - end: format={}", TemplateFormat.PDF);
+                log.trace("detectFormat() - end: format={}", TemplateFormat.PDF);
                 return TemplateFormat.PDF;
             }
         }
 
         TemplateFormat contentTypeFormat = detectByContentType(input.contentType());
         if (contentTypeFormat != null) {
-            log.info("detectFormat() - end: format={}", contentTypeFormat);
+            log.trace("detectFormat() - end: format={}", contentTypeFormat);
             return contentTypeFormat;
         }
         TemplateFormat fileNameFormat = detectByFileName(input.fileName());
         if (fileNameFormat != null) {
-            log.info("detectFormat() - end: format={}", fileNameFormat);
+            log.trace("detectFormat() - end: format={}", fileNameFormat);
             return fileNameFormat;
         }
 
@@ -118,7 +124,7 @@ public class TemplateFormatDetector {
      * @return detected format or {@code null} when container cannot be recognized
      */
     private static TemplateFormat detectZipContainer(byte[] bytes) {
-        log.info("detectZipContainer() - start: bytesLength={}", bytes == null ? null : bytes.length);
+        log.trace("detectZipContainer() - start: bytesLength={}", bytes == null ? null : bytes.length);
         boolean hasWordFolder = false;
         boolean hasExcelFolder = false;
         boolean hasOdfSpreadsheetMime = false;
@@ -154,22 +160,22 @@ public class TemplateFormatDetector {
         }
 
         if (hasOdfSpreadsheetMime) {
-            log.info("detectZipContainer() - end: format={}", TemplateFormat.ODS);
+            log.trace("detectZipContainer() - end: format={}", TemplateFormat.ODS);
             return TemplateFormat.ODS;
         }
         if (hasOdfTextMime) {
-            log.info("detectZipContainer() - end: format={}", TemplateFormat.ODT);
+            log.trace("detectZipContainer() - end: format={}", TemplateFormat.ODT);
             return TemplateFormat.ODT;
         }
         if (hasWordFolder) {
-            log.info("detectZipContainer() - end: format={}", TemplateFormat.DOCX);
+            log.trace("detectZipContainer() - end: format={}", TemplateFormat.DOCX);
             return TemplateFormat.DOCX;
         }
         if (hasExcelFolder) {
-            log.info("detectZipContainer() - end: format={}", TemplateFormat.XLSX);
+            log.trace("detectZipContainer() - end: format={}", TemplateFormat.XLSX);
             return TemplateFormat.XLSX;
         }
-        log.info("detectZipContainer() - end: format=unknown");
+        log.trace("detectZipContainer() - end: format=unknown");
         return null;
     }
 
@@ -181,35 +187,39 @@ public class TemplateFormatDetector {
      * @return detected format (defaults to {@link TemplateFormat#XLS} for backward compatibility)
      */
     private static TemplateFormat detectOle2Container(byte[] bytes, TemplateInput input) {
-        log.info("detectOle2Container() - start: bytesLength={}, fileName={}, contentType={}",
+        log.trace("detectOle2Container() - start: bytesLength={}, fileName={}, contentType={}",
             bytes == null ? null : bytes.length,
             input == null ? null : input.fileName(),
             input == null ? null : input.contentType());
         try (POIFSFileSystem fileSystem = new POIFSFileSystem(new ByteArrayInputStream(bytes))) {
             DirectoryNode root = fileSystem.getRoot();
             if (root.hasEntry("WordDocument")) {
-                log.info("detectOle2Container() - end: format={}", TemplateFormat.DOC);
+                log.trace("detectOle2Container() - end: format={}", TemplateFormat.DOC);
                 return TemplateFormat.DOC;
             }
             if (root.hasEntry("Workbook") || root.hasEntry("Book")) {
-                log.info("detectOle2Container() - end: format={}", TemplateFormat.XLS);
+                log.trace("detectOle2Container() - end: format={}", TemplateFormat.XLS);
                 return TemplateFormat.XLS;
             }
         } catch (Exception ignored) {
             log.warn("detectOle2Container() - warning: failedToInspectOle2=true");
         }
 
+        if (input == null) {
+            throw new UnsupportedTemplateFormatException("Input is empty");
+        }
+
         if (hasDocHint(input)) {
-            log.info("detectOle2Container() - end: format={}", TemplateFormat.DOC);
+            log.trace("detectOle2Container() - end: format={}", TemplateFormat.DOC);
             return TemplateFormat.DOC;
         }
         if (hasXlsHint(input)) {
-            log.info("detectOle2Container() - end: format={}", TemplateFormat.XLS);
+            log.trace("detectOle2Container() - end: format={}", TemplateFormat.XLS);
             return TemplateFormat.XLS;
         }
 
         // keep backward-compatible default for unknown OLE2 containers
-        log.info("detectOle2Container() - end: format={}", TemplateFormat.XLS);
+        log.trace("detectOle2Container() - end: format={}", TemplateFormat.XLS);
         return TemplateFormat.XLS;
     }
 

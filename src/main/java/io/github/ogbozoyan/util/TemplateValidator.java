@@ -31,7 +31,7 @@ public class TemplateValidator {
      * @throws TemplateStructureException when regions overlap
      */
     public static List<BlockRegion> validateAndBuildRegions(TemplateScanResult scanResult) {
-        log.info("validateAndBuildRegions() - start: markers={}",
+        log.debug("validateAndBuildRegions() - start: markers={}",
             scanResult == null || scanResult.markers() == null ? null : scanResult.markers().size());
         Map<MarkerKey, List<BlockMarker>> grouped = new HashMap<>();
 
@@ -96,7 +96,7 @@ public class TemplateValidator {
         }
 
         validateNoOverlaps(regions);
-        log.info("validateAndBuildRegions() - end: regions={}", regions.size());
+        log.trace("validateAndBuildRegions() - end: regions={}", regions.size());
         return regions;
     }
 

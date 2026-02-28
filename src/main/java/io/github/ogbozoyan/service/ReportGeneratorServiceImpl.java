@@ -43,7 +43,7 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
      */
     public ReportGeneratorServiceImpl() {
         this(new LibreOfficeDocumentFormatConverter());
-        log.info("ReportGeneratorServiceImpl() - end: converter={}", this.formatConverter.getClass().getSimpleName());
+        log.debug("ReportGeneratorServiceImpl() - end: converter={}", this.formatConverter.getClass().getSimpleName());
     }
 
     /**
@@ -52,10 +52,10 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
      * @param formatConverter converter for post-processing output formats
      */
     public ReportGeneratorServiceImpl(DocumentFormatConverter formatConverter) {
-        log.info("ReportGeneratorServiceImpl(DocumentFormatConverter) - start: converterClass={}",
+        log.debug("ReportGeneratorServiceImpl(DocumentFormatConverter) - start: converterClass={}",
             formatConverter == null ? null : formatConverter.getClass().getName());
         this.formatConverter = Objects.requireNonNull(formatConverter, "formatConverter must not be null");
-        log.info("ReportGeneratorServiceImpl(DocumentFormatConverter) - end: converterClass={}",
+        log.debug("ReportGeneratorServiceImpl(DocumentFormatConverter) - end: converterClass={}",
             this.formatConverter.getClass().getName());
     }
 
@@ -73,7 +73,7 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
      */
     @Override
     public GeneratedReport generate(TemplateInput template, ReportData data, GenerateOptions options) {
-        log.info("generate() - start: fileName={}, contentType={}, bytesLength={}, scalarTokens={}, requestedOptionsPresent={}",
+        log.debug("generate() - start: fileName={}, contentType={}, bytesLength={}, scalarTokens={}, requestedOptionsPresent={}",
             template == null ? null : template.fileName(),
             template == null ? null : template.contentType(),
             template == null || template.bytes() == null ? null : template.bytes().length,
@@ -96,8 +96,13 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
         TemplateFormat requestedOutputFormat = TemplateFormatDetector.detectRequestedOutputFormat(template);
         TemplateFormat outputFormat = requestedOutputFormat == null ? sourceFormat : requestedOutputFormat;
         validateOutputFormatConversion(sourceFormat, outputFormat);
-        log.info("generate() - formatResolved: sourceFormat={}, requestedOutputFormat={}, outputFormat={}",
+        log.debug("generate() - formatResolved: sourceFormat={}, requestedOutputFormat={}, outputFormat={}",
             sourceFormat, requestedOutputFormat, outputFormat);
+        log.debug("generate() - optionsResolved: missingValuePolicy={}, recalculateFormulas={}, rowsOnlyTableTokens={}, zoneId={}",
+            resolvedOptions.missingValuePolicy(),
+            resolvedOptions.recalculateFormulas(),
+            resolvedOptions.rowsOnlyTableTokens(),
+            resolvedOptions.zoneId());
 
         WarningCollector warningCollector = new WarningCollector();
 
@@ -111,7 +116,7 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
                 : formatConverter.convert(generatedBytes, sourceFormat, outputFormat);
 
             GeneratedReport report = ReportSerializer.serialize(template, outputFormat, outputBytes, warningCollector);
-            log.info("generate() - end: outputFileName={}, outputContentType={}, outputBytesLength={}, warnings={}",
+            log.debug("generate() - end: outputFileName={}, outputContentType={}, outputBytesLength={}, warnings={}",
                 report.fileName(), report.contentType(), report.bytes().length, report.warnings().size());
             return report;
         }
@@ -125,7 +130,10 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
      * @return io.github.ogbozoyan.processor implementation for the format
      */
     private WorkbookProcessor createProcessor(TemplateFormat format, byte[] bytes) {
-        log.info("createProcessor() - start: format={}, bytesLength={}", format, bytes == null ? null : bytes.length);
+        if (bytes == null || bytes.length == 0) {
+            throw new IllegalArgumentException("Template bytes must not be null or empty");
+        }
+        log.debug("createProcessor() - start: format={}, bytesLength={}", format, bytes.length);
         WorkbookProcessor processor = switch (format) {
             case XLS, XLSX -> new PoiWorkbookProcessor(bytes);
             case DOC -> new DocDocumentProcessor(bytes);
@@ -136,7 +144,7 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
                 "Use XLS/XLSX or DOC/DOCX templates and request ODS/ODT on output."
             );
         };
-        log.info("createProcessor() - end: processorClass={}", processor.getClass().getName());
+        log.debug("createProcessor() - end: processorClass={}", processor.getClass().getName());
         return processor;
     }
 
@@ -146,14 +154,14 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
      * @param sourceFormat detected source template format
      */
     private void validateSourceTemplateFormat(TemplateFormat sourceFormat) {
-        log.info("validateSourceTemplateFormat() - start: sourceFormat={}", sourceFormat);
+        log.trace("validateSourceTemplateFormat() - start: sourceFormat={}", sourceFormat);
         if (sourceFormat == TemplateFormat.ODS || sourceFormat == TemplateFormat.ODT) {
             throw new UnsupportedTemplateFormatException(
                 "ODS/ODT templates are not supported as input. " +
                 "Use XLS/XLSX or DOC/DOCX templates and request ODS/ODT on output."
             );
         }
-        log.info("validateSourceTemplateFormat() - end: sourceFormat={}", sourceFormat);
+        log.trace("validateSourceTemplateFormat() - end: sourceFormat={}", sourceFormat);
     }
 
     /**
@@ -170,9 +178,9 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
      * @param outputFormat requested output format
      */
     private void validateOutputFormatConversion(TemplateFormat sourceFormat, TemplateFormat outputFormat) {
-        log.info("validateOutputFormatConversion() - start: sourceFormat={}, outputFormat={}", sourceFormat, outputFormat);
+        log.trace("validateOutputFormatConversion() - start: sourceFormat={}, outputFormat={}", sourceFormat, outputFormat);
         if (sourceFormat == outputFormat) {
-            log.info("validateOutputFormatConversion() - end: sameFormat=true");
+            log.trace("validateOutputFormatConversion() - end: sameFormat=true");
             return;
         }
 
@@ -180,7 +188,7 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
         boolean wordToOdt = isWord(sourceFormat) && outputFormat == TemplateFormat.ODT;
 
         if (spreadsheetToOds || wordToOdt) {
-            log.info("validateOutputFormatConversion() - end: conversionAllowed=true");
+            log.trace("validateOutputFormatConversion() - end: conversionAllowed=true");
             return;
         }
 

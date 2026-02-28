@@ -42,15 +42,15 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
      * @throws TemplateReadWriteException when source PDF cannot be parsed
      */
     public PdfDocumentProcessor(byte[] bytes) {
-        log.info("PdfDocumentProcessor() - start: bytesLength={}", bytes == null ? null : bytes.length);
+        log.debug("PdfDocumentProcessor() - start: bytesLength={}", bytes.length);
         try (PDDocument document = Loader.loadPDF(bytes)) {
             PDFTextStripper textStripper = new PDFTextStripper();
             extractedText = textStripper.getText(document);
-            log.info("PdfDocumentProcessor() - end: extractedTextLength={}, pageCount={}",
+            log.debug("PdfDocumentProcessor() - end: extractedTextLength={}, pageCount={}",
                 extractedText == null ? 0 : extractedText.length(),
                 document.getNumberOfPages());
         } catch (Exception e) {
-            log.error("PdfDocumentProcessor() - end with error: bytesLength={}", bytes == null ? null : bytes.length, e);
+            log.error("PdfDocumentProcessor() - end with error: bytesLength={}", bytes.length, e);
             throw new TemplateReadWriteException("Failed to read PDF template", e);
         }
     }
@@ -168,9 +168,9 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
      */
     @Override
     public TemplateScanResult scan() {
-        log.info("scan() - start");
+        log.trace("scan() - start");
         TemplateScanResult result = new TemplateScanResult(List.of(), List.of());
-        log.info("scan() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
+        log.trace("scan() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
         return result;
     }
 
@@ -183,11 +183,11 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
      */
     @Override
     public void applyTemplateTokens(Map<String, Object> templateToken, GenerateOptions options, WarningCollector warningCollector) {
-        log.info("applyTemplateTokens() - start: tokenCount={}, extractedTextLength={}",
+        log.trace("applyTemplateTokens() - start: tokenCount={}, extractedTextLength={}",
             templateToken == null ? null : templateToken.size(),
             extractedText == null ? 0 : extractedText.length());
         extractedText = replaceTokensWithTables(extractedText == null ? "" : extractedText, templateToken, options, warningCollector);
-        log.info("applyTemplateTokens() - end: extractedTextLength={}", extractedText == null ? 0 : extractedText.length());
+        log.trace("applyTemplateTokens() - end: extractedTextLength={}", extractedText == null ? 0 : extractedText.length());
     }
 
     /**
@@ -197,7 +197,7 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
      */
     @Override
     public byte[] serialize() {
-        log.info("serialize() - start: extractedTextLength={}", extractedText == null ? 0 : extractedText.length());
+        log.trace("serialize() - start: extractedTextLength={}", extractedText == null ? 0 : extractedText.length());
         try (PDDocument document = new PDDocument();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
@@ -248,7 +248,7 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
 
             document.save(outputStream);
             byte[] bytes = outputStream.toByteArray();
-            log.info("serialize() - end: bytesLength={}", bytes.length);
+            log.trace("serialize() - end: bytesLength={}", bytes.length);
             return bytes;
         } catch (Exception e) {
             log.error("serialize() - end with error", e);
@@ -274,7 +274,7 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
         GenerateOptions options,
         WarningCollector warningCollector
     ) {
-        log.info("replaceTokensWithTables() - start: sourceLength={}, tokenCount={}",
+        log.trace("replaceTokensWithTables() - start: sourceLength={}, tokenCount={}",
             source == null ? 0 : source.length(),
             templateTokens == null ? null : templateTokens.size());
         String normalized = source.replace("\r\n", "\n").replace('\r', '\n');
@@ -322,7 +322,7 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
             }
         }
         String output = result.toString();
-        log.info("replaceTokensWithTables() - end: outputLength={}, tableInsertions={}, scalarReplacements={}",
+        log.trace("replaceTokensWithTables() - end: outputLength={}, tableInsertions={}, scalarReplacements={}",
             output.length(), tableInsertions, scalarReplacements);
         return output;
     }

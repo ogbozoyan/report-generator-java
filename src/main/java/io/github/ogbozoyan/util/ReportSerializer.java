@@ -32,7 +32,7 @@ public class ReportSerializer {
         byte[] bytes,
         WarningCollector warningCollector
     ) {
-        log.info("serialize() - start: inputFileName={}, format={}, bytesLength={}, warnings={}",
+        log.trace("serialize() - start: inputFileName={}, format={}, bytesLength={}, warnings={}",
             input == null ? null : input.fileName(),
             format,
             bytes == null ? null : bytes.length,
@@ -40,7 +40,7 @@ public class ReportSerializer {
         String fileName = normalizeFileName(input.fileName(), format);
         String contentType = format.contentType();
         GeneratedReport report = new GeneratedReport(fileName, contentType, bytes, warningCollector.asList());
-        log.info("serialize() - end: outputFileName={}, contentType={}, warnings={}",
+        log.debug("serialize() - end: outputFileName={}, contentType={}, warnings={}",
             report.fileName(), report.contentType(), report.warnings().size());
         return report;
     }

@@ -39,7 +39,7 @@ public class TemplateScanner {
      * @return scan result
      */
     public static TemplateScanResult scanPoi(Workbook workbook) {
-        log.info("scanPoi() - start: sheetCount={}", workbook == null ? null : workbook.getNumberOfSheets());
+        log.trace("scanPoi() - start: sheetCount={}", workbook == null ? null : workbook.getNumberOfSheets());
         List<BlockMarker> markers = new ArrayList<>();
         List<TokenOccurrence> tokens = new ArrayList<>();
 
@@ -58,7 +58,7 @@ public class TemplateScanner {
         }
 
         TemplateScanResult result = new TemplateScanResult(markers, tokens);
-        log.info("scanPoi() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
+        log.trace("scanPoi() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
         return result;
     }
 
@@ -71,7 +71,7 @@ public class TemplateScanner {
      * @return scan result
      */
     public static TemplateScanResult scanOds(OdfDocument document) {
-        log.info("scanOds() - start: tableCount={}", document == null ? null : document.getTableList(false).size());
+        log.trace("scanOds() - start: tableCount={}", document == null ? null : document.getTableList(false).size());
         List<BlockMarker> markers = new ArrayList<>();
         List<TokenOccurrence> tokens = new ArrayList<>();
 
@@ -96,7 +96,7 @@ public class TemplateScanner {
         }
 
         TemplateScanResult result = new TemplateScanResult(markers, tokens);
-        log.info("scanOds() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
+        log.trace("scanOds() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
         return result;
     }
 

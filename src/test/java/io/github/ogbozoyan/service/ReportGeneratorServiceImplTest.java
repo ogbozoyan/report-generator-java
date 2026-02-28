@@ -1,54 +1,41 @@
-package io.github.ogbozoyan;
+package io.github.ogbozoyan.service;
 
+import io.github.ogbozoyan.BaseTest;
 import io.github.ogbozoyan.contract.GeneratedReport;
 import io.github.ogbozoyan.contract.ReportData;
 import io.github.ogbozoyan.contract.TemplateFormat;
 import io.github.ogbozoyan.contract.TemplateInput;
 import io.github.ogbozoyan.exception.UnsupportedTemplateFormatException;
-import io.github.ogbozoyan.service.ReportGeneratorService;
-import io.github.ogbozoyan.service.ReportGeneratorServiceImpl;
-import io.github.ogbozoyan.util.DocumentFormatConverter;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ReportGeneratorServiceImplTest {
+class ReportGeneratorServiceImplTest extends BaseTest {
 
     private final ReportGeneratorService service = new ReportGeneratorServiceImpl();
 
@@ -138,6 +125,153 @@ class ReportGeneratorServiceImplTest {
             assertEquals("after", sheet.getRow(3).getCell(0).getStringCellValue());
         }
         assertTrue(result.warnings().stream().anyMatch(w -> "TABLE_TOKEN_INLINE_TEXT_DROPPED".equals(w.code())));
+    }
+
+    @Test
+    void shouldInsertRowsOnlyTableTokenInXlsxWithoutHeader() throws Exception {
+        byte[] template = createXlsxTableTemplate();
+        List<Object[]> rows = List.of(
+            new Object[] {"North", 1200.25},
+            new Object[] {"South", 900.00}
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of("rows", rows)),
+            rowsOnlyOptions()
+        );
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertEquals("North", sheet.getRow(0).getCell(0).getStringCellValue());
+            assertEquals(1200.25, sheet.getRow(0).getCell(1).getNumericCellValue(), 0.0001);
+            assertEquals("South", sheet.getRow(1).getCell(0).getStringCellValue());
+            assertEquals(900.00, sheet.getRow(1).getCell(1).getNumericCellValue(), 0.0001);
+            assertEquals("after", sheet.getRow(2).getCell(0).getStringCellValue());
+        }
+    }
+
+    @Test
+    void shouldApplyConfiguredColumnOrderForRowsOnlyTableTokenInXlsx() throws Exception {
+        byte[] template = createXlsxTableTemplate();
+        List<Object[]> rows = List.of(
+            new Object[] {"RU", "North", 1200.25},
+            new Object[] {"EU", "South", 900.00}
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of(
+                "rows", rows,
+                "rows__columns", List.of("region", "name")
+            )),
+            rowsOnlyOptions()
+        );
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertEquals("RU", sheet.getRow(0).getCell(0).getStringCellValue());
+            assertEquals("North", sheet.getRow(0).getCell(1).getStringCellValue());
+            assertEquals(1200.25, sheet.getRow(0).getCell(2).getNumericCellValue(), 0.0001);
+        }
+    }
+
+    @Test
+    void shouldUseArrayOrderForRowsOnlyTableTokenWithoutConfiguredColumns() throws Exception {
+        byte[] template = createXlsxTableTemplate();
+        List<Object[]> rows = List.of(
+            new Object[] {2, 1},
+            new Object[] {3, 4, 5}
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of("rows", rows)),
+            rowsOnlyOptions()
+        );
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertEquals(2.0, sheet.getRow(0).getCell(0).getNumericCellValue(), 0.0001);
+            assertEquals(1.0, sheet.getRow(0).getCell(1).getNumericCellValue(), 0.0001);
+            assertEquals(5.0, sheet.getRow(1).getCell(2).getNumericCellValue(), 0.0001);
+        }
+    }
+
+    @Test
+    void shouldShiftTailRowsForRowsOnlyTableTokenInXlsx() throws Exception {
+        byte[] template = createXlsxTableTemplate();
+        List<Object[]> rows = List.of(
+            new Object[] {"North", 1200.25},
+            new Object[] {"South", 900.00},
+            new Object[] {"West", 700.00}
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of("rows", rows)),
+            rowsOnlyOptions()
+        );
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertEquals("after", sheet.getRow(3).getCell(0).getStringCellValue());
+        }
+    }
+
+    @Test
+    void shouldKeepHeaderModeWhenRowsOnlyFlagIsFalse() throws Exception {
+        byte[] template = createXlsxTableTemplate();
+        List<Map<String, Object>> rows = List.of(
+            row("name", "North", "amount", 1200.25),
+            row("name", "South", "amount", 900.00)
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of("rows", rows)),
+            headerModeOptions()
+        );
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertEquals("name", sheet.getRow(0).getCell(0).getStringCellValue());
+            assertEquals("North", sheet.getRow(1).getCell(0).getStringCellValue());
+        }
+    }
+
+    @Test
+    void shouldReturnEmptyTableWarningForRowsOnlyTableTokenInXlsx() throws Exception {
+        byte[] template = createXlsxTableTemplate();
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of("rows", List.of())),
+            rowsOnlyOptions()
+        );
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertEquals(CellType.BLANK, sheet.getRow(0).getCell(0).getCellType());
+            assertEquals("after", sheet.getRow(1).getCell(0).getStringCellValue());
+        }
+        assertTrue(result.warnings().stream().anyMatch(w -> "TABLE_TOKEN_EMPTY".equals(w.code())));
+    }
+
+    @Test
+    void shouldReturnInvalidTableWarningWhenRowsOnlyPayloadUsesMapRows() throws Exception {
+        byte[] template = createXlsxTableTemplate();
+        List<Map<String, Object>> rows = List.of(
+            row("name", "North", "amount", 1200.25)
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of("rows", rows)),
+            rowsOnlyOptions()
+        );
+
+        assertTrue(result.warnings().stream().anyMatch(w -> "TABLE_TOKEN_INVALID".equals(w.code())));
     }
 
     @Test
@@ -353,14 +487,14 @@ class ReportGeneratorServiceImplTest {
             null
         );
 
-        assertEquals(1, converter.calls);
-        assertEquals(TemplateFormat.XLSX, converter.sourceFormat);
-        assertEquals(TemplateFormat.ODS, converter.targetFormat);
+        assertEquals(1, converter.getCalls());
+        assertEquals(TemplateFormat.XLSX, converter.getSourceFormat());
+        assertEquals(TemplateFormat.ODS, converter.getTargetFormat());
         assertEquals("report.ods", result.fileName());
         assertEquals(TemplateFormat.ODS.contentType(), result.contentType());
         assertArrayEquals("converted-ods".getBytes(StandardCharsets.UTF_8), result.bytes());
 
-        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(converter.sourceBytes))) {
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(converter.getSourceBytes()))) {
             assertEquals("Alice", workbook.getSheetAt(0).getRow(0).getCell(0).getStringCellValue());
         }
     }
@@ -377,14 +511,14 @@ class ReportGeneratorServiceImplTest {
             null
         );
 
-        assertEquals(1, converter.calls);
-        assertEquals(TemplateFormat.DOCX, converter.sourceFormat);
-        assertEquals(TemplateFormat.ODT, converter.targetFormat);
+        assertEquals(1, converter.getCalls());
+        assertEquals(TemplateFormat.DOCX, converter.getSourceFormat());
+        assertEquals(TemplateFormat.ODT, converter.getTargetFormat());
         assertEquals("report.odt", result.fileName());
         assertEquals(TemplateFormat.ODT.contentType(), result.contentType());
         assertArrayEquals("converted-odt".getBytes(StandardCharsets.UTF_8), result.bytes());
 
-        try (XWPFDocument generatedDoc = new XWPFDocument(new ByteArrayInputStream(converter.sourceBytes))) {
+        try (XWPFDocument generatedDoc = new XWPFDocument(new ByteArrayInputStream(converter.getSourceBytes()))) {
             assertTrue(generatedDoc.getParagraphs().stream().anyMatch(p -> "Nina".equals(p.getText())));
         }
     }
@@ -401,7 +535,7 @@ class ReportGeneratorServiceImplTest {
             null
         );
 
-        assertEquals(0, converter.calls);
+        assertEquals(0, converter.getCalls());
         try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
             assertEquals("Alice", workbook.getSheetAt(0).getRow(0).getCell(0).getStringCellValue());
         }
@@ -449,183 +583,4 @@ class ReportGeneratorServiceImplTest {
         assertTrue(result.warnings().stream().anyMatch(w -> "MISSING_TOKEN".equals(w.code())));
     }
 
-    private byte[] createXlsScalarTemplate() throws Exception {
-        try (Workbook workbook = new HSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.createSheet("S");
-            Row row = sheet.createRow(0);
-            Cell cell = row.createCell(0);
-            cell.setCellValue("{{name}}");
-
-            CellStyle style = workbook.createCellStyle();
-            Font font = workbook.createFont();
-            font.setBold(true);
-            style.setFont(font);
-            cell.setCellStyle(style);
-
-            workbook.write(output);
-            return output.toByteArray();
-        }
-    }
-
-    private byte[] createXlsxTableTemplate() throws Exception {
-        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.createSheet("S");
-            Row markerRow = sheet.createRow(0);
-            Cell markerCell = markerRow.createCell(0);
-            markerCell.setCellValue("{{rows}}");
-
-            CellStyle style = workbook.createCellStyle();
-            Font font = workbook.createFont();
-            font.setBold(true);
-            style.setFont(font);
-            style.setWrapText(true);
-            style.setAlignment(HorizontalAlignment.CENTER);
-            markerCell.setCellStyle(style);
-
-            sheet.setColumnWidth(0, 1200);
-            sheet.setColumnWidth(1, 1200);
-            sheet.createRow(1).createCell(0).setCellValue("after");
-
-            workbook.write(output);
-            return output.toByteArray();
-        }
-    }
-
-    private byte[] createXlsxInlineTableTemplate() throws Exception {
-        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.createSheet("S");
-            Row markerRow = sheet.createRow(0);
-            Cell markerCell = markerRow.createCell(0);
-            markerCell.setCellValue("{{rows}} год");
-
-            CellStyle style = workbook.createCellStyle();
-            Font font = workbook.createFont();
-            font.setBold(true);
-            style.setFont(font);
-            style.setWrapText(true);
-            style.setAlignment(HorizontalAlignment.CENTER);
-            markerCell.setCellStyle(style);
-
-            sheet.setColumnWidth(0, 1200);
-            sheet.setColumnWidth(1, 1200);
-            sheet.createRow(1).createCell(0).setCellValue("after");
-
-            workbook.write(output);
-            return output.toByteArray();
-        }
-    }
-
-    private byte[] createDocxTableTemplate() throws Exception {
-        try (XWPFDocument document = new XWPFDocument();
-             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            document.createParagraph().createRun().setText("{{rows}}");
-            document.createParagraph().createRun().setText("tail");
-            document.write(output);
-            return output.toByteArray();
-        }
-    }
-
-    private byte[] createDocxNestedTableTokenTemplate() throws Exception {
-        try (XWPFDocument document = new XWPFDocument();
-             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            XWPFTable table = document.createTable(1, 2);
-            putCellToken(table.getRow(0).getCell(0), "{{inner_table}}");
-            putCellToken(table.getRow(0).getCell(1), "{{mega_test}}");
-            document.write(output);
-            return output.toByteArray();
-        }
-    }
-
-    private void putCellToken(XWPFTableCell cell, String token) {
-        for (int i = cell.getParagraphs().size() - 1; i >= 0; i--) {
-            cell.removeParagraph(i);
-        }
-        cell.addParagraph().createRun().setText(token);
-    }
-
-    private byte[] createDocxScalarTemplate(String value) throws Exception {
-        try (XWPFDocument document = new XWPFDocument();
-             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            document.createParagraph().createRun().setText(value);
-            document.write(output);
-            return output.toByteArray();
-        }
-    }
-
-    private byte[] createPdfTableTemplate() throws Exception {
-        try (PDDocument document = new PDDocument();
-             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            PDPage page = new PDPage(PDRectangle.A4);
-            document.addPage(page);
-
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
-                contentStream.beginText();
-                contentStream.newLineAtOffset(40, 780);
-                contentStream.showText("{{rows}}");
-                contentStream.endText();
-            }
-
-            document.save(output);
-            return output.toByteArray();
-        }
-    }
-
-    private byte[] createSimpleXlsx(String value, boolean withStyleAndWidth) throws Exception {
-        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.createSheet("S");
-            Row row = sheet.createRow(0);
-            Cell cell = row.createCell(0);
-            cell.setCellValue(value);
-
-            if (withStyleAndWidth) {
-                CellStyle style = workbook.createCellStyle();
-                Font font = workbook.createFont();
-                font.setBold(true);
-                style.setFont(font);
-                style.setWrapText(true);
-                cell.setCellStyle(style);
-                sheet.setColumnWidth(0, 4200);
-            }
-
-            workbook.write(output);
-            return output.toByteArray();
-        }
-    }
-
-    private byte[] loadResourceBytes(String path) throws Exception {
-        try (InputStream stream = getClass().getResourceAsStream(path)) {
-            assertNotNull(stream, "Missing test resource: " + path);
-            return stream.readAllBytes();
-        }
-    }
-
-    private Map<String, Object> row(Object... values) {
-        LinkedHashMap<String, Object> row = new LinkedHashMap<>();
-        for (int i = 0; i < values.length; i += 2) {
-            row.put(String.valueOf(values[i]), values[i + 1]);
-        }
-        return row;
-    }
-
-    private static final class RecordingConverter implements DocumentFormatConverter {
-        private final byte[] convertedBytes;
-        private int calls;
-        private TemplateFormat sourceFormat;
-        private TemplateFormat targetFormat;
-        private byte[] sourceBytes;
-
-        private RecordingConverter(byte[] convertedBytes) {
-            this.convertedBytes = convertedBytes;
-        }
-
-        @Override
-        public byte[] convert(byte[] sourceBytes, TemplateFormat sourceFormat, TemplateFormat targetFormat) {
-            this.calls++;
-            this.sourceBytes = sourceBytes;
-            this.sourceFormat = sourceFormat;
-            this.targetFormat = targetFormat;
-            return convertedBytes;
-        }
-    }
 }

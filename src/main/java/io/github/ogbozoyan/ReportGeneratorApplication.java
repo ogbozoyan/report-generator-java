@@ -31,10 +31,11 @@ public class ReportGeneratorApplication {
     public static void main(String[] args) {
         ReportGeneratorService service = new ReportGeneratorServiceImpl();
 
-        GeneratedReport reportXlsx = xlsx(service);
-        GeneratedReport reportDocx = docx(service);
+//        GeneratedReport reportXlsx = xlsx(service);
+        GeneratedReport reportXlsxRows = xlsxRows(service);
+//        GeneratedReport reportDocx = docx(service);
 
-        for (List<GenerationWarning> warningList : List.of(reportXlsx.warnings(), reportDocx.warnings())) {
+        for (List<GenerationWarning> warningList : List.of(/*reportXlsx.warnings(), reportDocx.warnings(), */reportXlsxRows.warnings())) {
             for (GenerationWarning warning : warningList) {
                 System.out.printf("[%s] %s @ %s%n", warning.code(), warning.message(), warning.location());
             }
@@ -87,8 +88,8 @@ public class ReportGeneratorApplication {
         GenerateOptions options = new GenerateOptions(
             MissingValuePolicy.EMPTY_AND_LOG,
             true,
-            Locale.forLanguageTag("ru-RU"),
-            ZoneId.of("Europe/Moscow")
+            Locale.forLanguageTag("ru-RU"), ZoneId.of("Europe/Moscow"),
+            false
         );
 
         GeneratedReport report = service.generate(input, data, options);
@@ -149,14 +150,67 @@ public class ReportGeneratorApplication {
         GenerateOptions options = new GenerateOptions(
             MissingValuePolicy.EMPTY_AND_LOG,
             true, // recalculate formulas (для XLS/XLSX)
-            Locale.forLanguageTag("ru-RU"),
-            ZoneId.of("Europe/Moscow")
+            Locale.forLanguageTag("ru-RU"), ZoneId.of("Europe/Moscow"),
+            false
         );
 
         GeneratedReport report = service.generate(input, data, options);
 
         Files.createDirectories(Path.of("out"));
         Files.write(Path.of("/Users/onbozoyan/Downloads/report-generator/book_table.xlsx"), report.bytes());
+        return report;
+    }
+
+    /**
+     * Generates XLSX sample report used for local smoke testing.
+     *
+     * @param service report generator io.github.ogbozoyan.service
+     * @return generated report
+     * @throws IOException when template/result file I/O fails
+     */
+    private static @NonNull GeneratedReport xlsxRows(ReportGeneratorService service) throws IOException {
+        byte[] templateBytes = Files.readAllBytes(Path.of("/Users/ogbozoyan/IdeaProjects/report-generator-java/TABLE_BOOK_ROWS.xlsx"));
+
+        TemplateInput input = new TemplateInput(
+            "TABLE_BOOK_ROWS.xlsx",
+            null,
+            templateBytes
+        );
+
+        Map<String, Object> tagsMap = new HashMap<>();
+
+        tagsMap.put("TABLE_WITH_ROWS_ONLY", List.of(
+            new Object[] {
+                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
+                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
+                "10000.00", "10000.00", "10000.00"
+            },
+            new Object[] {
+                "Петров Петр Петрович", "67890", "Аналитик", "1985-05-15",
+                "39", "2019-03-15", "75000.00", "15000.00", "2019-04-15",
+                "15000.00", "15000.00", "15000.00"
+            },
+            new Object[] {
+                "Сидоров Сидор Сидорович", "54321", "Разработчик", "IT отдел", "1992-12-20",
+                "32", "2021-06-01", "60000.00", "12000.00", "2021-07-01",
+                "12000.00", "12000.00", "12000.00"
+            }
+        ));
+
+
+        ReportData data = new ReportData(tagsMap);
+
+        GenerateOptions options = new GenerateOptions(
+            MissingValuePolicy.EMPTY_AND_LOG,
+            true, // recalculate formulas (для XLS/XLSX)
+            Locale.forLanguageTag("ru-RU"), ZoneId.of("Europe/Moscow"),
+            true
+        );
+
+        GeneratedReport report = service.generate(input, data, options);
+
+        Files.createDirectories(Path.of("out"));
+        Files.write(Path.of("book_table_rows.xlsx"), report.bytes());
         return report;
     }
 

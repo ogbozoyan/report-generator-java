@@ -10,6 +10,8 @@
 
 - scalar tokens: подстановка значений в `{{TOKEN}}`;
 - table tokens: `{{TABLE_TOKEN}}` для значения типа `List<Map<String, Object>>`;
+- rows-only table mode для `XLS/XLSX` через `GenerateOptions.rowsOnlyTableTokens=true`
+  и значения типа `List<Object[]>` (вставка без header-строки);
 - единая модель данных для spreadsheet и non-spreadsheet форматов;
 - политика отсутствующих токенов: `EMPTY_AND_LOG`, `LEAVE_TOKEN`, `FAIL_FAST`;
 - пересчёт формул для `XLS/XLSX`;
@@ -47,7 +49,13 @@ ReportData data = new ReportData(Map.of(
         "rows__columns", List.of("name", "amount")
 ));
 
-GenerateOptions options = GenerateOptions.defaults();
+GenerateOptions options = new GenerateOptions(
+        MissingValuePolicy.EMPTY_AND_LOG,
+        true,
+        Locale.getDefault(),
+        ZoneId.systemDefault(),
+        false // rowsOnlyTableTokens
+);
 GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, options);
 ```
 

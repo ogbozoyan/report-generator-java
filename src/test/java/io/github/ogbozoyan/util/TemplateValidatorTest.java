@@ -1,5 +1,6 @@
 package io.github.ogbozoyan.util;
 
+import io.github.ogbozoyan.BaseTest;
 import io.github.ogbozoyan.contract.BlockMarker;
 import io.github.ogbozoyan.contract.BlockRegion;
 import io.github.ogbozoyan.contract.BlockType;
@@ -15,7 +16,7 @@ import static io.github.ogbozoyan.util.TemplateValidator.validateAndBuildRegions
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class TemplateValidatorTest {
+class TemplateValidatorTest extends BaseTest {
 
     @Test
     void shouldBuildRegionsForValidMarkers() {

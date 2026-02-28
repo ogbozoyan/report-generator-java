@@ -1,5 +1,6 @@
 package io.github.ogbozoyan.util;
 
+import io.github.ogbozoyan.BaseTest;
 import io.github.ogbozoyan.contract.TemplateFormat;
 import io.github.ogbozoyan.contract.TemplateInput;
 import io.github.ogbozoyan.exception.UnsupportedTemplateFormatException;
@@ -8,18 +9,13 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import static io.github.ogbozoyan.util.TemplateFormatDetector.detectFormat;
 import static io.github.ogbozoyan.util.TemplateFormatDetector.detectRequestedOutputFormat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class TemplateFormatDetectorTest {
+class TemplateFormatDetectorTest extends BaseTest {
 
     @Test
     void shouldDetectFormatByExtension() {
@@ -80,27 +76,5 @@ class TemplateFormatDetectorTest {
     void shouldThrowOnUnknown() {
         TemplateInput input = new TemplateInput("report.abc", "text/plain", new byte[] {1, 2, 3, 4});
         assertThrows(UnsupportedTemplateFormatException.class, () -> detectFormat(input));
-    }
-
-    private byte[] loadResourceBytes(String path) throws Exception {
-        try (InputStream stream = getClass().getResourceAsStream(path)) {
-            assertNotNull(stream, "Missing test resource: " + path);
-            return stream.readAllBytes();
-        }
-    }
-
-    private byte[] zipWithEntries(String... entryNames) {
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream();
-             ZipOutputStream zipOutputStream = new ZipOutputStream(output, StandardCharsets.UTF_8)) {
-            for (String entryName : entryNames) {
-                zipOutputStream.putNextEntry(new ZipEntry(entryName));
-                zipOutputStream.write("<x/>".getBytes(StandardCharsets.UTF_8));
-                zipOutputStream.closeEntry();
-            }
-            zipOutputStream.finish();
-            return output.toByteArray();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 }

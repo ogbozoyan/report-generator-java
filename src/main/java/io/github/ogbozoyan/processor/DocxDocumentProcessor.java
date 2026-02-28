@@ -53,10 +53,10 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
      * @throws TemplateReadWriteException when document cannot be parsed
      */
     public DocxDocumentProcessor(byte[] bytes) {
-        log.info("DocxDocumentProcessor() - start: bytesLength={}", bytes == null ? null : bytes.length);
+        log.trace("DocxDocumentProcessor() - start: bytesLength={}", bytes == null ? null : bytes.length);
         try {
             this.document = new XWPFDocument(new ByteArrayInputStream(bytes));
-            log.info("DocxDocumentProcessor() - end: paragraphs={}", this.document.getParagraphs().size());
+            log.trace("DocxDocumentProcessor() - end: paragraphs={}", this.document.getParagraphs().size());
         } catch (Exception e) {
             log.error("DocxDocumentProcessor() - end with error: bytesLength={}", bytes == null ? null : bytes.length, e);
             throw new TemplateReadWriteException("Failed to read DOCX template", e);
@@ -70,9 +70,9 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
      */
     @Override
     public TemplateScanResult scan() {
-        log.info("scan() - start");
+        log.trace("scan() - start");
         TemplateScanResult result = new TemplateScanResult(List.of(), List.of());
-        log.info("scan() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
+        log.trace("scan() - end: markers={}, tokens={}", result.markers().size(), result.scalarTokens().size());
         return result;
     }
 
@@ -89,7 +89,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
     @Override
     public void applyTemplateTokens(Map<String, Object> templateTokens, GenerateOptions options, WarningCollector warningCollector) {
         List<ParagraphTarget> paragraphTargets = collectParagraphTargets();
-        log.info("applyTemplateTokens() - start: tokenCount={}, paragraphs={}",
+        log.debug("applyTemplateTokens() - start: tokenCount={}, paragraphs={}",
             templateTokens == null ? null : templateTokens.size(),
             paragraphTargets.size());
         List<DocxTableAnchor> anchors = new ArrayList<>();
@@ -140,7 +140,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
         for (DocxTableAnchor anchor : anchors) {
             insertTableAtParagraph(anchor, warningCollector);
         }
-        log.info("applyTemplateTokens() - end: tableInsertions={}, scalarReplacements={}", anchors.size(), scalarReplacements);
+        log.trace("applyTemplateTokens() - end: tableInsertions={}, scalarReplacements={}", anchors.size(), scalarReplacements);
     }
 
     /**
@@ -150,11 +150,11 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
      */
     @Override
     public byte[] serialize() {
-        log.info("serialize() - start");
+        log.trace("serialize() - start");
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             document.write(outputStream);
             byte[] bytes = outputStream.toByteArray();
-            log.info("serialize() - end: bytesLength={}", bytes.length);
+            log.trace("serialize() - end: bytesLength={}", bytes.length);
             return bytes;
         } catch (Exception e) {
             log.error("serialize() - end with error", e);
@@ -167,12 +167,12 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
      */
     @Override
     public void close() {
-        log.info("close() - start");
+        log.trace("close() - start");
         try {
             document.close();
-            log.info("close() - end: closed=true");
+            log.trace("close() - end: closed=true");
         } catch (Exception ignored) {
-            log.warn("close() - end with warning: failedToClose=true");
+            log.trace("close() - end with warning: failedToClose=true");
             // no-op
         }
     }
@@ -184,13 +184,13 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
      * @param warningCollector collector for non-fatal warnings
      */
     private void insertTableAtParagraph(DocxTableAnchor anchor, WarningCollector warningCollector) {
-        log.info("insertTableAtParagraph() - start: token={}, rowCount={}, location={}",
+        log.trace("insertTableAtParagraph() - start: token={}, rowCount={}, location={}",
             anchor.token(), anchor.rows().size(), anchor.location());
         List<Map<String, Object>> rows = anchor.rows();
         if (rows.isEmpty()) {
             warningCollector.add("TABLE_TOKEN_EMPTY", "Table token has no rows: " + anchor.token(), anchor.location());
             replaceParagraphText(anchor.paragraph(), "");
-            log.info("insertTableAtParagraph() - end: inserted=false, reason=emptyRows");
+            log.trace("insertTableAtParagraph() - end: inserted=false, reason=emptyRows");
             return;
         }
 
@@ -198,7 +198,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
         if (columns.isEmpty()) {
             warningCollector.add("TABLE_TOKEN_INVALID", "Table token has no columns: " + anchor.token(), anchor.location());
             replaceParagraphText(anchor.paragraph(), "");
-            log.info("insertTableAtParagraph() - end: inserted=false, reason=emptyColumns");
+            log.trace("insertTableAtParagraph() - end: inserted=false, reason=emptyColumns");
             return;
         }
 
@@ -207,7 +207,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
         writeTable(table, columns, rows);
 
         removeParagraphFromContainer(anchor.paragraph());
-        log.info("insertTableAtParagraph() - end: inserted=true, columns={}", columns.size());
+        log.trace("insertTableAtParagraph() - end: inserted=true, columns={}", columns.size());
     }
 
     /**

@@ -37,10 +37,10 @@ public class LibreOfficeDocumentFormatConverter implements DocumentFormatConvert
      */
     @Override
     public byte[] convert(byte[] sourceBytes, TemplateFormat sourceFormat, TemplateFormat targetFormat) {
-        log.info("convert() - start: sourceFormat={}, targetFormat={}, sourceBytesLength={}",
+        log.trace("convert() - start: sourceFormat={}, targetFormat={}, sourceBytesLength={}",
             sourceFormat, targetFormat, sourceBytes == null ? null : sourceBytes.length);
         if (sourceFormat == targetFormat) {
-            log.info("convert() - end: converted=false, reason=sameFormat, outputBytesLength={}",
+            log.trace("convert() - end: converted=false, reason=sameFormat, outputBytesLength={}",
                 sourceBytes == null ? null : sourceBytes.length);
             return sourceBytes;
         }
@@ -64,7 +64,7 @@ public class LibreOfficeDocumentFormatConverter implements DocumentFormatConvert
                 inputFile.toString()
             );
 
-            log.info("convert() - command: sourceFormat={}, targetFormat={}, binary={}", sourceFormat, targetFormat, binary);
+            log.trace("convert() - command: sourceFormat={}, targetFormat={}, binary={}", sourceFormat, targetFormat, binary);
             Process process = new ProcessBuilder(command)
                 .redirectErrorStream(true)
                 .start();
@@ -91,7 +91,7 @@ public class LibreOfficeDocumentFormatConverter implements DocumentFormatConvert
             }
 
             byte[] converted = Files.readAllBytes(outputFile);
-            log.info("convert() - end: converted=true, outputBytesLength={}", converted.length);
+            log.trace("convert() - end: converted=true, outputBytesLength={}", converted.length);
             return converted;
         } catch (IOException e) {
             log.error("convert() - end with error: ioFailure=true", e);
@@ -114,14 +114,14 @@ public class LibreOfficeDocumentFormatConverter implements DocumentFormatConvert
      * @throws TemplateReadWriteException when no candidate is available in PATH
      */
     private String resolveOfficeBinary() {
-        log.info("resolveOfficeBinary() - start: candidates={}", OFFICE_BINARIES);
+        log.trace("resolveOfficeBinary() - start: candidates={}", OFFICE_BINARIES);
         for (String candidate : OFFICE_BINARIES) {
             try {
                 Process process = new ProcessBuilder(candidate, "--version")
                     .redirectErrorStream(true)
                     .start();
                 if (process.waitFor(5, TimeUnit.SECONDS) && process.exitValue() == 0) {
-                    log.info("resolveOfficeBinary() - end: binary={}", candidate);
+                    log.trace("resolveOfficeBinary() - end: binary={}", candidate);
                     return candidate;
                 }
             } catch (Exception ignored) {
@@ -140,7 +140,7 @@ public class LibreOfficeDocumentFormatConverter implements DocumentFormatConvert
      * @param root temporary root directory
      */
     private void deleteRecursively(Path root) {
-        log.info("deleteRecursively() - start: root={}", root);
+        log.trace("deleteRecursively() - start: root={}", root);
         try (Stream<Path> stream = Files.walk(root)) {
             stream.sorted(Comparator.reverseOrder())
                 .forEach(path -> {
@@ -153,6 +153,6 @@ public class LibreOfficeDocumentFormatConverter implements DocumentFormatConvert
         } catch (IOException ignored) {
             log.warn("deleteRecursively() - warning: failedToWalkRoot={}", root);
         }
-        log.info("deleteRecursively() - end: root={}", root);
+        log.trace("deleteRecursively() - end: root={}", root);
     }
 }
