@@ -46,7 +46,7 @@ ReportData data = new ReportData(Map.of(
                 Map.of("name", "North", "amount", 1200.25),
                 Map.of("name", "South", "amount", 900.00)
         ),
-        "rows__columns", List.of("name", "amount")
+        TagConstants.ROWS_COLUMNS.getValue(), List.of("name", "amount")
 ));
 
 GenerateOptions options = new GenerateOptions(

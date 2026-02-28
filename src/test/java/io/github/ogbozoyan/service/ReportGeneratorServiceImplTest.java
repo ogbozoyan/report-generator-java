@@ -3,6 +3,7 @@ package io.github.ogbozoyan.service;
 import io.github.ogbozoyan.BaseTest;
 import io.github.ogbozoyan.data.GeneratedReport;
 import io.github.ogbozoyan.data.ReportData;
+import io.github.ogbozoyan.data.TagConstants;
 import io.github.ogbozoyan.data.TemplateFormat;
 import io.github.ogbozoyan.data.TemplateInput;
 import io.github.ogbozoyan.exception.UnsupportedTemplateFormatException;
@@ -163,7 +164,7 @@ class ReportGeneratorServiceImplTest extends BaseTest {
             new TemplateInput("report.xlsx", null, template),
             new ReportData(Map.of(
                 "rows", rows,
-                "rows__columns", List.of("region", "name")
+                TagConstants.ROWS_COLUMNS.getValue(), List.of("region", "name")
             )),
             rowsOnlyOptions()
         );
@@ -308,7 +309,7 @@ class ReportGeneratorServiceImplTest extends BaseTest {
             new TemplateInput("report.xlsx", null, template),
             new ReportData(Map.of(
                 "rows", rows,
-                "rows__columns", List.of("name", "amount", "жопа", "слона")
+                TagConstants.ROWS_COLUMNS.getValue(), List.of("name", "amount", "жопа", "слона")
             )),
             null
         );
