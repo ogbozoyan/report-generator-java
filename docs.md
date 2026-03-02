@@ -112,6 +112,11 @@
 - dual table modes:
   - default: header + data;
   - rows-only (`GenerateOptions.rowsOnlyTableTokens=true`): только data-строки из `List<Object[]>`.
+- multi-pass table expansion:
+  - сначала выполняются только table-pass проходы;
+  - каждый проход: scan anchors -> reverse insert;
+  - проходы повторяются, пока есть новые anchors;
+  - после стабилизации выполняется scalar-pass.
 - style baseline: reuse стиля маркерной ячейки для header/data.
 - auto-width: ширины меняются только у вставленных колонок.
 - formula policy: формулы с токенами не переписываются, только warning.
@@ -121,6 +126,7 @@
 - sparse traversal устраняет зависания на больших разреженных листах;
 - reverse apply делает множественные вставки детерминированными при `shiftRows`;
 - rows-only режим позволяет использовать отдельную строку descriptor/маппинга без дублирования заголовка;
+- multi-pass устраняет потерю table token, которые появляются только после предыдущей вставки;
 - baseline style минимизирует визуальные регрессии шаблонов;
 - локальный auto-width не ломает внешний layout листа;
 - пропуск formula-токенов безопаснее, чем риск повреждения формульного синтаксиса.
@@ -186,6 +192,9 @@
   - в rows-only mode значение токена не является `List<Object[]>`.
 - `TABLE_TOKEN_EMPTY`:
   - таблица передана как пустой список.
+- `TABLE_TOKEN_RECURSIVE`:
+  - вставки table token не стабилизировались за лимит `MAX_TABLE_PASSES`;
+  - проверьте, что table-токены не ссылаются циклически друг на друга.
 - `GenerateOptions.rowsOnlyTableTokens=true`:
   - включён rows-only режим для `XLS/XLSX`: marker row становится первой data-строкой;
   - payload токена должен быть `List<Object[]>`.
@@ -281,6 +290,9 @@ GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, Gener
 
 - `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.service.ReportGeneratorFormattingGoldenTest.java`
   - регрессионная проверка форматирования spreadsheet при table insertion.
+
+- `src/test/java/io/github/ogbozoyan/integration/ReportGeneratorManualIntegrationTest.java`
+  - ручные интеграционные сценарии, вынесенные из `main` (класс помечен `@Disabled`).
 
 - `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.util/TemplateFormatDetectorTest.java`
   - детект формата по magic bytes/content-type/extension;

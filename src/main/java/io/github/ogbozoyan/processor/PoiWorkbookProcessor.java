@@ -56,7 +56,8 @@ import static io.github.ogbozoyan.helper.PoiHelper.writeValueToCell;
  * <p>Key design choices:
  * <ul>
  *     <li>iterate physical rows/cells only, to avoid full-grid scans on sparse templates,</li>
- *     <li>collect table anchors first and insert them in reverse order, so row shifting does not break coordinates,</li>
+ *     <li>run table insertion in multi-pass mode with reverse anchor application, so row shifting
+ *     and newly appeared table tokens are handled deterministically,</li>
  *     <li>resize only inserted table columns and clamp width to a safe range,</li>
  *     <li>preserve table marker style for both header and data rows.</li>
  * </ul>
@@ -72,6 +73,8 @@ import static io.github.ogbozoyan.helper.PoiHelper.writeValueToCell;
  */
 @Slf4j
 public class PoiWorkbookProcessor implements WorkbookProcessor {
+
+    private static final int MAX_TABLE_PASSES = 50;
 
     private final Workbook workbook;
 
@@ -113,7 +116,8 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
      *     <li>{@code List<Map<String, Object>>} in default mode,</li>
      *     <li>{@code List<Object[]>} when {@link GenerateOptions#rowsOnlyTableTokens()} is {@code true}.</li>
      * </ul>
-     * During scan phase table anchors are collected, then applied in reverse order after scalar pass.
+     * During table phase anchors are collected and applied in reverse order for each pass.
+     * Additional passes run until no new table anchors are found, then scalar pass is executed.
      *
      * <p>Example:
      * <pre>{@code
@@ -149,13 +153,13 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
     }
 
     /**
-     * Processes a single sheet: scans tokens, collects table anchors, then inserts tables.
+     * Processes a single sheet using two phases: table passes, then scalar pass.
      *
      * <p>The method is intentionally split into phases:
      * <ol>
-     *     <li>scan physical rows and cells,</li>
-     *     <li>accumulate table anchors,</li>
-     *     <li>insert tables from bottom-to-top.</li>
+     *     <li>repeat table passes until no anchors are found (or {@link #MAX_TABLE_PASSES} reached),</li>
+     *     <li>for each table pass: scan physical rows/cells, collect anchors, apply bottom-to-top,</li>
+     *     <li>run scalar replacement pass on the stabilized sheet.</li>
      * </ol>
      */
     private void processSheetTokens(
@@ -166,8 +170,10 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         GenerateOptions options,
         WarningCollector warningCollector
     ) {
-        SheetProcessingState state = new SheetProcessingState();
         String sheetName = sheet.getSheetName();
+        int totalTablePasses = 0;
+        int totalTableTokensFound = 0;
+        int totalTableInsertions = 0;
 
         log.trace("processSheetTokens() - start: sheetName={}, sheetIndex={}, sheetCount={}, lastRow={}, lastCell={}",
             sheetName,
@@ -176,15 +182,16 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
             sheet.getLastRowNum(),
             resolveSheetLastCellNum(sheet));
 
-        for (Row row : sheet) {
-            if (row.getLastCellNum() <= 0) {
-                continue;
+        for (int pass = 1; pass <= MAX_TABLE_PASSES; pass++) {
+            SheetProcessingState tablePassState = new SheetProcessingState();
+            for (Row row : sheet) {
+                if (row.getLastCellNum() <= 0) {
+                    continue;
+                }
+                processRowTokens(sheet, row, context, options, warningCollector, tablePassState, false);
             }
-            processRowTokens(sheet, row, context, options, warningCollector, state);
-        }
 
-        state.getAnchors()
-            .sort(
+            tablePassState.getAnchors().sort(
                 Comparator
                     .comparingInt(PoiTableAnchor::rowIndex)
                     .reversed()
@@ -193,12 +200,53 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                     )
             );
 
-        log.trace("processSheetTokens() - end: sheetName={}, processedCells={}, tableTokensFound={}, scalarTokensApplied={}, tableInsertions={}",
-            sheetName, state.getProcessedCells(), state.getTableTokensFound(), state.getScalarTokensApplied(), state.getAnchors().size());
+            if (tablePassState.getAnchors().isEmpty()) {
+                log.trace("processSheetTokens() - tablePassComplete: sheetName={}, pass={}, anchorsFound=0",
+                    sheetName, pass);
+                break;
+            }
 
-        for (PoiTableAnchor anchor : state.getAnchors()) {
-            insertTableAtAnchor(sheet, anchor, options, warningCollector);
+            totalTablePasses++;
+            totalTableTokensFound += tablePassState.getTableTokensFound();
+            totalTableInsertions += tablePassState.getAnchors().size();
+
+            log.trace("processSheetTokens() - tablePass: sheetName={}, pass={}, processedCells={}, tableTokensFound={}, tableInsertions={}",
+                sheetName,
+                pass,
+                tablePassState.getProcessedCells(),
+                tablePassState.getTableTokensFound(),
+                tablePassState.getAnchors().size());
+
+            for (PoiTableAnchor anchor : tablePassState.getAnchors()) {
+                insertTableAtAnchor(sheet, anchor, options, warningCollector);
+            }
+
+            if (pass == MAX_TABLE_PASSES) {
+                String location = cellLocation(sheet, 0, 0);
+                log.warn("processSheetTokens() - tablePassLimitReached: sheetName={}, maxPasses={}", sheetName, MAX_TABLE_PASSES);
+                warningCollector.add(
+                    "TABLE_TOKEN_RECURSIVE",
+                    "Table token expansion did not stabilize after " + MAX_TABLE_PASSES + " passes",
+                    location
+                );
+            }
         }
+
+        SheetProcessingState scalarPassState = new SheetProcessingState();
+        for (Row row : sheet) {
+            if (row.getLastCellNum() <= 0) {
+                continue;
+            }
+            processRowTokens(sheet, row, context, options, warningCollector, scalarPassState, true);
+        }
+
+        log.trace("processSheetTokens() - end: sheetName={}, tablePasses={}, tableTokensFound={}, tableInsertions={}, scalarProcessedCells={}, scalarTokensApplied={}",
+            sheetName,
+            totalTablePasses,
+            totalTableTokensFound,
+            totalTableInsertions,
+            scalarPassState.getProcessedCells(),
+            scalarPassState.getScalarTokensApplied());
     }
 
     /**
@@ -217,14 +265,15 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         Map<String, Object> context,
         GenerateOptions options,
         WarningCollector warningCollector,
-        SheetProcessingState state
+        SheetProcessingState state,
+        boolean scalarPass
     ) {
         int rowIndex = row.getRowNum();
-        log.trace("processRowTokens() - start: rowIndex={}, cellCount={}", rowIndex, row.getLastCellNum());
+        log.trace("processRowTokens() - start: rowIndex={}, cellCount={}, scalarPass={}", rowIndex, row.getLastCellNum(), scalarPass);
         for (Cell cell : row) {
-            processCellToken(sheet, row, cell, context, options, warningCollector, state);
+            processCellToken(sheet, row, cell, context, options, warningCollector, state, scalarPass);
         }
-        log.trace("processRowTokens() - end: rowIndex={}", rowIndex);
+        log.trace("processRowTokens() - end: rowIndex={}, scalarPass={}", rowIndex, scalarPass);
     }
 
     /**
@@ -245,14 +294,15 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         Map<String, Object> context,
         GenerateOptions options,
         WarningCollector warningCollector,
-        SheetProcessingState state
+        SheetProcessingState state,
+        boolean scalarPass
     ) {
         int rowIndex = row.getRowNum();
         int colIndex = cell.getColumnIndex();
         String location = cellLocation(sheet, rowIndex, colIndex);
         state.incrementProcessedCells();
 
-        if (isFormulaTokenCell(cell, location, warningCollector)) {
+        if (scalarPass && isFormulaTokenCell(cell, location, warningCollector)) {
             return;
         }
         if (!isEligibleCellType(cell)) {
@@ -269,6 +319,14 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
             return;
         }
 
+        if (!scalarPass) {
+            return;
+        }
+        if (isScalarTableTokenCandidate(original, context, options)) {
+            log.trace("processCellToken() - scalarSkippedForTableToken: location={}, tokenText={}", location, original);
+            return;
+        }
+
         applyTokenToCell(
             cell,
             context,
@@ -278,6 +336,36 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
             location
         );
         state.incrementScalarTokensApplied();
+    }
+
+    /**
+     * Checks whether current token text should be treated as table token during scalar pass.
+     *
+     * <p>This guard prevents scalar phase from converting unresolved table placeholders to
+     * stringified list values when table expansion is expected.
+     */
+    private boolean isScalarTableTokenCandidate(
+        String original,
+        Map<String, Object> context,
+        GenerateOptions options
+    ) {
+        String exactToken = TokenResolver.getExactToken(original);
+        String singleToken = TokenResolver.getSingleToken(original);
+        String token = exactToken != null ? exactToken : singleToken;
+        if (token == null || TokenResolver.isItemOrIndexToken(token)) {
+            return false;
+        }
+
+        Object resolved = TokenResolver.resolvePath(context, token);
+        if (resolved == null) {
+            return false;
+        }
+
+        List<String> configuredColumnOrder = resolveConfiguredColumnOrder(context, token);
+        if (options.rowsOnlyTableTokens()) {
+            return toRowsOnlyTableRows(resolved, configuredColumnOrder) != null;
+        }
+        return TokenResolver.toTableRows(resolved) != null;
     }
 
     /**

@@ -221,6 +221,34 @@ class ReportGeneratorServiceImplTest extends BaseTest {
     }
 
     @Test
+    void shouldResolveTableTokenInsertedByPreviousTablePassInRowsOnlyMode() throws Exception {
+        byte[] template = createXlsxTableTemplate();
+        List<Object[]> outerRows = List.<Object[]>of(
+            new Object[] {"{{rows2}}"}
+        );
+        List<Object[]> innerRows = List.of(
+            new Object[] {"A"},
+            new Object[] {"B"}
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of(
+                "rows", outerRows,
+                "rows2", innerRows
+            )),
+            rowsOnlyOptions()
+        );
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertEquals("A", sheet.getRow(0).getCell(0).getStringCellValue());
+            assertEquals("B", sheet.getRow(1).getCell(0).getStringCellValue());
+            assertEquals("after", sheet.getRow(2).getCell(0).getStringCellValue());
+        }
+    }
+
+    @Test
     void shouldKeepHeaderModeWhenRowsOnlyFlagIsFalse() throws Exception {
         byte[] template = createXlsxTableTemplate();
         List<Map<String, Object>> rows = List.of(

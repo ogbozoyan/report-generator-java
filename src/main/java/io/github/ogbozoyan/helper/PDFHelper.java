@@ -1,12 +1,10 @@
 package io.github.ogbozoyan.helper;
 
-import lombok.experimental.Helper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
 @Slf4j
-@Helper
 public class PDFHelper {
     /**
      * Builds separator line for ASCII table.

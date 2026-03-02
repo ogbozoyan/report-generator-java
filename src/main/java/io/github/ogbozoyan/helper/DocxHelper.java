@@ -2,8 +2,6 @@ package io.github.ogbozoyan.helper;
 
 import io.github.ogbozoyan.data.ParagraphTarget;
 import io.github.ogbozoyan.exception.TemplateReadWriteException;
-import lombok.experimental.Helper;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.BodyElementType;
 import org.apache.poi.xwpf.usermodel.IBody;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
@@ -19,8 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Helper
-@Slf4j
 public class DocxHelper extends CommonHelper {
     /**
      * Ensures row has at least requested number of cells.

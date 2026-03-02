@@ -12,6 +12,8 @@
 - table tokens: `{{TABLE_TOKEN}}` для значения типа `List<Map<String, Object>>`;
 - rows-only table mode для `XLS/XLSX` через `GenerateOptions.rowsOnlyTableTokens=true`
   и значения типа `List<Object[]>` (вставка без header-строки);
+- multi-pass обработка table tokens в `XLS/XLSX`: токены, появившиеся после вставки
+  (например `{{TABLE_PART_2}}` внутри вставленных строк), обрабатываются на следующем проходе;
 - единая модель данных для spreadsheet и non-spreadsheet форматов;
 - политика отсутствующих токенов: `EMPTY_AND_LOG`, `LEAVE_TOKEN`, `FAIL_FAST`;
 - пересчёт формул для `XLS/XLSX`;
@@ -66,9 +68,14 @@ GeneratedReport report = service.generate(input, data, options);
   - токен есть в шаблоне, но отсутствует в `ReportData.templateTokens()`.
 - `FORMULA_TOKEN_SKIPPED`:
   - токен найден внутри формулы, формула не переписывается намеренно.
+- `TABLE_TOKEN_RECURSIVE`:
+  - table-вставки не стабилизировались за защитный лимит проходов (`MAX_TABLE_PASSES`).
 
 ## Документация
 
 Подробная архитектура, алгоритмы, rationale по всем `WorkbookProcessor`, troubleshooting и расширенные примеры:
 
 - [docs.md](docs.md)
+
+Локальные ручные интеграционные сценарии перенесены в
+`src/test/java/io/github/ogbozoyan/integration/ReportGeneratorManualIntegrationTest.java`.
