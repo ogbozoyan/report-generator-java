@@ -12,7 +12,7 @@ import java.util.Map;
  * <p>Each implementation owns one document instance and applies the same lifecycle:
  * <ol>
  *     <li>optional {@link #scan()} phase,</li>
- *     <li>{@link #applyTemplateTokens(Map, GenerateOptions, WarningCollector)},</li>
+ *     <li>{@link #process(Map, GenerateOptions, WarningCollector)},</li>
  *     <li>optional {@link #recalculateFormulas(GenerateOptions)},</li>
  *     <li>{@link #serialize()},</li>
  *     <li>{@link #close()}.</li>
@@ -30,12 +30,12 @@ public interface WorkbookProcessor extends AutoCloseable {
     /**
      * Applies scalar and table tokens.
      *
-     * @param scalars          unified token map; table token values are expected as
-     *                         {@code List<Map<String, Object>>}
-     * @param options          generation options
-     * @param warningCollector collector for non-fatal generation warnings
+     * @param templateTokensMappings unified token map; table token values are expected as
+     *                               {@code List<Map<String, Object>>}
+     * @param options                generation options
+     * @param warningCollector       collector for non-fatal generation warnings
      */
-    void applyTemplateTokens(Map<String, Object> scalars, GenerateOptions options, WarningCollector warningCollector);
+    void process(Map<String, Object> templateTokensMappings, GenerateOptions options, WarningCollector warningCollector);
 
     /**
      * Recalculates formulas when the format supports it.

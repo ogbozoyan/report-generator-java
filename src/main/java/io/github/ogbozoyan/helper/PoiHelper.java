@@ -1,6 +1,6 @@
 package io.github.ogbozoyan.helper;
 
-import lombok.experimental.UtilityClass;
+import lombok.experimental.Helper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -20,9 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-@UtilityClass
+@Helper
 @Slf4j
-public class PoiHelper {
+public class PoiHelper extends CommonHelper {
 
     /**
      * Applies baseline style to cell when style is available.

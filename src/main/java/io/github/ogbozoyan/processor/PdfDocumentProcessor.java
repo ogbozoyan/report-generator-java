@@ -18,9 +18,12 @@ import org.apache.pdfbox.text.PDFTextStripper;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+
+import static io.github.ogbozoyan.helper.CommonHelper.buildColumnOrder;
+import static io.github.ogbozoyan.helper.PDFHelper.buildRow;
+import static io.github.ogbozoyan.helper.PDFHelper.buildSeparator;
 
 /**
  * Processor for PDF templates.
@@ -177,17 +180,17 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
     /**
      * Applies token replacement to extracted text representation.
      *
-     * @param templateToken    token map
-     * @param options          generation options
-     * @param warningCollector collector for non-fatal warnings
+     * @param templateTokensMappings token map
+     * @param options                generation options
+     * @param warningCollector       collector for non-fatal warnings
      */
     @Override
-    public void applyTemplateTokens(Map<String, Object> templateToken, GenerateOptions options, WarningCollector warningCollector) {
-        log.trace("applyTemplateTokens() - start: tokenCount={}, extractedTextLength={}",
-            templateToken == null ? null : templateToken.size(),
+    public void process(Map<String, Object> templateTokensMappings, GenerateOptions options, WarningCollector warningCollector) {
+        log.trace("process() - start: tokenCount={}, extractedTextLength={}",
+            templateTokensMappings == null ? null : templateTokensMappings.size(),
             extractedText == null ? 0 : extractedText.length());
-        extractedText = replaceTokensWithTables(extractedText == null ? "" : extractedText, templateToken, options, warningCollector);
-        log.trace("applyTemplateTokens() - end: extractedTextLength={}", extractedText == null ? 0 : extractedText.length());
+        extractedText = replaceTokensWithTables(extractedText == null ? "" : extractedText, templateTokensMappings, options, warningCollector);
+        log.trace("process() - end: extractedTextLength={}", extractedText.length());
     }
 
     /**
@@ -365,70 +368,5 @@ public class PdfDocumentProcessor implements WorkbookProcessor {
         return sb.toString();
     }
 
-    /**
-     * Builds separator line for ASCII table.
-     *
-     * @param widths per-column widths
-     * @return separator line
-     */
-    private String buildSeparator(int[] widths) {
-        StringBuilder sb = new StringBuilder();
-        for (int width : widths) {
-            if (sb.length() > 0) {
-                sb.append("-+-");
-            }
-            sb.append("-".repeat(Math.max(1, width)));
-        }
-        return sb.toString();
-    }
 
-    /**
-     * Builds padded row line for ASCII table.
-     *
-     * @param cells  row cell values
-     * @param widths per-column widths
-     * @return row line
-     */
-    private String buildRow(List<String> cells, int[] widths) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < cells.size(); i++) {
-            if (i > 0) {
-                sb.append(" | ");
-            }
-            sb.append(padRight(cells.get(i), widths[i]));
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Right-pads value to fixed length.
-     *
-     * @param value  source value
-     * @param length target length
-     * @return padded string
-     */
-    private String padRight(String value, int length) {
-        String source = value == null ? "" : value;
-        if (source.length() >= length) {
-            return source;
-        }
-        return source + " ".repeat(length - source.length());
-    }
-
-    /**
-     * Builds stable column order: first-row keys, then new keys in encounter order.
-     *
-     * @param rows table rows
-     * @return ordered columns
-     */
-    private List<String> buildColumnOrder(List<Map<String, Object>> rows) {
-        LinkedHashSet<String> ordered = new LinkedHashSet<>();
-        if (!rows.isEmpty()) {
-            ordered.addAll(rows.get(0).keySet());
-        }
-        for (Map<String, Object> row : rows) {
-            ordered.addAll(row.keySet());
-        }
-        return List.copyOf(ordered);
-    }
 }

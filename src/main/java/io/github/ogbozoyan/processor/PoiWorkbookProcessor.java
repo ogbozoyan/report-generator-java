@@ -128,27 +128,24 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
      * io.github.ogbozoyan.processor.applyTemplateTokens(tokens, GenerateOptions.defaults(), warningCollector);
      * }</pre>
      *
-     * @param templateTokens   token map; table token must be {@code List<Map<String, Object>>}
-     *                         in default mode or {@code List<Object[]>} in rows-only mode
-     * @param options          generation options
-     * @param warningCollector collector for non-fatal issues
+     * @param templateTokensMappings token map; table token must be {@code List<Map<String, Object>>}
+     *                               in default mode or {@code List<Object[]>} in rows-only mode
+     * @param options                generation options
+     * @param warningCollector       collector for non-fatal issues
      */
     @Override
-    public void applyTemplateTokens(Map<String, Object> templateTokens, GenerateOptions options, WarningCollector warningCollector) {
-        Map<String, Object> context = templateTokens == null ? Map.of() : templateTokens;
+    public void process(Map<String, Object> templateTokensMappings, GenerateOptions options, WarningCollector warningCollector) {
+        Map<String, Object> context = templateTokensMappings == null ? Map.of() : templateTokensMappings;
         int sheetCount = workbook.getNumberOfSheets();
 
-        log.trace("applyTemplateTokens() - start: sheetCount={}, tokenCount={}",
-            sheetCount, context.size());
-        log.trace("applyTemplateTokens() - options: missingValuePolicy={}, zoneId={}, recalculateFormulas={}",
-            options.missingValuePolicy(), options.zoneId(), options.recalculateFormulas());
-        log.trace("applyTemplateTokens() - tableMode: rowsOnlyTableTokens={}", options.rowsOnlyTableTokens());
+        log.trace("process() - start: sheetCount={}, tokenCount={}, missingValuePolicy={}, zoneId={}, recalculateFormulas={}, rowsOnlyTableTokens={}",
+            sheetCount, context.size(), options.missingValuePolicy(), options.zoneId(), options.recalculateFormulas(), options.rowsOnlyTableTokens());
 
         for (int sheetIndex = 0; sheetIndex < sheetCount; sheetIndex++) {
             Sheet sheet = workbook.getSheetAt(sheetIndex);
             processSheetTokens(sheet, sheetIndex, sheetCount, context, options, warningCollector);
         }
-        log.trace("applyTemplateTokens() - end: sheetCount={}", sheetCount);
+        log.trace("process() - end: sheetCount={}", sheetCount);
     }
 
     /**

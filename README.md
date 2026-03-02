@@ -34,9 +34,7 @@
 ## Quickstart
 
 ```java
-ReportGeneratorService io.github.ogbozoyan.service =new
-
-ReportGeneratorServiceImpl();
+ReportGeneratorService service = new ReportGeneratorServiceImpl();
 
 TemplateInput input = new TemplateInput("sales-report.xlsx", null, templateBytes);
 
@@ -56,7 +54,7 @@ GenerateOptions options = new GenerateOptions(
         ZoneId.systemDefault(),
         false // rowsOnlyTableTokens
 );
-GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, options);
+GeneratedReport report = service.generate(input, data, options);
 ```
 
 ## Частые ошибки

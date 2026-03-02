@@ -12,9 +12,11 @@ import org.apache.poi.hwpf.usermodel.Range;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+
+import static io.github.ogbozoyan.helper.DocHelper.normalizeParagraphText;
+import static io.github.ogbozoyan.helper.DocHelper.renderTableAsDocText;
 
 /**
  * Basic {@code .doc} io.github.ogbozoyan.processor based on Apache POI HWPF.
@@ -74,14 +76,14 @@ public class DocDocumentProcessor implements WorkbookProcessor {
      *     <li>global scalar replacement pass for remaining scalar tokens.</li>
      * </ul>
      *
-     * @param templateToken    token map
-     * @param options          generation options
-     * @param warningCollector collector for non-fatal warnings
+     * @param templateTokensMappings token map
+     * @param options                generation options
+     * @param warningCollector       collector for non-fatal warnings
      */
     @Override
-    public void applyTemplateTokens(Map<String, Object> templateToken, GenerateOptions options, WarningCollector warningCollector) {
-        log.trace("applyTemplateTokens() - start: tokenCount={}, missingValuePolicy={}",
-            templateToken == null ? null : templateToken.size(),
+    public void process(Map<String, Object> templateTokensMappings, GenerateOptions options, WarningCollector warningCollector) {
+        log.trace("process() - start: tokenCount={}, missingValuePolicy={}",
+            templateTokensMappings == null ? null : templateTokensMappings.size(),
             options == null ? null : options.missingValuePolicy());
         Range range = document.getRange();
         int tableInsertions = 0;
@@ -102,7 +104,7 @@ public class DocDocumentProcessor implements WorkbookProcessor {
                 continue;
             }
 
-            Object resolved = TokenResolver.resolvePath(templateToken, exactToken);
+            Object resolved = TokenResolver.resolvePath(templateTokensMappings, exactToken);
             if (!TokenResolver.isTableValue(resolved)) {
                 continue;
             }
@@ -123,16 +125,20 @@ public class DocDocumentProcessor implements WorkbookProcessor {
         }
 
         // token replacements for plain tokens.
-        for (Map.Entry<String, Object> entry : templateToken.entrySet()) {
-            String token = "{{" + entry.getKey() + "}}";
-            Object value = entry.getValue();
-            if (TokenResolver.isTableValue(value)) {
-                continue;
+        if (templateTokensMappings != null) {
+            for (Map.Entry<String, Object> entry : templateTokensMappings.entrySet()) {
+                String token = "{{" + entry.getKey() + "}}";
+                Object value = entry.getValue();
+                if (TokenResolver.isTableValue(value)) {
+                    continue;
+                }
+                range.replaceText(token, value == null ? "" : String.valueOf(value));
+                scalarReplacements++;
             }
-            range.replaceText(token, value == null ? "" : String.valueOf(value));
-            scalarReplacements++;
+            log.trace("process() - end: tableInsertions={}, scalarReplacements={}", tableInsertions, scalarReplacements);
+        } else {
+            log.trace("process() - end: templateToken is empty");
         }
-        log.trace("applyTemplateTokens() - end: tableInsertions={}, scalarReplacements={}", tableInsertions, scalarReplacements);
     }
 
     /**
@@ -169,58 +175,4 @@ public class DocDocumentProcessor implements WorkbookProcessor {
         }
     }
 
-    /**
-     * Normalizes HWPF paragraph text by removing control markers and trimming spaces.
-     *
-     * @param text source paragraph text
-     * @return normalized text
-     */
-    private String normalizeParagraphText(String text) {
-        if (text == null) {
-            return "";
-        }
-        return text.replace("\u0007", "").replace("\r", "").trim();
-    }
-
-    /**
-     * Renders table payload as DOC-compatible text grid.
-     *
-     * <p>First row is header, followed by data rows.
-     *
-     * @param rows normalized table rows
-     * @return grid text with {@code \\t} and {@code \\r} separators
-     */
-    private String renderTableAsDocText(List<Map<String, Object>> rows) {
-        List<String> columns = buildColumnOrder(rows);
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.join("\t", columns)).append("\r");
-        for (Map<String, Object> row : rows) {
-            for (int c = 0; c < columns.size(); c++) {
-                if (c > 0) {
-                    sb.append('\t');
-                }
-                Object value = row.get(columns.get(c));
-                sb.append(value == null ? "" : value);
-            }
-            sb.append("\r");
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Builds stable column order: first-row keys, then new keys in encounter order.
-     *
-     * @param rows table rows
-     * @return ordered column names
-     */
-    private List<String> buildColumnOrder(List<Map<String, Object>> rows) {
-        LinkedHashSet<String> ordered = new LinkedHashSet<>();
-        if (!rows.isEmpty()) {
-            ordered.addAll(rows.get(0).keySet());
-        }
-        for (Map<String, Object> row : rows) {
-            ordered.addAll(row.keySet());
-        }
-        return List.copyOf(ordered);
-    }
 }

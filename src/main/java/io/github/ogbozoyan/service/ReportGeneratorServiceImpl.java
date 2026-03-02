@@ -107,7 +107,7 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
         WarningCollector warningCollector = new WarningCollector();
 
         try (WorkbookProcessor processor = createProcessor(sourceFormat, template.bytes())) {
-            processor.applyTemplateTokens(data.templateTokens(), resolvedOptions, warningCollector);
+            processor.process(data.templateTokens(), resolvedOptions, warningCollector);
             processor.recalculateFormulas(resolvedOptions);
 
             byte[] generatedBytes = processor.serialize();

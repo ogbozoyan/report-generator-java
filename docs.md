@@ -207,9 +207,7 @@
 ### 7.1 XLSX с table token
 
 ```java
-ReportGeneratorService io.github.ogbozoyan.service =new
-
-ReportGeneratorServiceImpl();
+ReportGeneratorService serviceI = new io.github.ogbozoyan.service.ReportGeneratorServiceImpl();
 
 TemplateInput input = new TemplateInput("TABLE_BOOK.xlsx", null, xlsxTemplateBytes);
 ReportData data = new ReportData(Map.of(
@@ -229,7 +227,7 @@ GenerateOptions options = new GenerateOptions(
         false
 );
 
-GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, options);
+GeneratedReport report = serviceI.generate(input, data, options);
 ```
 
 ### 7.2 DOCX: table token внутри существующей таблицы
