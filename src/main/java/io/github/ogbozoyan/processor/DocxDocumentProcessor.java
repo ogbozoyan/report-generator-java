@@ -6,6 +6,7 @@ import io.github.ogbozoyan.data.ParagraphTarget;
 import io.github.ogbozoyan.data.ResolvedText;
 import io.github.ogbozoyan.data.TemplateScanResult;
 import io.github.ogbozoyan.exception.TemplateReadWriteException;
+import io.github.ogbozoyan.helper.TableBuilder;
 import io.github.ogbozoyan.util.TokenResolver;
 import io.github.ogbozoyan.util.WarningCollector;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,7 @@ import static io.github.ogbozoyan.helper.DocxHelper.writeTable;
 public class DocxDocumentProcessor implements WorkbookProcessor {
 
     private final XWPFDocument document;
+    private final TableBuilder tableBuilder = new TableBuilder();
 
     /**
      * Creates io.github.ogbozoyan.processor and parses DOCX bytes.
@@ -89,6 +91,8 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
      */
     @Override
     public void process(Map<String, Object> templateTokensMappings, GenerateOptions options, WarningCollector warningCollector) {
+        tableBuilder.apply(document, templateTokensMappings, options, warningCollector);
+
         List<ParagraphTarget> paragraphTargets = collectParagraphTargets(document);
         log.debug("process() - start: tokenCount={}, paragraphs={}",
             templateTokensMappings == null ? null : templateTokensMappings.size(),

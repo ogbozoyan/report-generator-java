@@ -10,6 +10,9 @@
 
 - scalar tokens: подстановка значений в `{{TOKEN}}`;
 - table tokens: `{{TABLE_TOKEN}}` для значения типа `List<Map<String, Object>>`;
+- DOCX scalar tokens: подстановка значений в `{{TOKEN}}` внутри существующих таблиц/параграфов;
+- DOCX row-template таблицы: расширение существующей строки таблицы по токенам `{{field}}`
+  из `List<Map<String, Object>>` или `List<POJO>`;
 - rows-only table mode для `XLS/XLSX` через `GenerateOptions.rowsOnlyTableTokens=true`
   и значения типа `List<Object[]>` (вставка без header-строки);
 - multi-pass обработка table tokens в `XLS/XLSX`: токены, появившиеся после вставки
@@ -58,6 +61,13 @@ GenerateOptions options = new GenerateOptions(
 );
 GeneratedReport report = service.generate(input, data, options);
 ```
+
+## DOCX: как заполнить существующую таблицу
+
+1. В title/header ячейках используйте токены `{{token}}`.
+2. Одну data-строку таблицы сделайте шаблонной (например `{{payment_no}}`, `{{payment_date}}`, `{{amount}}`).
+3. После шаблонной строки можно оставить `…`, `n.` или пустые строки — они будут удалены.
+4. Передайте в `ReportData` один целевой список `List<Map<String,Object>>` или `List<POJO>`.
 
 ## Частые ошибки
 

@@ -145,6 +145,62 @@ public class BaseTest {
         }
     }
 
+    protected byte[] createDocxTokenScheduleTemplate() throws Exception {
+        try (XWPFDocument document = new XWPFDocument();
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            XWPFTable table = document.createTable(4, 4);
+
+            putCellToken(table.getRow(0).getCell(0), "{{schedule_title}}");
+            putCellToken(table.getRow(0).getCell(1), "");
+            putCellToken(table.getRow(0).getCell(2), "");
+            putCellToken(table.getRow(0).getCell(3), "");
+
+            putCellToken(table.getRow(1).getCell(0), "{{col_payment_no}}");
+            putCellToken(table.getRow(1).getCell(1), "{{col_payment_month}}");
+            putCellToken(table.getRow(1).getCell(2), "{{col_amount}}");
+            putCellToken(table.getRow(1).getCell(3), "{{col_balance}}");
+
+            putCellToken(table.getRow(2).getCell(0), "{{payment_no}}");
+            putCellToken(table.getRow(2).getCell(1), "{{payment_date}}");
+            putCellToken(table.getRow(2).getCell(2), "{{amount}}");
+            putCellToken(table.getRow(2).getCell(3), "{{ost_osn_dolg}}");
+
+            putCellToken(table.getRow(3).getCell(0), "…");
+            putCellToken(table.getRow(3).getCell(1), "");
+            putCellToken(table.getRow(3).getCell(2), "");
+            putCellToken(table.getRow(3).getCell(3), "");
+
+            document.write(output);
+            return output.toByteArray();
+        }
+    }
+
+    protected byte[] createDocxTokenInventoryTemplate() throws Exception {
+        try (XWPFDocument document = new XWPFDocument();
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            XWPFTable table = document.createTable(4, 3);
+
+            putCellToken(table.getRow(0).getCell(0), "{{inventory_title}}");
+            putCellToken(table.getRow(0).getCell(1), "");
+            putCellToken(table.getRow(0).getCell(2), "");
+
+            putCellToken(table.getRow(1).getCell(0), "{{col_item}}");
+            putCellToken(table.getRow(1).getCell(1), "{{col_qty}}");
+            putCellToken(table.getRow(1).getCell(2), "{{col_status}}");
+
+            putCellToken(table.getRow(2).getCell(0), "{{item_name}}");
+            putCellToken(table.getRow(2).getCell(1), "{{qty}}");
+            putCellToken(table.getRow(2).getCell(2), "{{status}}");
+
+            putCellToken(table.getRow(3).getCell(0), "n.");
+            putCellToken(table.getRow(3).getCell(1), "");
+            putCellToken(table.getRow(3).getCell(2), "");
+
+            document.write(output);
+            return output.toByteArray();
+        }
+    }
+
     protected byte[] createPdfTableTemplate() throws Exception {
         try (PDDocument document = new PDDocument();
              ByteArrayOutputStream output = new ByteArrayOutputStream()) {

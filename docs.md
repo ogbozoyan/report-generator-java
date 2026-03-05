@@ -45,6 +45,8 @@
 - scalar token: любое строковое/числовое/дата-значение.
 - table token (default mode): `List<Map<String, Object>>`.
 - table token (rows-only mode): `List<Object[]>`.
+- DOCX row-template mode: `List<Map<String, Object>>` или `List<POJO>`
+  для расширения существующей строки таблицы с токенами `{{field}}`.
 - optional порядок колонок: `TOKEN__columns` (или `TOKEN_columns`, `TOKEN.columns`).
 
 ### 3.3 `GenerateOptions`
@@ -136,6 +138,12 @@
 Ключевые алгоритмы:
 
 - recursive traversal по `IBody`: document body -> table -> cell -> nested body;
+- scalar replacement по `{{token}}` для параграфов/ячеек DOCX;
+- row-template expansion:
+  - строка с токенами `{{field}}` определяется как шаблонная data-строка;
+  - первая строка заполняется inplace, последующие добавляются динамически;
+  - payload: `List<Map<String,Object>>` или `List<POJO>` (getter + snake_case alias);
+  - хвостовые placeholder-строки (`…`, `n.`, пустые) удаляются;
 - сбор `ParagraphTarget` с порядком обхода;
 - table anchors применяются в обратном порядке;
 - вставка таблицы строго в контейнер абзаца (`XWPFDocument` или `XWPFTableCell`);
@@ -144,6 +152,7 @@
 Почему:
 
 - DOCX часто содержит токены внутри существующих таблиц, а не только в body-параграфах;
+- row-template режим позволяет сохранять layout существующей таблицы;
 - корректный контейнер вставки устраняет кейс, когда таблица создавалась не там, где стоял placeholder;
 - удаление placeholder-абзаца предотвращает дублирование контента.
 
@@ -189,7 +198,8 @@
   - токен отсутствует в `templateTokens`; проверьте ключи и `missingValuePolicy`.
 - `TABLE_TOKEN_INVALID`:
   - в default mode значение токена не является `List<Map<String,Object>>`;
-  - в rows-only mode значение токена не является `List<Object[]>`.
+  - в rows-only mode значение токена не является `List<Object[]>`;
+  - в DOCX row-template найдено неоднозначное соответствие списков данным строки.
 - `TABLE_TOKEN_EMPTY`:
   - таблица передана как пустой список.
 - `TABLE_TOKEN_RECURSIVE`:
@@ -259,14 +269,41 @@ ReportData data = new ReportData(Map.of(
 GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
 ```
 
-### 7.3 XLSX -> ODS
+### 7.3 DOCX: row-template в существующей таблице
+
+Условие шаблона:
+
+- title/header/ячейки содержат токены `{{token}}`;
+- одна data-строка содержит токены `{{payment_no}}`, `{{payment_date}}`, `{{amount}}`, `{{ost_osn_dolg}}`;
+- после неё можно оставить placeholder-строки (`…`, `n.`, пустые).
+
+Пример:
+
+```java
+TemplateInput input = new TemplateInput("contract.docx", null, docxTemplateBytes);
+ReportData data = new ReportData(Map.of(
+        "schedule_title", "График платежей",
+        "col_payment_no", "№ платежа",
+        "col_payment_month", "месяц платежа",
+        "col_amount", "сумма платежа, руб.",
+        "col_balance", "остаток долга",
+        "payment_schedule_rows", List.of(
+                Map.of("payment_no", 1, "payment_date", "2026-01", "amount", "1000", "ost_osn_dolg", "5000"),
+                Map.of("payment_no", 2, "payment_date", "2026-02", "amount", "1000", "ost_osn_dolg", "4000")
+        )
+));
+
+GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
+```
+
+### 7.4 XLSX -> ODS
 
 ```java
 TemplateInput input = new TemplateInput("sales-report.ods", null, xlsxTemplateBytes);
 GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
 ```
 
-### 7.4 DOCX -> ODT
+### 7.5 DOCX -> ODT
 
 ```java
 TemplateInput input = new TemplateInput(

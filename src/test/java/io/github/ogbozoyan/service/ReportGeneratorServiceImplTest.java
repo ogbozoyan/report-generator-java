@@ -33,6 +33,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -459,6 +460,107 @@ class ReportGeneratorServiceImplTest extends BaseTest {
     }
 
     @Test
+    void shouldExpandTokenBasedDocxScheduleTableFromPojoList() throws Exception {
+        byte[] template = createDocxTokenScheduleTemplate();
+        List<PaymentRow> rows = List.of(
+            new PaymentRow(1, "2026-01", "1000", "5000"),
+            new PaymentRow(2, "2026-02", "1000", "4000"),
+                new PaymentRow(3, "2026-03", "1100", "2200")
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.docx", null, template),
+            new ReportData(Map.of(
+                "schedule_title", "График платежей",
+                "col_payment_no", "№ платежа",
+                "col_payment_month", "месяц платежа",
+                "col_amount", "сумма платежа, руб.",
+                "col_balance", "остаток долга",
+                "payment_schedule_rows", rows
+            )),
+            null
+        );
+
+        try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(result.bytes()))) {
+            assertEquals(1, document.getTables().size());
+            XWPFTable table = document.getTables().get(0);
+
+            assertEquals("График платежей", table.getRow(0).getCell(0).getText());
+            assertEquals("№ платежа", table.getRow(1).getCell(0).getText());
+            assertEquals("месяц платежа", table.getRow(1).getCell(1).getText());
+            assertEquals("сумма платежа, руб.", table.getRow(1).getCell(2).getText());
+            assertEquals("остаток долга", table.getRow(1).getCell(3).getText());
+
+            assertEquals("1", table.getRow(2).getCell(0).getText());
+            assertEquals("2026-01", table.getRow(2).getCell(1).getText());
+            assertEquals("1000", table.getRow(2).getCell(2).getText());
+            assertEquals("5000", table.getRow(2).getCell(3).getText());
+
+            assertEquals("2", table.getRow(3).getCell(0).getText());
+            assertEquals("2026-02", table.getRow(3).getCell(1).getText());
+            assertEquals("1000", table.getRow(3).getCell(2).getText());
+            assertEquals("4000", table.getRow(3).getCell(3).getText());
+
+            assertEquals("3", table.getRow(4).getCell(0).getText());
+            assertEquals("2026-03", table.getRow(4).getCell(1).getText());
+            assertEquals("1100", table.getRow(4).getCell(2).getText());
+            assertEquals("2200", table.getRow(4).getCell(3).getText());
+
+            assertEquals(5, table.getRows().size());
+            assertFalse(table.getText().contains("{{payment_date}}"));
+            assertFalse(table.getText().contains("…"));
+        }
+    }
+
+    @Test
+    void shouldExpandTokenBasedDocxTableWithDifferentContent() throws Exception {
+        byte[] template = createDocxTokenInventoryTemplate();
+        List<Map<String, Object>> rows = List.of(
+            row("item_name", "Ноутбук", "qty", 2, "status", "READY"),
+            row("item_name", "Монитор", "qty", 5, "status", "IN_STOCK"),
+            row("item_name", "Клавиатура", "qty", 9, "status", "RESERVED")
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("inventory.docx", null, template),
+            new ReportData(Map.of(
+                "inventory_title", "Складские позиции",
+                "col_item", "Товар",
+                "col_qty", "Количество",
+                "col_status", "Статус",
+                "inventory_rows", rows
+            )),
+            null
+        );
+
+        try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(result.bytes()))) {
+            assertEquals(1, document.getTables().size());
+            XWPFTable table = document.getTables().get(0);
+
+            assertEquals("Складские позиции", table.getRow(0).getCell(0).getText());
+            assertEquals("Товар", table.getRow(1).getCell(0).getText());
+            assertEquals("Количество", table.getRow(1).getCell(1).getText());
+            assertEquals("Статус", table.getRow(1).getCell(2).getText());
+
+            assertEquals("Ноутбук", table.getRow(2).getCell(0).getText());
+            assertEquals("2", table.getRow(2).getCell(1).getText());
+            assertEquals("READY", table.getRow(2).getCell(2).getText());
+
+            assertEquals("Монитор", table.getRow(3).getCell(0).getText());
+            assertEquals("5", table.getRow(3).getCell(1).getText());
+            assertEquals("IN_STOCK", table.getRow(3).getCell(2).getText());
+
+            assertEquals("Клавиатура", table.getRow(4).getCell(0).getText());
+            assertEquals("9", table.getRow(4).getCell(1).getText());
+            assertEquals("RESERVED", table.getRow(4).getCell(2).getText());
+
+            assertEquals(5, table.getRows().size());
+            assertFalse(table.getText().contains("{{item_name}}"));
+            assertFalse(table.getText().contains("n."));
+        }
+    }
+
+    @Test
     void shouldInsertTableTokenInPdfAsTextGrid() throws Exception {
         byte[] template = createPdfTableTemplate();
         List<Map<String, Object>> rows = List.of(
@@ -610,6 +712,36 @@ class ReportGeneratorServiceImplTest extends BaseTest {
             assertEquals("", workbook.getSheetAt(0).getRow(0).getCell(0).getStringCellValue());
         }
         assertTrue(result.warnings().stream().anyMatch(w -> "MISSING_TOKEN".equals(w.code())));
+    }
+
+    private static class PaymentRow {
+        private final int paymentNo;
+        private final String paymentDate;
+        private final String amount;
+        private final String ostOsnDolg;
+
+        private PaymentRow(int paymentNo, String paymentDate, String amount, String ostOsnDolg) {
+            this.paymentNo = paymentNo;
+            this.paymentDate = paymentDate;
+            this.amount = amount;
+            this.ostOsnDolg = ostOsnDolg;
+        }
+
+        public int getPaymentNo() {
+            return paymentNo;
+        }
+
+        public String getPaymentDate() {
+            return paymentDate;
+        }
+
+        public String getAmount() {
+            return amount;
+        }
+
+        public String getOstOsnDolg() {
+            return ostOsnDolg;
+        }
     }
 
 }
