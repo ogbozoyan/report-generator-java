@@ -9,7 +9,8 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
  * @param token     table token name
  * @param tablePayload table payload object:
  *                     {@code List<Map<String,Object>>} or declarative
- *                     {@code io.github.ogbozoyan.contract.TableBuilder}
+ *                     {@code io.github.ogbozoyan.contract.TableBuilder} /
+ *                     {@code io.github.ogbozoyan.contract.RowBuilder}
  * @param location  diagnostic location
  * @param order     traversal order, used for reverse application
  */

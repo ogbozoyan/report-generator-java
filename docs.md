@@ -47,6 +47,7 @@
 - table token (rows-only mode): `List<Object[]>`.
 - table token (declarative XLS/XLSX mode): `TableXlsxBuilder`.
 - table token (declarative DOC/DOCX mode): `TableBuilder`.
+- table token (DOCX template-row mode): `RowBuilder`.
 - optional порядок колонок: `TOKEN__columns` (или `TOKEN_columns`, `TOKEN.columns`).
 
 ### 3.3 `GenerateOptions`
@@ -150,6 +151,10 @@
   - строки/ячейки задаются в коде;
   - `colSpan` маппится в `w:gridSpan`;
   - `bold` применяется на уровне run в ячейке.
+- поддерживается template-row payload `RowBuilder`:
+  - токен ставится в начало строки уже существующей таблицы;
+  - строка-шаблон клонируется для каждой переданной строки сохраняя формат таблицы;
+  - форматирование строки/ячеек сохраняется через clone `CTRow`.
 
 Почему:
 
@@ -203,6 +208,7 @@
   - в rows-only mode значение токена не является `List<Object[]>`.
   - в declarative XLS/XLSX mode передан пустой/некорректный `TableXlsxBuilder`.
   - для declarative mode передан пустой/некорректный `TableBuilder`.
+  - для DOCX template-row mode токен стоит вне таблицы или payload некорректен.
 - `TABLE_TOKEN_EMPTY`:
   - таблица передана как пустой список.
 - `TABLE_TOKEN_RECURSIVE`:
@@ -339,6 +345,33 @@ ReportData data = new ReportData(Map.of(
 ));
 GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
 ```
+
+### 7.7 DOCX template row clone (`RowBuilder`)
+
+```java
+RowBuilder paymentRows = RowBuilder.create()
+        .row(
+                RowBuilder.cell("1"),
+                RowBuilder.cell("2026-03"),
+                RowBuilder.cell("250000"),
+                RowBuilder.cell("750000")
+        )
+        .row(
+                RowBuilder.cell("2"),
+                RowBuilder.cell("2026-04"),
+                RowBuilder.cell("250000"),
+                RowBuilder.cell("500000")
+        );
+
+TemplateInput input = new TemplateInput("contract.docx", null, docxTemplateBytes);
+ReportData data = new ReportData(Map.of(
+        "PAYMENT_ROWS", paymentRows
+));
+GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
+```
+
+Условие шаблона:
+- `{{PAYMENT_ROWS}}` расположен внутри строки существующей DOCX-таблицы (строка используется как template row).
 
 ## 8. Связь решений с тестами
 

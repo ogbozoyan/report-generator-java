@@ -13,6 +13,8 @@ import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.xmlbeans.XmlCursor;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTDecimalNumber;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRow;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
 
 import java.math.BigInteger;
@@ -59,6 +61,41 @@ public class DocxHelper extends CommonHelper {
         XWPFParagraph paragraph = cell.addParagraph();
         XWPFRun run = paragraph.createRun();
         run.setBold(bold);
+        run.setText(value == null ? "" : value);
+    }
+
+    /**
+     * Rewrites cell text while preserving first paragraph properties and first run style.
+     *
+     * @param cell  destination cell
+     * @param value text value
+     */
+    public static void setCellTextPreservingParagraphStyle(XWPFTableCell cell, String value) {
+        XWPFParagraph paragraph;
+        int paragraphCount = cell.getParagraphs().size();
+        if (paragraphCount == 0) {
+            paragraph = cell.addParagraph();
+        } else {
+            for (int i = paragraphCount - 1; i >= 1; i--) {
+                cell.removeParagraph(i);
+            }
+            paragraph = cell.getParagraphs().get(0);
+        }
+
+        CTRPr runStyle = null;
+        if (!paragraph.getRuns().isEmpty() && paragraph.getRuns().get(0).getCTR().isSetRPr()) {
+            runStyle = (CTRPr) paragraph.getRuns().get(0).getCTR().getRPr().copy();
+        }
+
+        int runCount = paragraph.getRuns().size();
+        for (int i = runCount - 1; i >= 0; i--) {
+            paragraph.removeRun(i);
+        }
+
+        XWPFRun run = paragraph.createRun();
+        if (runStyle != null) {
+            run.getCTR().setRPr(runStyle);
+        }
         run.setText(value == null ? "" : value);
     }
 
@@ -121,6 +158,25 @@ public class DocxHelper extends CommonHelper {
             return headerRow;
         }
         throw new TemplateReadWriteException("Failed to create header row for DOCX table insertion");
+    }
+
+    /**
+     * Clones template row and inserts copy at specified index.
+     *
+     * @param table       target table
+     * @param templateRow source row
+     * @param index       insertion index
+     * @return inserted row clone
+     */
+    public static XWPFTableRow cloneTableRow(XWPFTable table, XWPFTableRow templateRow, int index) {
+        XWPFTableRow insertedRow = table.insertNewTableRow(index);
+        if (insertedRow == null) {
+            throw new TemplateReadWriteException("Failed to insert DOCX table row at index " + index);
+        }
+        insertedRow.getCtRow().set((CTRow) templateRow.getCtRow().copy());
+        // XWPFTableRow caches table cells on first access. After replacing CTRow content
+        // we need a fresh wrapper to read/write cloned cells correctly.
+        return new XWPFTableRow(insertedRow.getCtRow(), table);
     }
 
     /**

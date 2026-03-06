@@ -17,6 +17,8 @@ public interface ReportGeneratorService {
      * @param data     token data model; table tokens are provided in {@link ReportData#templateTokens()} as
      *                 {@code List<Map<String, Object>>}, {@code List<Object[]>} (rows-only XLS/XLSX mode),
      *                 declarative {@code io.github.ogbozoyan.contract.TableBuilder} for DOC/DOCX,
+     *                 declarative {@code io.github.ogbozoyan.contract.RowBuilder} for DOCX
+     *                 template-row insertion in existing table,
      *                 or declarative {@code io.github.ogbozoyan.contract.TableXlsxBuilder} for XLS/XLSX
      * @param options  generation options; if {@code null}, defaults are used
      * @return generated report

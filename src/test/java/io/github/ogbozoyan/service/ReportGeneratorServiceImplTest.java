@@ -1,6 +1,7 @@
 package io.github.ogbozoyan.service;
 
 import io.github.ogbozoyan.BaseTest;
+import io.github.ogbozoyan.contract.RowBuilder;
 import io.github.ogbozoyan.contract.TableBuilder;
 import io.github.ogbozoyan.contract.TableXlsxBuilder;
 import io.github.ogbozoyan.data.GeneratedReport;
@@ -611,6 +612,49 @@ class ReportGeneratorServiceImplTest extends BaseTest {
             XWPFTable megaTable = megaTableCell.getTables().get(0);
             assertEquals("code", megaTable.getRow(0).getCell(0).getText());
             assertEquals("M-1", megaTable.getRow(1).getCell(0).getText());
+        }
+    }
+
+    @Test
+    void shouldInsertDocxTemplateRowsAndPreserveTemplateStyle() throws Exception {
+        byte[] template = createDocxTemplateRowExpansionTemplate();
+        RowBuilder paymentRows = RowBuilder.create()
+            .row(
+                RowBuilder.cell("1"),
+                RowBuilder.cell("2026-03"),
+                RowBuilder.cell("250 000"),
+                RowBuilder.cell("750 000")
+            )
+            .row(
+                RowBuilder.cell("2"),
+                RowBuilder.cell("2026-04"),
+                RowBuilder.cell("250 000"),
+                RowBuilder.cell("500 000")
+            );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.docx", null, template),
+            new ReportData(Map.of("PAYMENT_ROWS", paymentRows)),
+            null
+        );
+
+        try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(result.bytes()))) {
+            assertEquals(1, document.getTables().size());
+            XWPFTable table = document.getTables().get(0);
+
+            assertEquals(4, table.getRows().size());
+            assertEquals("1", table.getRow(1).getCell(0).getText());
+            assertEquals("2026-03", table.getRow(1).getCell(1).getText());
+            assertEquals("2", table.getRow(2).getCell(0).getText());
+            assertEquals("2026-04", table.getRow(2).getCell(1).getText());
+            assertEquals("tail", table.getRow(3).getCell(0).getText());
+
+            assertEquals(640, table.getRow(1).getHeight());
+            assertEquals(640, table.getRow(2).getHeight());
+            assertTrue("D9E2F3".equalsIgnoreCase(table.getRow(1).getCell(0).getColor()));
+            assertTrue("D9E2F3".equalsIgnoreCase(table.getRow(2).getCell(3).getColor()));
+            assertEquals(table.getRow(0).getCell(0).getParagraphs().get(0).getAlignment(),
+                table.getRow(1).getCell(0).getParagraphs().get(0).getAlignment());
         }
     }
 

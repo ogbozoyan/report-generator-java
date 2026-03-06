@@ -1,6 +1,7 @@
 package io.github.ogbozoyan.util;
 
 
+import io.github.ogbozoyan.contract.RowBuilder;
 import io.github.ogbozoyan.contract.TableBuilder;
 import io.github.ogbozoyan.contract.TableXlsxBuilder;
 import io.github.ogbozoyan.data.MissingValuePolicy;
@@ -204,10 +205,13 @@ public class TokenResolver {
      *
      * @param value token value
      * @return {@code true} for classic map-table payload or declarative
-     * {@link TableBuilder}/{@link TableXlsxBuilder}
+     * {@link TableBuilder}/{@link TableXlsxBuilder}/{@link RowBuilder}
      */
     public static boolean isTableTokenValue(Object value) {
-        return isTableValue(value) || value instanceof TableBuilder || value instanceof TableXlsxBuilder;
+        return isTableValue(value)
+               || value instanceof TableBuilder
+               || value instanceof TableXlsxBuilder
+               || value instanceof RowBuilder;
     }
 
     /**

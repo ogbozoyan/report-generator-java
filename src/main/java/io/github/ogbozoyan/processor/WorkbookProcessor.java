@@ -34,7 +34,9 @@ public interface WorkbookProcessor extends AutoCloseable {
      *                               {@code List<Map<String, Object>>}, {@code List<Object[]>}
      *                               (rows-only XLS/XLSX mode), or
      *                               {@code io.github.ogbozoyan.contract.TableBuilder}
-     *                               (declarative DOC/DOCX mode) /
+     *                               (declarative DOC/DOCX mode),
+     *                               {@code io.github.ogbozoyan.contract.RowBuilder}
+     *                               (DOCX template-row mode), or
      *                               {@code io.github.ogbozoyan.contract.TableXlsxBuilder}
      *                               (declarative XLS/XLSX mode)
      * @param options                generation options
