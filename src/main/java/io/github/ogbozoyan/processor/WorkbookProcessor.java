@@ -31,7 +31,12 @@ public interface WorkbookProcessor extends AutoCloseable {
      * Applies scalar and table tokens.
      *
      * @param templateTokensMappings unified token map; table token values are expected as
-     *                               {@code List<Map<String, Object>>}
+     *                               {@code List<Map<String, Object>>}, {@code List<Object[]>}
+     *                               (rows-only XLS/XLSX mode), or
+     *                               {@code io.github.ogbozoyan.contract.TableBuilder}
+     *                               (declarative DOC/DOCX mode) /
+     *                               {@code io.github.ogbozoyan.contract.TableXlsxBuilder}
+     *                               (declarative XLS/XLSX mode)
      * @param options                generation options
      * @param warningCollector       collector for non-fatal generation warnings
      */

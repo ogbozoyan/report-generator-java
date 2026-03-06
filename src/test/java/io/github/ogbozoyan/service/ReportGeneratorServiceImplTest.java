@@ -1,6 +1,8 @@
 package io.github.ogbozoyan.service;
 
 import io.github.ogbozoyan.BaseTest;
+import io.github.ogbozoyan.contract.TableBuilder;
+import io.github.ogbozoyan.contract.TableXlsxBuilder;
 import io.github.ogbozoyan.data.GeneratedReport;
 import io.github.ogbozoyan.data.ReportData;
 import io.github.ogbozoyan.data.TagConstants;
@@ -398,6 +400,89 @@ class ReportGeneratorServiceImplTest extends BaseTest {
     }
 
     @Test
+    void shouldInsertTableXlsxBuilderInXlsxWithMergedTitleAndBold() throws Exception {
+        byte[] template = createXlsxTableTemplate();
+        TableXlsxBuilder table = TableXlsxBuilder.create()
+            .row(TableXlsxBuilder.boldCell("Payment schedule", 4))
+            .row(
+                TableXlsxBuilder.cell("1."),
+                TableXlsxBuilder.cell("{{payment_date}}"),
+                TableXlsxBuilder.cell("{{amount}}"),
+                TableXlsxBuilder.cell("{{balance}}")
+            );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of(
+                "rows", table,
+                "payment_date", "2026-03",
+                "amount", 250000,
+                "balance", 750000
+            )),
+            null
+        );
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertEquals("Payment schedule", sheet.getRow(0).getCell(0).getStringCellValue());
+            assertTrue(hasMergedRegion(sheet, 0, 0, 0, 3));
+            assertTrue(workbook.getFontAt(sheet.getRow(0).getCell(0).getCellStyle().getFontIndexAsInt()).getBold());
+
+            assertEquals("1.", sheet.getRow(1).getCell(0).getStringCellValue());
+            assertEquals("2026-03", sheet.getRow(1).getCell(1).getStringCellValue());
+            assertEquals(250000.0, sheet.getRow(1).getCell(2).getNumericCellValue(), 0.0001);
+            assertEquals(750000.0, sheet.getRow(1).getCell(3).getNumericCellValue(), 0.0001);
+            assertEquals("after", sheet.getRow(2).getCell(0).getStringCellValue());
+        }
+    }
+
+    @Test
+    void shouldResolveTableTokenInsertedByTableXlsxBuilderOnNextPass() throws Exception {
+        byte[] template = createXlsxTableTemplate();
+        TableXlsxBuilder outer = TableXlsxBuilder.create()
+            .row(TableXlsxBuilder.cell("{{rows2}}"));
+        List<Map<String, Object>> inner = List.of(
+            row("name", "A"),
+            row("name", "B")
+        );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of(
+                "rows", outer,
+                "rows2", inner
+            )),
+            null
+        );
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertEquals("name", sheet.getRow(0).getCell(0).getStringCellValue());
+            assertEquals("A", sheet.getRow(1).getCell(0).getStringCellValue());
+            assertEquals("B", sheet.getRow(2).getCell(0).getStringCellValue());
+            assertEquals("after", sheet.getRow(3).getCell(0).getStringCellValue());
+        }
+    }
+
+    @Test
+    void shouldReturnEmptyTableWarningForTableXlsxBuilder() throws Exception {
+        byte[] template = createXlsxTableTemplate();
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.xlsx", null, template),
+            new ReportData(Map.of("rows", TableXlsxBuilder.create())),
+            null
+        );
+
+        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result.bytes()))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertEquals(CellType.BLANK, sheet.getRow(0).getCell(0).getCellType());
+            assertEquals("after", sheet.getRow(1).getCell(0).getStringCellValue());
+        }
+        assertTrue(result.warnings().stream().anyMatch(w -> "TABLE_TOKEN_EMPTY".equals(w.code())));
+    }
+
+    @Test
     void shouldInsertTableTokenInDocx() throws Exception {
         byte[] template = createDocxTableTemplate();
         List<Map<String, Object>> rows = List.of(
@@ -417,6 +502,77 @@ class ReportGeneratorServiceImplTest extends BaseTest {
             assertEquals("North", document.getTables().get(0).getRow(1).getCell(0).getText());
             assertTrue(document.getParagraphs().stream().noneMatch(p -> "{{rows}}".equals(p.getText())));
         }
+    }
+
+    @Test
+    void shouldInsertDeclarativeTableBuilderInDocx() throws Exception {
+        byte[] template = createDocxScalarTemplate("{{TABLE_HERE}}");
+        TableBuilder table = TableBuilder.create()
+            .row(TableBuilder.boldCell("Payment schedule", 4))
+            .row(
+                TableBuilder.boldCell("No"),
+                TableBuilder.boldCell("Payment month"),
+                TableBuilder.boldCell("Payment amount"),
+                TableBuilder.boldCell("Remaining balance")
+            )
+            .row(
+                TableBuilder.cell(""),
+                TableBuilder.cell(""),
+                TableBuilder.boldCell("Loan amount"),
+                TableBuilder.boldCell("{{ust_zaim}}")
+            )
+            .row(
+                TableBuilder.cell("1."),
+                TableBuilder.cell("{{payment_date}}"),
+                TableBuilder.cell("{{amount}}"),
+                TableBuilder.cell("{{ost_osn_dolg}}")
+            );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.docx", null, template),
+            new ReportData(Map.of(
+                "TABLE_HERE", table,
+                "ust_zaim", "1 000 000",
+                "payment_date", "2026-03",
+                "amount", "250 000",
+                "ost_osn_dolg", "750 000"
+            )),
+            null
+        );
+
+        try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(result.bytes()))) {
+            assertEquals(1, document.getTables().size());
+            XWPFTable insertedTable = document.getTables().get(0);
+            assertEquals(4, insertedTable.getRows().size());
+
+            assertEquals(1, insertedTable.getRow(0).getTableCells().size());
+            assertEquals("Payment schedule", insertedTable.getRow(0).getCell(0).getText());
+            assertTrue(insertedTable.getRow(0).getCell(0).getParagraphs().get(0).getRuns().get(0).isBold());
+
+            assertEquals("Loan amount", insertedTable.getRow(2).getCell(2).getText());
+            assertEquals("1 000 000", insertedTable.getRow(2).getCell(3).getText());
+            assertEquals("2026-03", insertedTable.getRow(3).getCell(1).getText());
+            assertEquals("250 000", insertedTable.getRow(3).getCell(2).getText());
+            assertEquals("750 000", insertedTable.getRow(3).getCell(3).getText());
+        }
+    }
+
+    @Test
+    void shouldIgnoreInlineDeclarativeTableToken() throws Exception {
+        byte[] template = createDocxScalarTemplate("prefix {{TABLE_HERE}} suffix");
+        TableBuilder table = TableBuilder.create().row(TableBuilder.cell("X"));
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.docx", null, template),
+            new ReportData(Map.of("TABLE_HERE", table)),
+            null
+        );
+
+        try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(result.bytes()))) {
+            assertEquals("prefix {{TABLE_HERE}} suffix", document.getParagraphs().get(0).getText());
+            assertEquals(0, document.getTables().size());
+        }
+        assertTrue(result.warnings().stream().anyMatch(w -> "TABLE_TOKEN_INLINE_IGNORED".equals(w.code())));
     }
 
     @Test
@@ -501,6 +657,37 @@ class ReportGeneratorServiceImplTest extends BaseTest {
             assertTrue(text.contains("name\tamount"));
             assertTrue(text.contains("North\t1200.25"));
             assertTrue(text.contains("South\t900.0"));
+        }
+    }
+
+    @Test
+    void shouldInsertDeclarativeTableBuilderInDocAsTextGrid() throws Exception {
+        byte[] template = loadResourceBytes("/fixtures/doc-table-template.doc");
+        TableBuilder table = TableBuilder.create()
+            .row(TableBuilder.boldCell("Payment schedule", 4))
+            .row(
+                TableBuilder.cell("1."),
+                TableBuilder.cell("{{payment_date}}"),
+                TableBuilder.cell("{{amount}}"),
+                TableBuilder.cell("{{balance}}")
+            );
+
+        GeneratedReport result = service.generate(
+            new TemplateInput("report.doc", null, template),
+            new ReportData(Map.of(
+                "rows", table,
+                "payment_date", "2026-03",
+                "amount", "250000",
+                "balance", "750000"
+            )),
+            null
+        );
+
+        try (HWPFDocument document = new HWPFDocument(new ByteArrayInputStream(result.bytes()));
+             WordExtractor extractor = new WordExtractor(document)) {
+            String text = extractor.getText();
+            assertTrue(text.contains("Payment schedule\t\t\t"));
+            assertTrue(text.contains("1.\t2026-03\t250000\t750000"));
         }
     }
 

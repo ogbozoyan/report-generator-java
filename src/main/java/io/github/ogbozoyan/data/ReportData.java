@@ -17,6 +17,10 @@ import java.util.Map;
  *     <li>{@code List<Map<String, Object>>} for default header+data table insertion.</li>
  *     <li>{@code List<Object[]>} when {@code GenerateOptions.rowsOnlyTableTokens=true}
  *     (XLS/XLSX rows-only insertion without header).</li>
+ *     <li>{@code io.github.ogbozoyan.contract.TableBuilder} for declarative DOC/DOCX table insertion
+ *     at exact placeholder token.</li>
+ *     <li>{@code io.github.ogbozoyan.contract.TableXlsxBuilder} for declarative XLS/XLSX table insertion
+ *     at exact placeholder token.</li>
  * </ul>
  * <p>
  * Optional table meta-keys can be provided in the same map:

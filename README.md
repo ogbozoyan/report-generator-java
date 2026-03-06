@@ -10,6 +10,10 @@
 
 - scalar tokens: подстановка значений в `{{TOKEN}}`;
 - table tokens: `{{TABLE_TOKEN}}` для значения типа `List<Map<String, Object>>`;
+- declarative table tokens для `DOC/DOCX` через `TableBuilder`
+  (создание таблицы по placeholder без заранее вставленной таблицы в шаблон);
+- declarative table tokens для `XLS/XLSX` через `TableXlsxBuilder`
+  (поддержка `colSpan` и `bold`, вставка по placeholder);
 - rows-only table mode для `XLS/XLSX` через `GenerateOptions.rowsOnlyTableTokens=true`
   и значения типа `List<Object[]>` (вставка без header-строки);
 - multi-pass обработка table tokens в `XLS/XLSX`: токены, появившиеся после вставки
@@ -59,6 +63,56 @@ GenerateOptions options = new GenerateOptions(
 GeneratedReport report = service.generate(input, data, options);
 ```
 
+## DOCX TableBuilder (declarative)
+
+```java
+TableBuilder schedule = TableBuilder.create()
+        .row(TableBuilder.boldCell("Payment schedule", 4))
+        .row(
+                TableBuilder.boldCell("No"),
+                TableBuilder.boldCell("Payment month"),
+                TableBuilder.boldCell("Payment amount"),
+                TableBuilder.boldCell("Remaining balance")
+        )
+        .row(
+                TableBuilder.cell("1."),
+                TableBuilder.cell("{{payment_date}}"),
+                TableBuilder.cell("{{amount}}"),
+                TableBuilder.cell("{{ost_osn_dolg}}")
+        );
+
+TemplateInput input = new TemplateInput("report.docx", null, docxTemplateBytes);
+ReportData data = new ReportData(Map.of(
+        "TABLE_HERE", schedule,
+        "payment_date", "2026-03",
+        "amount", "250000",
+        "ost_osn_dolg", "750000"
+));
+GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
+```
+
+## XLSX TableXlsxBuilder (declarative)
+
+```java
+TableXlsxBuilder table = TableXlsxBuilder.create()
+        .row(TableXlsxBuilder.boldCell("Payment schedule", 4))
+        .row(
+                TableXlsxBuilder.cell("1."),
+                TableXlsxBuilder.cell("{{payment_date}}"),
+                TableXlsxBuilder.cell("{{amount}}"),
+                TableXlsxBuilder.cell("{{balance}}")
+        );
+
+TemplateInput input = new TemplateInput("report.xlsx", null, xlsxTemplateBytes);
+ReportData data = new ReportData(Map.of(
+        "rows", table,
+        "payment_date", "2026-03",
+        "amount", 250000,
+        "balance", 750000
+));
+GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
+```
+
 ## Частые ошибки
 
 - `TABLE_TOKEN_INLINE_IGNORED` / `TABLE_TOKEN_INLINE_TEXT_DROPPED`:
@@ -70,6 +124,8 @@ GeneratedReport report = service.generate(input, data, options);
   - токен найден внутри формулы, формула не переписывается намеренно.
 - `TABLE_TOKEN_RECURSIVE`:
   - table-вставки не стабилизировались за защитный лимит проходов (`MAX_TABLE_PASSES`).
+- `TABLE_TOKEN_INVALID` для `TableBuilder`:
+  - декларативная таблица пустая или содержит некорректные строки/colspan.
 
 ## Документация
 

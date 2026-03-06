@@ -45,6 +45,8 @@
 - scalar token: любое строковое/числовое/дата-значение.
 - table token (default mode): `List<Map<String, Object>>`.
 - table token (rows-only mode): `List<Object[]>`.
+- table token (declarative XLS/XLSX mode): `TableXlsxBuilder`.
+- table token (declarative DOC/DOCX mode): `TableBuilder`.
 - optional порядок колонок: `TOKEN__columns` (или `TOKEN_columns`, `TOKEN.columns`).
 
 ### 3.3 `GenerateOptions`
@@ -67,7 +69,7 @@
 - `WorkbookProcessor`: единый lifecycle-контракт форматных обработчиков.
 - `PoiWorkbookProcessor`: `XLS/XLSX` таблицы, типизированная запись значений, auto-width, формулы.
 - `DocxDocumentProcessor`: работа по дереву body/table/cell, вставка таблиц в корректный контейнер.
-- `DocDocumentProcessor`: basic text-table в `.doc`.
+- `DocDocumentProcessor`: basic text-table в `.doc` (включая declarative `TableBuilder` как text-grid fallback).
 - `PdfDocumentProcessor`: text reconstruction и ASCII-grid таблицы.
 
 ### 4.3 `io.github.ogbozoyan.util/*`
@@ -112,6 +114,10 @@
 - dual table modes:
   - default: header + data;
   - rows-only (`GenerateOptions.rowsOnlyTableTokens=true`): только data-строки из `List<Object[]>`.
+- declarative XLS/XLSX mode (`TableXlsxBuilder`):
+  - явная модель строк/ячеек;
+  - поддержка `colSpan` через merged regions;
+  - поддержка `bold` с сохранением baseline-стиля маркера.
 - multi-pass table expansion:
   - сначала выполняются только table-pass проходы;
   - каждый проход: scan anchors -> reverse insert;
@@ -140,6 +146,10 @@
 - table anchors применяются в обратном порядке;
 - вставка таблицы строго в контейнер абзаца (`XWPFDocument` или `XWPFTableCell`);
 - placeholder paragraph удаляется из исходного контейнера после вставки.
+- поддерживается declarative payload `TableBuilder`:
+  - строки/ячейки задаются в коде;
+  - `colSpan` маппится в `w:gridSpan`;
+  - `bold` применяется на уровне run в ячейке.
 
 Почему:
 
@@ -153,6 +163,7 @@
 
 - exact paragraph placeholder распознаётся в `HWPF Range`;
 - table token рендерится как text-grid: header/rows с разделителями `\t` и `\r`;
+- declarative `TableBuilder` рендерится в тот же text-grid формат;
 - scalar токены заменяются массовым `range.replaceText(...)`.
 
 Почему:
@@ -190,6 +201,8 @@
 - `TABLE_TOKEN_INVALID`:
   - в default mode значение токена не является `List<Map<String,Object>>`;
   - в rows-only mode значение токена не является `List<Object[]>`.
+  - в declarative XLS/XLSX mode передан пустой/некорректный `TableXlsxBuilder`.
+  - для declarative mode передан пустой/некорректный `TableBuilder`.
 - `TABLE_TOKEN_EMPTY`:
   - таблица передана как пустой список.
 - `TABLE_TOKEN_RECURSIVE`:
@@ -274,6 +287,56 @@ TemplateInput input = new TemplateInput(
         "application/vnd.oasis.opendocument.text",
         docxTemplateBytes
 );
+GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
+```
+
+### 7.5 DOCX declarative table (`TableBuilder`)
+
+```java
+TableBuilder schedule = TableBuilder.create()
+        .row(TableBuilder.boldCell("Payment schedule", 4))
+        .row(
+                TableBuilder.boldCell("No"),
+                TableBuilder.boldCell("Payment month"),
+                TableBuilder.boldCell("Payment amount"),
+                TableBuilder.boldCell("Remaining balance")
+        )
+        .row(
+                TableBuilder.cell("1."),
+                TableBuilder.cell("{{payment_date}}"),
+                TableBuilder.cell("{{amount}}"),
+                TableBuilder.cell("{{balance}}")
+        );
+
+TemplateInput input = new TemplateInput("contract.docx", null, docxTemplateBytes);
+ReportData data = new ReportData(Map.of(
+        "TABLE_HERE", schedule,
+        "payment_date", "2026-03",
+        "amount", "250000",
+        "balance", "750000"
+));
+GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
+```
+
+### 7.6 XLSX declarative table (`TableXlsxBuilder`)
+
+```java
+TableXlsxBuilder schedule = TableXlsxBuilder.create()
+        .row(TableXlsxBuilder.boldCell("Payment schedule", 4))
+        .row(
+                TableXlsxBuilder.cell("1."),
+                TableXlsxBuilder.cell("{{payment_date}}"),
+                TableXlsxBuilder.cell("{{amount}}"),
+                TableXlsxBuilder.cell("{{balance}}")
+        );
+
+TemplateInput input = new TemplateInput("table.xlsx", null, xlsxTemplateBytes);
+ReportData data = new ReportData(Map.of(
+        "rows", schedule,
+        "payment_date", "2026-03",
+        "amount", 250000,
+        "balance", 750000
+));
 GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
 ```
 

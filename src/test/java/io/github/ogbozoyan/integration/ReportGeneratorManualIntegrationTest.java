@@ -1,5 +1,6 @@
 package io.github.ogbozoyan.integration;
 
+import io.github.ogbozoyan.contract.TableXlsxBuilder;
 import io.github.ogbozoyan.data.GenerateOptions;
 import io.github.ogbozoyan.data.GeneratedReport;
 import io.github.ogbozoyan.data.GenerationWarning;
@@ -215,24 +216,222 @@ class ReportGeneratorManualIntegrationTest {
 
         Map<String, Object> tagsMap = new HashMap<>();
 
-        tagsMap.put("TABLE_ROW", List.of(
+        tagsMap.put(
+            "TABLE_ROW",
+            TableXlsxBuilder.create()
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Петров Петр Петрович"),
+                    TableXlsxBuilder.cell("67890"),
+                    TableXlsxBuilder.cell("Аналитик"),
+                    TableXlsxBuilder.cell(""),
+                    TableXlsxBuilder.cell("1985-05-15"),
+                    TableXlsxBuilder.cell("39"),
+                    TableXlsxBuilder.cell("2019-03-15"),
+                    TableXlsxBuilder.cell("75000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("2019-04-15"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Сидоров Сидор Сидорович"),
+                    TableXlsxBuilder.cell("54321"),
+                    TableXlsxBuilder.cell("Разработчик"),
+                    TableXlsxBuilder.cell("IT отдел"),
+                    TableXlsxBuilder.cell("1992-12-20"),
+                    TableXlsxBuilder.cell("32"),
+                    TableXlsxBuilder.cell("2021-06-01"),
+                    TableXlsxBuilder.cell("60000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("2021-07-01"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00")
+                )
+        );
+        tagsMap.put("TABLE_ROW_2", List.of(
             new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
                 "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
                 "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
                 "10000.00", "10000.00", "10000.00"
@@ -325,479 +524,1616 @@ class ReportGeneratorManualIntegrationTest {
 
         Map<String, Object> tagsMap = new HashMap<>();
 
-        tagsMap.put("TABLE_PART_1", List.of(
-            new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            },
-            new Object[] {
-                "Петров Петр Петрович", "67890", "Аналитик", "1985-05-15",
-                "39", "2019-03-15", "75000.00", "15000.00", "2019-04-15",
-                "15000.00", "15000.00", "15000.00"
-            },
-            new Object[] {
-                "Сидоров Сидор Сидорович", "54321", "Разработчик", "IT отдел", "1992-12-20",
-                "32", "2021-06-01", "60000.00", "12000.00", "2021-07-01",
-                "12000.00", "12000.00", "12000.00"
-            }
-        ));
+        tagsMap.put(
+            "TABLE_PART_1",
+            TableXlsxBuilder.create()
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Петров Петр Петрович"),
+                    TableXlsxBuilder.cell("67890"),
+                    TableXlsxBuilder.cell("Аналитик"),
+                    TableXlsxBuilder.cell(""),
+                    TableXlsxBuilder.cell("1985-05-15"),
+                    TableXlsxBuilder.cell("39"),
+                    TableXlsxBuilder.cell("2019-03-15"),
+                    TableXlsxBuilder.cell("75000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("2019-04-15"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Сидоров Сидор Сидорович"),
+                    TableXlsxBuilder.cell("54321"),
+                    TableXlsxBuilder.cell("Разработчик"),
+                    TableXlsxBuilder.cell("IT отдел"),
+                    TableXlsxBuilder.cell("1992-12-20"),
+                    TableXlsxBuilder.cell("32"),
+                    TableXlsxBuilder.cell("2021-06-01"),
+                    TableXlsxBuilder.cell("60000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("2021-07-01"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00")
+                )
+        );
 
-        tagsMap.put("TABLE_PART_2", List.of(
-            new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            },
-            new Object[] {
-                "Петров Петр Петрович", "67890", "Аналитик", "1985-05-15",
-                "39", "2019-03-15", "75000.00", "15000.00", "2019-04-15",
-                "15000.00", "15000.00", "15000.00"
-            },
-            new Object[] {
-                "Сидоров Сидор Сидорович", "54321", "Разработчик", "IT отдел", "1992-12-20",
-                "32", "2021-06-01", "60000.00", "12000.00", "2021-07-01",
-                "12000.00", "12000.00", "12000.00"
-            }
-        ));
+        tagsMap.put(
+            "TABLE_PART_2",
+            TableXlsxBuilder.create()
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович", 2),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Петров Петр Петрович", 2),
+                    TableXlsxBuilder.cell("67890"),
+                    TableXlsxBuilder.cell("Аналитик"),
+                    TableXlsxBuilder.cell(""),
+                    TableXlsxBuilder.cell("1985-05-15"),
+                    TableXlsxBuilder.cell("39"),
+                    TableXlsxBuilder.cell("2019-03-15"),
+                    TableXlsxBuilder.cell("75000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("2019-04-15"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Сидоров Сидор Сидорович", 2),
+                    TableXlsxBuilder.cell("54321"),
+                    TableXlsxBuilder.cell("Разработчик"),
+                    TableXlsxBuilder.cell("IT отдел"),
+                    TableXlsxBuilder.cell("1992-12-20"),
+                    TableXlsxBuilder.cell("32"),
+                    TableXlsxBuilder.cell("2021-06-01"),
+                    TableXlsxBuilder.cell("60000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("2021-07-01"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00")
+                )
+        );
 
+        tagsMap.put(
+            "TABLE_PART_3",
+            TableXlsxBuilder.create()
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Петров Петр Петрович"),
+                    TableXlsxBuilder.cell("67890"),
+                    TableXlsxBuilder.cell("Аналитик"),
+                    TableXlsxBuilder.cell(""),
+                    TableXlsxBuilder.cell("1985-05-15"),
+                    TableXlsxBuilder.cell("39"),
+                    TableXlsxBuilder.cell("2019-03-15"),
+                    TableXlsxBuilder.cell("75000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("2019-04-15"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Сидоров Сидор Сидорович"),
+                    TableXlsxBuilder.cell("54321"),
+                    TableXlsxBuilder.cell("Разработчик"),
+                    TableXlsxBuilder.cell("IT отдел"),
+                    TableXlsxBuilder.cell("1992-12-20"),
+                    TableXlsxBuilder.cell("32"),
+                    TableXlsxBuilder.cell("2021-06-01"),
+                    TableXlsxBuilder.cell("60000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("2021-07-01"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00")
+                )
+        );
 
-        tagsMap.put("TABLE_PART_3", List.of(
-            new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            },
-            new Object[] {
-                "Петров Петр Петрович", "67890", "Аналитик", "1985-05-15",
-                "39", "2019-03-15", "75000.00", "15000.00", "2019-04-15",
-                "15000.00", "15000.00", "15000.00"
-            },
-            new Object[] {
-                "Сидоров Сидор Сидорович", "54321", "Разработчик", "IT отдел", "1992-12-20",
-                "32", "2021-06-01", "60000.00", "12000.00", "2021-07-01",
-                "12000.00", "12000.00", "12000.00"
-            }
-        ));
+        tagsMap.put(
+            "TABLE_PART_4",
+            TableXlsxBuilder.create()
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Петров Петр Петрович"),
+                    TableXlsxBuilder.cell("67890"),
+                    TableXlsxBuilder.cell("Аналитик"),
+                    TableXlsxBuilder.cell(""),
+                    TableXlsxBuilder.cell("1985-05-15"),
+                    TableXlsxBuilder.cell("39"),
+                    TableXlsxBuilder.cell("2019-03-15"),
+                    TableXlsxBuilder.cell("75000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("2019-04-15"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Сидоров Сидор Сидорович"),
+                    TableXlsxBuilder.cell("54321"),
+                    TableXlsxBuilder.cell("Разработчик"),
+                    TableXlsxBuilder.cell("IT отдел"),
+                    TableXlsxBuilder.cell("1992-12-20"),
+                    TableXlsxBuilder.cell("32"),
+                    TableXlsxBuilder.cell("2021-06-01"),
+                    TableXlsxBuilder.cell("60000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("2021-07-01"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00")
+                )
+        );
 
-        tagsMap.put("TABLE_PART_4", List.of(
-            new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            },
-            new Object[] {
-                "Петров Петр Петрович", "67890", "Аналитик", "1985-05-15",
-                "39", "2019-03-15", "75000.00", "15000.00", "2019-04-15",
-                "15000.00", "15000.00", "15000.00"
-            },
-            new Object[] {
-                "Сидоров Сидор Сидорович", "54321", "Разработчик", "IT отдел", "1992-12-20",
-                "32", "2021-06-01", "60000.00", "12000.00", "2021-07-01",
-                "12000.00", "12000.00", "12000.00"
-            }
-        ));
+        tagsMap.put(
+            "TABLE_PART_5",
+            TableXlsxBuilder.create()
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Петров Петр Петрович"),
+                    TableXlsxBuilder.cell("67890"),
+                    TableXlsxBuilder.cell("Аналитик"),
+                    TableXlsxBuilder.cell(""),
+                    TableXlsxBuilder.cell("1985-05-15"),
+                    TableXlsxBuilder.cell("39"),
+                    TableXlsxBuilder.cell("2019-03-15"),
+                    TableXlsxBuilder.cell("75000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("2019-04-15"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Сидоров Сидор Сидорович"),
+                    TableXlsxBuilder.cell("54321"),
+                    TableXlsxBuilder.cell("Разработчик"),
+                    TableXlsxBuilder.cell("IT отдел"),
+                    TableXlsxBuilder.cell("1992-12-20"),
+                    TableXlsxBuilder.cell("32"),
+                    TableXlsxBuilder.cell("2021-06-01"),
+                    TableXlsxBuilder.cell("60000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("2021-07-01"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00")
+                )
+        );
 
-        tagsMap.put("TABLE_PART_5", List.of(
-            new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            },
-            new Object[] {
-                "Петров Петр Петрович", "67890", "Аналитик", "1985-05-15",
-                "39", "2019-03-15", "75000.00", "15000.00", "2019-04-15",
-                "15000.00", "15000.00", "15000.00"
-            },
-            new Object[] {
-                "Сидоров Сидор Сидорович", "54321", "Разработчик", "IT отдел", "1992-12-20",
-                "32", "2021-06-01", "60000.00", "12000.00", "2021-07-01",
-                "12000.00", "12000.00", "12000.00"
-            }
-        ));
+        tagsMap.put(
+            "TABLE_PART_6",
+            TableXlsxBuilder.create()
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Иванов Иван Иванович"),
+                    TableXlsxBuilder.cell("12345"),
+                    TableXlsxBuilder.cell("Менеджер"),
+                    TableXlsxBuilder.cell("Главный офис"),
+                    TableXlsxBuilder.cell("1990-01-01"),
+                    TableXlsxBuilder.cell("34"),
+                    TableXlsxBuilder.cell("2020-01-01"),
+                    TableXlsxBuilder.cell("50000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("2020-02-01"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00"),
+                    TableXlsxBuilder.cell("10000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Петров Петр Петрович"),
+                    TableXlsxBuilder.cell("67890"),
+                    TableXlsxBuilder.cell("Аналитик"),
+                    TableXlsxBuilder.cell(""),
+                    TableXlsxBuilder.cell("1985-05-15"),
+                    TableXlsxBuilder.cell("39"),
+                    TableXlsxBuilder.cell("2019-03-15"),
+                    TableXlsxBuilder.cell("75000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("2019-04-15"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00"),
+                    TableXlsxBuilder.cell("15000.00")
+                )
+                .row(
+                    TableXlsxBuilder.cell("Сидоров Сидор Сидорович"),
+                    TableXlsxBuilder.cell("54321"),
+                    TableXlsxBuilder.cell("Разработчик"),
+                    TableXlsxBuilder.cell("IT отдел"),
+                    TableXlsxBuilder.cell("1992-12-20"),
+                    TableXlsxBuilder.cell("32"),
+                    TableXlsxBuilder.cell("2021-06-01"),
+                    TableXlsxBuilder.cell("60000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("2021-07-01"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00"),
+                    TableXlsxBuilder.cell("12000.00")
+                )
+        );
 
-        tagsMap.put("TABLE_PART_6", List.of(
-            new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            }, new Object[] {
-                "Иванов Иван Иванович", "12345", "Менеджер", "Главный офис", "1990-01-01",
-                "34", "2020-01-01", "50000.00", "10000.00", "2020-02-01",
-                "10000.00", "10000.00", "10000.00"
-            },
-            new Object[] {
-                "Петров Петр Петрович", "67890", "Аналитик", "1985-05-15",
-                "39", "2019-03-15", "75000.00", "15000.00", "2019-04-15",
-                "15000.00", "15000.00", "15000.00"
-            },
-            new Object[] {
-                "Сидоров Сидор Сидорович", "54321", "Разработчик", "IT отдел", "1992-12-20",
-                "32", "2021-06-01", "60000.00", "12000.00", "2021-07-01",
-                "12000.00", "12000.00", "12000.00"
-            }
-        ));
         ReportData data = new ReportData(tagsMap);
 
         GenerateOptions options = new GenerateOptions(
             MissingValuePolicy.EMPTY_AND_LOG,
-            true, // recalculate formulas (для XLS/XLSX)
+            true,
             Locale.forLanguageTag("ru-RU"), ZoneId.of("Europe/Moscow"),
             true
         );

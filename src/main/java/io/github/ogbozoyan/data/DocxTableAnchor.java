@@ -2,22 +2,21 @@ package io.github.ogbozoyan.data;
 
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * Deferred DOCX table insertion anchor.
  *
  * @param paragraph paragraph that contains table placeholder
  * @param token     table token name
- * @param rows      table payload rows
+ * @param tablePayload table payload object:
+ *                     {@code List<Map<String,Object>>} or declarative
+ *                     {@code io.github.ogbozoyan.contract.TableBuilder}
  * @param location  diagnostic location
  * @param order     traversal order, used for reverse application
  */
 public record DocxTableAnchor(
     XWPFParagraph paragraph,
     String token,
-    List<Map<String, Object>> rows,
+    Object tablePayload,
     String location,
     int order
 ) {

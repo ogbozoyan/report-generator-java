@@ -1,5 +1,6 @@
 package io.github.ogbozoyan.processor;
 
+import io.github.ogbozoyan.contract.TableXlsxBuilder;
 import io.github.ogbozoyan.data.GenerateOptions;
 import io.github.ogbozoyan.data.MissingValuePolicy;
 import io.github.ogbozoyan.data.PoiTableAnchor;
@@ -13,16 +14,21 @@ import io.github.ogbozoyan.util.TokenResolver;
 import io.github.ogbozoyan.util.WarningCollector;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.util.CellRangeAddress;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -48,6 +54,7 @@ import static io.github.ogbozoyan.helper.PoiHelper.writeValueToCell;
  *     <li>table token insertion for values of type {@code List<Map<String, Object>>},</li>
  *     <li>rows-only table insertion when {@link GenerateOptions#rowsOnlyTableTokens()} is {@code true}
  *     and token value is {@code List<Object[]>},</li>
+ *     <li>declarative table insertion for values of type {@link TableXlsxBuilder},</li>
  *     <li>baseline style reuse from marker cell,</li>
  *     <li>optional formula recalculation,</li>
  *     <li>serialization back to workbook bytes.</li>
@@ -115,6 +122,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
      * <ul>
      *     <li>{@code List<Map<String, Object>>} in default mode,</li>
      *     <li>{@code List<Object[]>} when {@link GenerateOptions#rowsOnlyTableTokens()} is {@code true}.</li>
+     *     <li>{@link TableXlsxBuilder} in declarative mode.</li>
      * </ul>
      * During table phase anchors are collected and applied in reverse order for each pass.
      * Additional passes run until no new table anchors are found, then scalar pass is executed.
@@ -133,7 +141,8 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
      * }</pre>
      *
      * @param templateTokensMappings token map; table token must be {@code List<Map<String, Object>>}
-     *                               in default mode or {@code List<Object[]>} in rows-only mode
+     *                               in default mode, {@code List<Object[]>} in rows-only mode,
+     *                               or {@link TableXlsxBuilder} in declarative mode
      * @param options                generation options
      * @param warningCollector       collector for non-fatal issues
      */
@@ -360,6 +369,9 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         if (resolved == null) {
             return false;
         }
+        if (resolved instanceof TableXlsxBuilder) {
+            return true;
+        }
 
         List<String> configuredColumnOrder = resolveConfiguredColumnOrder(context, token);
         if (options.rowsOnlyTableTokens()) {
@@ -395,6 +407,33 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
 
         boolean rowsOnly = options.rowsOnlyTableTokens();
         Object resolved = TokenResolver.resolvePath(context, tableAnchorToken);
+        if (resolved instanceof TableXlsxBuilder tableXlsxBuilder) {
+            if (exactToken == null) {
+                warningCollector.add(
+                    "TABLE_TOKEN_INLINE_TEXT_DROPPED",
+                    "Inline text around table token was removed during table insertion",
+                    location
+                );
+            }
+            log.trace("tryAddTableAnchor() - xlsxBuilderTokenFound: token={}, rowCount={}, location={}",
+                tableAnchorToken, tableXlsxBuilder.rows().size(), location);
+            state.incrementTableTokensFound();
+            state.getAnchors()
+                .add(
+                    new PoiTableAnchor(
+                        rowIndex,
+                        colIndex,
+                        tableAnchorToken,
+                        List.of(),
+                        tableXlsxBuilder,
+                        cell.getCellStyle(),
+                        row.getHeight(),
+                        List.of()
+                    )
+                );
+            return true;
+        }
+
         List<String> configuredColumnOrder = resolveConfiguredColumnOrder(context, tableAnchorToken);
         List<Map<String, Object>> rows = rowsOnly
             ? toRowsOnlyTableRows(resolved, configuredColumnOrder)
@@ -434,6 +473,7 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
                     colIndex,
                     tableAnchorToken,
                     rows,
+                    null,
                     cell.getCellStyle(),
                     row.getHeight(),
                     configuredColumnOrder
@@ -591,9 +631,15 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
         WarningCollector warningCollector
     ) {
         String location = cellLocation(sheet, anchor.rowIndex(), anchor.colIndex());
-        List<Map<String, Object>> rows = anchor.rows();
         Row anchorRow = getOrCreateRow(sheet, anchor.rowIndex());
         Cell anchorCell = getOrCreateCell(anchorRow, anchor.colIndex());
+
+        if (anchor.xlsxBuilder() != null) {
+            insertXlsxBuilderAtAnchor(sheet, anchor, options, warningCollector, location, anchorCell);
+            return;
+        }
+
+        List<Map<String, Object>> rows = anchor.rows();
 
         log.trace("insertTableAtAnchor() - start: token={}, location={}, rowCount={}", anchor.token(), location, rows.size());
 
@@ -626,6 +672,96 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
 
         log.trace("insertTableAtAnchor() - end: token={}, location={}, columnCount={}, rowCount={}",
             anchor.token(), location, columns.size(), rows.size());
+    }
+
+    private void insertXlsxBuilderAtAnchor(
+        Sheet sheet,
+        PoiTableAnchor anchor,
+        GenerateOptions options,
+        WarningCollector warningCollector,
+        String location,
+        Cell anchorCell
+    ) {
+        TableXlsxBuilder table = anchor.xlsxBuilder();
+        List<TableXlsxBuilder.Row> rows = table.rows();
+        log.trace("insertXlsxBuilderAtAnchor() - start: token={}, location={}, rowCount={}", anchor.token(), location, rows.size());
+
+        if (rows.isEmpty()) {
+            warningCollector.add("TABLE_TOKEN_EMPTY", "Table token has no rows: " + anchor.token(), location);
+            applyBaselineStyle(anchorCell, anchor.baselineStyle());
+            writeValueToCell(anchorCell, null, options.zoneId());
+            log.trace("insertXlsxBuilderAtAnchor() - end: inserted=false, reason=emptyRows");
+            return;
+        }
+
+        int columnCount = table.columnCount();
+        if (columnCount < 1) {
+            warningCollector.add("TABLE_TOKEN_INVALID", "Table token has no columns: " + anchor.token(), location);
+            applyBaselineStyle(anchorCell, anchor.baselineStyle());
+            writeValueToCell(anchorCell, null, options.zoneId());
+            log.trace("insertXlsxBuilderAtAnchor() - end: inserted=false, reason=emptyColumns");
+            return;
+        }
+
+        int shiftCount = rows.size() - 1;
+        if (shiftCount > 0 && anchor.rowIndex() + 1 <= sheet.getLastRowNum()) {
+            log.trace("insertXlsxBuilderAtAnchor() - shiftRows: shiftCount={}, startRow={}", shiftCount, anchor.rowIndex() + 1);
+            sheet.shiftRows(anchor.rowIndex() + 1, sheet.getLastRowNum(), shiftCount, true, false);
+        }
+
+        Map<Short, CellStyle> boldStyleCache = new HashMap<>();
+        List<Integer> maxColumnLengths = new ArrayList<>(columnCount);
+        for (int i = 0; i < columnCount; i++) {
+            maxColumnLengths.add(0);
+        }
+
+        for (int rowOffset = 0; rowOffset < rows.size(); rowOffset++) {
+            TableXlsxBuilder.Row rowSpec = rows.get(rowOffset);
+            Row targetRow = getOrCreateRow(sheet, anchor.rowIndex() + rowOffset);
+            targetRow.setHeight(anchor.baselineRowHeight());
+
+            int columnOffset = 0;
+            for (TableXlsxBuilder.Cell cellSpec : rowSpec.cells()) {
+                int targetColumn = anchor.colIndex() + columnOffset;
+                Cell targetCell = getOrCreateCell(targetRow, targetColumn);
+                applyCellStyle(targetCell, anchor.baselineStyle(), cellSpec.bold(), boldStyleCache);
+                writeValueToCell(targetCell, cellSpec.value(), options.zoneId());
+
+                int textLength = stringifyLength(cellSpec.value());
+                int distributedLength = cellSpec.colSpan() > 1
+                    ? Math.max(1, (int) Math.ceil((double) textLength / cellSpec.colSpan()))
+                    : textLength;
+                for (int spanOffset = 0; spanOffset < cellSpec.colSpan() && columnOffset + spanOffset < columnCount; spanOffset++) {
+                    int previous = maxColumnLengths.get(columnOffset + spanOffset);
+                    maxColumnLengths.set(columnOffset + spanOffset, Math.max(previous, distributedLength));
+                }
+
+                if (cellSpec.colSpan() > 1) {
+                    int from = targetColumn;
+                    int to = targetColumn + cellSpec.colSpan() - 1;
+                    for (int covered = from + 1; covered <= to; covered++) {
+                        Cell coveredCell = getOrCreateCell(targetRow, covered);
+                        applyCellStyle(coveredCell, anchor.baselineStyle(), cellSpec.bold(), boldStyleCache);
+                        writeValueToCell(coveredCell, null, options.zoneId());
+                    }
+                    addMergedRegionReplacingOverlaps(
+                        sheet,
+                        new CellRangeAddress(targetRow.getRowNum(), targetRow.getRowNum(), from, to)
+                    );
+                }
+                columnOffset += cellSpec.colSpan();
+            }
+
+            while (columnOffset < columnCount) {
+                Cell trailingCell = getOrCreateCell(targetRow, anchor.colIndex() + columnOffset);
+                applyCellStyle(trailingCell, anchor.baselineStyle(), false, boldStyleCache);
+                writeValueToCell(trailingCell, null, options.zoneId());
+                columnOffset++;
+            }
+        }
+
+        autoResizeDeclarativeColumns(sheet, anchor.colIndex(), maxColumnLengths);
+        log.trace("insertXlsxBuilderAtAnchor() - end: inserted=true, columnCount={}, rowCount={}", columnCount, rows.size());
     }
 
     /**
@@ -787,6 +923,84 @@ public class PoiWorkbookProcessor implements WorkbookProcessor {
             }
         }
         log.trace("autoResizeTableColumns() - end: columnCount={}", columns.size());
+    }
+
+    private void autoResizeDeclarativeColumns(
+        Sheet sheet,
+        int startColumnIndex,
+        List<Integer> maxColumnLengths
+    ) {
+        for (int offset = 0; offset < maxColumnLengths.size(); offset++) {
+            int maxLength = maxColumnLengths.get(offset);
+            int desiredWidth = calculateDesiredWidth(maxLength);
+            int targetColumn = startColumnIndex + offset;
+            int currentWidth = sheet.getColumnWidth(targetColumn);
+            if (currentWidth < desiredWidth) {
+                sheet.setColumnWidth(targetColumn, desiredWidth);
+            }
+        }
+    }
+
+    private void applyCellStyle(
+        Cell cell,
+        CellStyle baselineStyle,
+        boolean bold,
+        Map<Short, CellStyle> boldStyleCache
+    ) {
+        if (!bold) {
+            applyBaselineStyle(cell, baselineStyle);
+            return;
+        }
+        CellStyle boldStyle = resolveBoldStyle(baselineStyle, boldStyleCache);
+        if (boldStyle != null) {
+            cell.setCellStyle(boldStyle);
+            return;
+        }
+        applyBaselineStyle(cell, baselineStyle);
+    }
+
+    private CellStyle resolveBoldStyle(CellStyle baselineStyle, Map<Short, CellStyle> boldStyleCache) {
+        if (baselineStyle == null) {
+            return null;
+        }
+        short key = baselineStyle.getIndex();
+        CellStyle cached = boldStyleCache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+
+        CellStyle boldStyle = workbook.createCellStyle();
+        boldStyle.cloneStyleFrom(baselineStyle);
+
+        Font baselineFont = workbook.getFontAt(baselineStyle.getFontIndexAsInt());
+        Font boldFont = workbook.createFont();
+        cloneFont(baselineFont, boldFont);
+        boldFont.setBold(true);
+        boldStyle.setFont(boldFont);
+        boldStyleCache.put(key, boldStyle);
+        return boldStyle;
+    }
+
+    private void cloneFont(Font source, Font target) {
+        target.setBold(source.getBold());
+        target.setItalic(source.getItalic());
+        target.setStrikeout(source.getStrikeout());
+        target.setUnderline(source.getUnderline());
+        target.setTypeOffset(source.getTypeOffset());
+        target.setColor(source.getColor());
+        target.setFontName(source.getFontName());
+        target.setFontHeight(source.getFontHeight());
+        target.setCharSet(source.getCharSet());
+    }
+
+    private void addMergedRegionReplacingOverlaps(Sheet sheet, CellRangeAddress region) {
+        for (int i = sheet.getNumMergedRegions() - 1; i >= 0; i--) {
+            CellRangeAddress existing = sheet.getMergedRegion(i);
+            if (existing.intersects(region)) {
+                sheet.removeMergedRegion(i);
+            }
+        }
+        sheet.addMergedRegion(region);
     }
 
 }

@@ -1,5 +1,6 @@
 package io.github.ogbozoyan.processor;
 
+import io.github.ogbozoyan.contract.TableBuilder;
 import io.github.ogbozoyan.data.GenerateOptions;
 import io.github.ogbozoyan.data.TemplateScanResult;
 import io.github.ogbozoyan.exception.TemplateReadWriteException;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.github.ogbozoyan.helper.DocHelper.normalizeParagraphText;
+import static io.github.ogbozoyan.helper.DocHelper.renderDeclarativeTableAsDocText;
 import static io.github.ogbozoyan.helper.DocHelper.renderTableAsDocText;
 
 /**
@@ -23,6 +25,8 @@ import static io.github.ogbozoyan.helper.DocHelper.renderTableAsDocText;
  *
  * <p>The format has limited structural editing support, therefore table tokens are rendered
  * as text-grid blocks ({@code \\t} for columns and {@code \\r} for rows).
+ * Declarative {@code io.github.ogbozoyan.contract.TableBuilder} payloads are supported
+ * through the same text-grid fallback.
  *
  * <p>Example:
  * <pre>{@code
@@ -105,6 +109,31 @@ public class DocDocumentProcessor implements WorkbookProcessor {
             }
 
             Object resolved = TokenResolver.resolvePath(templateTokensMappings, exactToken);
+            if (resolved instanceof TableBuilder declarativeTable) {
+                String location = "doc:paragraph#" + i;
+                if (declarativeTable.rows().isEmpty()) {
+                    warningCollector.add("TABLE_TOKEN_EMPTY", "Declarative table has no rows: " + exactToken, location);
+                    paragraph.replaceText(paragraphText, "");
+                    continue;
+                }
+                if (declarativeTable.columnCount() < 1) {
+                    warningCollector.add("TABLE_TOKEN_INVALID", "Declarative table has no columns: " + exactToken, location);
+                    paragraph.replaceText(paragraphText, "");
+                    continue;
+                }
+                paragraph.replaceText(
+                    paragraphText,
+                    renderDeclarativeTableAsDocText(
+                        declarativeTable,
+                        templateTokensMappings,
+                        options.missingValuePolicy(),
+                        warningCollector,
+                        location
+                    )
+                );
+                tableInsertions++;
+                continue;
+            }
             if (!TokenResolver.isTableValue(resolved)) {
                 continue;
             }
@@ -129,7 +158,7 @@ public class DocDocumentProcessor implements WorkbookProcessor {
             for (Map.Entry<String, Object> entry : templateTokensMappings.entrySet()) {
                 String token = "{{" + entry.getKey() + "}}";
                 Object value = entry.getValue();
-                if (TokenResolver.isTableValue(value)) {
+                if (TokenResolver.isTableTokenValue(value)) {
                     continue;
                 }
                 range.replaceText(token, value == null ? "" : String.valueOf(value));

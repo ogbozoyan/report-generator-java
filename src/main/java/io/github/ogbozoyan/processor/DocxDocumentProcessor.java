@@ -1,5 +1,6 @@
 package io.github.ogbozoyan.processor;
 
+import io.github.ogbozoyan.contract.TableBuilder;
 import io.github.ogbozoyan.data.DocxTableAnchor;
 import io.github.ogbozoyan.data.GenerateOptions;
 import io.github.ogbozoyan.data.ParagraphTarget;
@@ -22,9 +23,13 @@ import java.util.Map;
 
 import static io.github.ogbozoyan.helper.DocxHelper.buildColumnOrder;
 import static io.github.ogbozoyan.helper.DocxHelper.collectParagraphTargets;
+import static io.github.ogbozoyan.helper.DocxHelper.getOrCreateFirstRow;
 import static io.github.ogbozoyan.helper.DocxHelper.insertTableAtParagraphCursor;
 import static io.github.ogbozoyan.helper.DocxHelper.removeParagraphFromContainer;
 import static io.github.ogbozoyan.helper.DocxHelper.replaceParagraphText;
+import static io.github.ogbozoyan.helper.DocxHelper.resetRowCells;
+import static io.github.ogbozoyan.helper.DocxHelper.setCellText;
+import static io.github.ogbozoyan.helper.DocxHelper.setHorizontalSpan;
 import static io.github.ogbozoyan.helper.DocxHelper.writeTable;
 
 /**
@@ -33,6 +38,10 @@ import static io.github.ogbozoyan.helper.DocxHelper.writeTable;
  * <p>Unlike plain body-only approaches, this implementation recursively traverses
  * document body and nested table cells, so placeholders inside existing tables
  * are handled by the same algorithm as top-level placeholders.
+ *
+ * <p>Table token payload can be either classic {@code List<Map<String,Object>>}
+ * (header + data rows) or declarative {@code io.github.ogbozoyan.contract.TableBuilder}
+ * (explicit row/cell model with colspan and cell-level bold).
  *
  * <p>Example:
  * <pre>{@code
@@ -89,9 +98,10 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
      */
     @Override
     public void process(Map<String, Object> templateTokensMappings, GenerateOptions options, WarningCollector warningCollector) {
+        Map<String, Object> context = templateTokensMappings == null ? Map.of() : templateTokensMappings;
         List<ParagraphTarget> paragraphTargets = collectParagraphTargets(document);
         log.debug("process() - start: tokenCount={}, paragraphs={}",
-            templateTokensMappings == null ? null : templateTokensMappings.size(),
+            context.size(),
             paragraphTargets.size());
         List<DocxTableAnchor> anchors = new ArrayList<>();
         int scalarReplacements = 0;
@@ -105,29 +115,24 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
 
             String exactToken = TokenResolver.getExactToken(text);
             if (exactToken != null) {
-                Object resolved = TokenResolver.resolvePath(templateTokensMappings, exactToken);
-                if (TokenResolver.isTableValue(resolved)) {
-                    List<Map<String, Object>> tableRows = TokenResolver.toTableRows(resolved);
-                    if (tableRows == null) {
-                        warningCollector.add("TABLE_TOKEN_INVALID", "Table token has invalid structure: " + exactToken, paragraphTarget.location());
-                    } else {
-                        anchors.add(
-                            new DocxTableAnchor(
-                                paragraph,
-                                exactToken,
-                                tableRows,
-                                paragraphTarget.location(),
-                                paragraphTarget.order()
-                            )
-                        );
-                    }
+                Object resolved = TokenResolver.resolvePath(context, exactToken);
+                if (resolved instanceof TableBuilder || TokenResolver.isTableValue(resolved)) {
+                    anchors.add(
+                        new DocxTableAnchor(
+                            paragraph,
+                            exactToken,
+                            resolved,
+                            paragraphTarget.location(),
+                            paragraphTarget.order()
+                        )
+                    );
                     continue;
                 }
             }
 
             ResolvedText resolvedText = TokenResolver.resolve(
                 text,
-                templateTokensMappings,
+                context,
                 options.missingValuePolicy(),
                 warningCollector,
                 paragraphTarget.location(),
@@ -143,7 +148,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
             (a, b) -> Integer.compare(b.order(), a.order())
         );
         for (DocxTableAnchor anchor : anchors) {
-            insertTableAtParagraph(anchor, warningCollector);
+            insertTableAtParagraph(anchor, context, options, warningCollector);
         }
         log.trace("process() - end: tableInsertions={}, scalarReplacements={}", anchors.size(), scalarReplacements);
     }
@@ -186,16 +191,43 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
      * Inserts table at placeholder paragraph and removes placeholder paragraph.
      *
      * @param anchor           insertion anchor
+     * @param context          token context
+     * @param options          generation options
      * @param warningCollector collector for non-fatal warnings
      */
-    private void insertTableAtParagraph(DocxTableAnchor anchor, WarningCollector warningCollector) {
-        log.trace("insertTableAtParagraph() - start: token={}, rowCount={}, location={}",
-            anchor.token(), anchor.rows().size(), anchor.location());
-        List<Map<String, Object>> rows = anchor.rows();
+    private void insertTableAtParagraph(
+        DocxTableAnchor anchor,
+        Map<String, Object> context,
+        GenerateOptions options,
+        WarningCollector warningCollector
+    ) {
+        Object payload = anchor.tablePayload();
+        if (payload instanceof TableBuilder builder) {
+            insertDeclarativeTableAtParagraph(anchor, builder, context, options, warningCollector);
+            return;
+        }
+        insertMapTableAtParagraph(anchor, payload, warningCollector);
+    }
+
+    private void insertMapTableAtParagraph(
+        DocxTableAnchor anchor,
+        Object payload,
+        WarningCollector warningCollector
+    ) {
+        List<Map<String, Object>> rows = TokenResolver.toTableRows(payload);
+        if (rows == null) {
+            warningCollector.add("TABLE_TOKEN_INVALID", "Table token has invalid structure: " + anchor.token(), anchor.location());
+            replaceParagraphText(anchor.paragraph(), "");
+            log.trace("insertMapTableAtParagraph() - end: inserted=false, reason=invalidRows");
+            return;
+        }
+
+        log.trace("insertMapTableAtParagraph() - start: token={}, rowCount={}, location={}",
+            anchor.token(), rows.size(), anchor.location());
         if (rows.isEmpty()) {
             warningCollector.add("TABLE_TOKEN_EMPTY", "Table token has no rows: " + anchor.token(), anchor.location());
             replaceParagraphText(anchor.paragraph(), "");
-            log.trace("insertTableAtParagraph() - end: inserted=false, reason=emptyRows");
+            log.trace("insertMapTableAtParagraph() - end: inserted=false, reason=emptyRows");
             return;
         }
 
@@ -203,7 +235,7 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
         if (columns.isEmpty()) {
             warningCollector.add("TABLE_TOKEN_INVALID", "Table token has no columns: " + anchor.token(), anchor.location());
             replaceParagraphText(anchor.paragraph(), "");
-            log.trace("insertTableAtParagraph() - end: inserted=false, reason=emptyColumns");
+            log.trace("insertMapTableAtParagraph() - end: inserted=false, reason=emptyColumns");
             return;
         }
 
@@ -212,7 +244,74 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
         writeTable(table, columns, rows);
 
         removeParagraphFromContainer(anchor.paragraph());
-        log.trace("insertTableAtParagraph() - end: inserted=true, columns={}", columns.size());
+        log.trace("insertMapTableAtParagraph() - end: inserted=true, columns={}", columns.size());
+    }
+
+    private void insertDeclarativeTableAtParagraph(
+        DocxTableAnchor anchor,
+        TableBuilder builder,
+        Map<String, Object> context,
+        GenerateOptions options,
+        WarningCollector warningCollector
+    ) {
+        List<TableBuilder.Row> specRows = builder.rows();
+        log.trace("insertDeclarativeTableAtParagraph() - start: token={}, rowCount={}, location={}",
+            anchor.token(), specRows.size(), anchor.location());
+        if (specRows.isEmpty()) {
+            warningCollector.add("TABLE_TOKEN_EMPTY", "Declarative table has no rows: " + anchor.token(), anchor.location());
+            replaceParagraphText(anchor.paragraph(), "");
+            log.trace("insertDeclarativeTableAtParagraph() - end: inserted=false, reason=emptyRows");
+            return;
+        }
+
+        int columnCount = builder.columnCount();
+        if (columnCount < 1) {
+            warningCollector.add("TABLE_TOKEN_INVALID", "Declarative table has no columns: " + anchor.token(), anchor.location());
+            replaceParagraphText(anchor.paragraph(), "");
+            log.trace("insertDeclarativeTableAtParagraph() - end: inserted=false, reason=emptyColumns");
+            return;
+        }
+
+        XmlCursor cursor = anchor.paragraph().getCTP().newCursor();
+        XWPFTable table = insertTableAtParagraphCursor(anchor.paragraph(), cursor);
+        for (int rowIndex = 0; rowIndex < specRows.size(); rowIndex++) {
+            TableBuilder.Row rowSpec = specRows.get(rowIndex);
+            var row = rowIndex == 0
+                ? getOrCreateFirstRow(table)
+                : table.createRow();
+
+            int cellCount = rowSpec.cells().size();
+            int missingCells = columnCount - rowSpec.width();
+            if (missingCells > 0) {
+                cellCount += missingCells;
+            }
+            resetRowCells(row, cellCount);
+
+            int physicalCell = 0;
+            for (int colIndex = 0; colIndex < rowSpec.cells().size(); colIndex++) {
+                TableBuilder.Cell cellSpec = rowSpec.cells().get(colIndex);
+                String cellLocation = anchor.location() + "/row#" + rowIndex + "/cell#" + colIndex;
+                ResolvedText resolvedText = TokenResolver.resolve(
+                    cellSpec.text(),
+                    context,
+                    options.missingValuePolicy(),
+                    warningCollector,
+                    cellLocation,
+                    false
+                );
+                setCellText(row.getCell(physicalCell), resolvedText.value(), cellSpec.bold());
+                setHorizontalSpan(row.getCell(physicalCell), cellSpec.colSpan());
+                physicalCell++;
+            }
+
+            for (int padIndex = 0; padIndex < missingCells; padIndex++) {
+                setCellText(row.getCell(physicalCell), "", false);
+                physicalCell++;
+            }
+        }
+
+        removeParagraphFromContainer(anchor.paragraph());
+        log.trace("insertDeclarativeTableAtParagraph() - end: inserted=true, columns={}", columnCount);
     }
 
 

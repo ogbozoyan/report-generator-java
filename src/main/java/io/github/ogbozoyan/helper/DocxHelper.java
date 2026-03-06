@@ -12,7 +12,10 @@ import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.xmlbeans.XmlCursor;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTDecimalNumber;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,12 +41,24 @@ public class DocxHelper extends CommonHelper {
      * @param value text value
      */
     public static void setCellText(XWPFTableCell cell, String value) {
+        setCellText(cell, value, false);
+    }
+
+    /**
+     * Replaces cell paragraphs with single paragraph containing provided value and style.
+     *
+     * @param cell  destination cell
+     * @param value text value
+     * @param bold  bold style for generated run
+     */
+    public static void setCellText(XWPFTableCell cell, String value, boolean bold) {
         int paragraphCount = cell.getParagraphs().size();
         for (int i = paragraphCount - 1; i >= 0; i--) {
             cell.removeParagraph(i);
         }
         XWPFParagraph paragraph = cell.addParagraph();
         XWPFRun run = paragraph.createRun();
+        run.setBold(bold);
         run.setText(value == null ? "" : value);
     }
 
@@ -106,6 +121,41 @@ public class DocxHelper extends CommonHelper {
             return headerRow;
         }
         throw new TemplateReadWriteException("Failed to create header row for DOCX table insertion");
+    }
+
+    /**
+     * Recreates row cell list to match exact physical cell count.
+     *
+     * @param row       target row
+     * @param cellCount exact physical cell count
+     */
+    public static void resetRowCells(XWPFTableRow row, int cellCount) {
+        int existing = row.getTableCells().size();
+        for (int i = existing - 1; i >= 0; i--) {
+            row.removeCell(i);
+        }
+        for (int i = 0; i < cellCount; i++) {
+            row.createCell();
+        }
+    }
+
+    /**
+     * Applies horizontal merge span to a DOCX cell via {@code w:gridSpan}.
+     *
+     * @param cell    target cell
+     * @param colSpan requested span
+     */
+    public static void setHorizontalSpan(XWPFTableCell cell, int colSpan) {
+        if (colSpan <= 1) {
+            return;
+        }
+        CTTcPr tcPr = cell.getCTTc().isSetTcPr()
+            ? cell.getCTTc().getTcPr()
+            : cell.getCTTc().addNewTcPr();
+        CTDecimalNumber span = tcPr.isSetGridSpan()
+            ? tcPr.getGridSpan()
+            : tcPr.addNewGridSpan();
+        span.setVal(BigInteger.valueOf(colSpan));
     }
 
 

@@ -1,6 +1,8 @@
 package io.github.ogbozoyan.util;
 
 
+import io.github.ogbozoyan.contract.TableBuilder;
+import io.github.ogbozoyan.contract.TableXlsxBuilder;
 import io.github.ogbozoyan.data.MissingValuePolicy;
 import io.github.ogbozoyan.data.ResolvedText;
 import io.github.ogbozoyan.exception.TemplateDataBindingException;
@@ -83,8 +85,9 @@ public class TokenResolver {
     /**
      * Resolves token expressions in free-form text.
      *
-     * <p>Missing token behavior is controlled by {@link MissingValuePolicy}. Table values are not
-     * expanded inline and produce warning instead.
+     * <p>Missing token behavior is controlled by {@link MissingValuePolicy}. Table values
+     * (classic list-map payloads and declarative table builders) are not expanded inline
+     * and produce warning instead.
      *
      * @param text             source text
      * @param context          token context
@@ -139,7 +142,7 @@ public class TokenResolver {
                 continue;
             }
 
-            if (isTableValue(resolved)) {
+            if (isTableTokenValue(resolved)) {
                 warningCollector.add(
                     "TABLE_TOKEN_INLINE_IGNORED",
                     "Table token can be inserted only as exact placeholder",
@@ -194,6 +197,17 @@ public class TokenResolver {
      */
     public static boolean isTableValue(Object value) {
         return toTableRows(value) != null;
+    }
+
+    /**
+     * Checks whether value is a table-token payload supported by at least one processor.
+     *
+     * @param value token value
+     * @return {@code true} for classic map-table payload or declarative
+     * {@link TableBuilder}/{@link TableXlsxBuilder}
+     */
+    public static boolean isTableTokenValue(Object value) {
+        return isTableValue(value) || value instanceof TableBuilder || value instanceof TableXlsxBuilder;
     }
 
     /**
