@@ -64,7 +64,7 @@ public class LibreOfficeDocumentFormatConverter implements DocumentFormatConvert
                 inputFile.toString()
             );
 
-            log.trace("convert() - command: sourceFormat={}, targetFormat={}, binary={}", sourceFormat, targetFormat, binary);
+            log.trace("convert() - command: targetExtension={}, sourceFormat={}, targetFormat={}, binary={}", targetExtension, sourceFormat, targetFormat, binary);
             Process process = new ProcessBuilder(command)
                 .redirectErrorStream(true)
                 .start();
