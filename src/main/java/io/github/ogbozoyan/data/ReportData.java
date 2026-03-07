@@ -19,6 +19,8 @@ import java.util.Map;
  *     (XLS/XLSX rows-only insertion without header).</li>
  *     <li>{@code io.github.ogbozoyan.contract.TableBuilder} for declarative DOC/DOCX table insertion
  *     at exact placeholder token.</li>
+ *     <li>{@code io.github.ogbozoyan.contract.RowBuilder} for DOCX template-row cloning
+ *     inside an existing table row.</li>
  *     <li>{@code io.github.ogbozoyan.contract.TableXlsxBuilder} for declarative XLS/XLSX table insertion
  *     at exact placeholder token.</li>
  * </ul>

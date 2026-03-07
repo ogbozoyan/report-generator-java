@@ -12,6 +12,8 @@
 - table tokens: `{{TABLE_TOKEN}}` для значения типа `List<Map<String, Object>>`;
 - declarative table tokens для `DOC/DOCX` через `TableBuilder`
   (создание таблицы по placeholder без заранее вставленной таблицы в шаблон);
+- template-row row tokens для `DOCX` через `RowBuilder`
+  (клонирование строки существующей таблицы с сохранением стиля);
 - declarative table tokens для `XLS/XLSX` через `TableXlsxBuilder`
   (поддержка `colSpan` и `bold`, вставка по placeholder);
 - rows-only table mode для `XLS/XLSX` через `GenerateOptions.rowsOnlyTableTokens=true`
@@ -87,6 +89,30 @@ ReportData data = new ReportData(Map.of(
         "payment_date", "2026-03",
         "amount", "250000",
         "ost_osn_dolg", "750000"
+));
+GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
+```
+
+## DOCX RowBuilder (template row clone)
+
+```java
+RowBuilder paymentRows = RowBuilder.create()
+        .row(
+                RowBuilder.cell("1"),
+                RowBuilder.cell("2026-03"),
+                RowBuilder.cell("250000"),
+                RowBuilder.cell("750000")
+        )
+        .row(
+                RowBuilder.cell("2"),
+                RowBuilder.cell("2026-04"),
+                RowBuilder.cell("250000"),
+                RowBuilder.cell("500000")
+        );
+
+// {{PAYMENT_ROWS}} должен быть в строке таблицы-шаблона DOCX.
+ReportData data = new ReportData(Map.of(
+        "PAYMENT_ROWS", paymentRows
 ));
 GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
 ```

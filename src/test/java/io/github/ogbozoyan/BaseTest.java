@@ -24,8 +24,11 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -129,11 +132,50 @@ public class BaseTest {
         }
     }
 
+    protected byte[] createDocxTemplateRowExpansionTemplate() throws Exception {
+        try (XWPFDocument document = new XWPFDocument();
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            XWPFTable table = document.createTable(3, 4);
+
+            XWPFTableRow headerRow = table.getRow(0);
+            setCellParagraph(headerRow.getCell(0), "No", ParagraphAlignment.CENTER);
+            setCellParagraph(headerRow.getCell(1), "Date", ParagraphAlignment.CENTER);
+            setCellParagraph(headerRow.getCell(2), "Amount", ParagraphAlignment.CENTER);
+            setCellParagraph(headerRow.getCell(3), "Balance", ParagraphAlignment.CENTER);
+
+            XWPFTableRow templateRow = table.getRow(1);
+            templateRow.setHeight(640);
+            for (int c = 0; c < 4; c++) {
+                XWPFTableCell cell = templateRow.getCell(c);
+                cell.setColor("D9E2F3");
+                setCellParagraph(cell, c == 0 ? "{{PAYMENT_ROWS}}" : "", ParagraphAlignment.CENTER);
+            }
+
+            XWPFTableRow tailRow = table.getRow(2);
+            setCellParagraph(tailRow.getCell(0), "tail", ParagraphAlignment.LEFT);
+            setCellParagraph(tailRow.getCell(1), "", ParagraphAlignment.LEFT);
+            setCellParagraph(tailRow.getCell(2), "", ParagraphAlignment.LEFT);
+            setCellParagraph(tailRow.getCell(3), "", ParagraphAlignment.LEFT);
+
+            document.write(output);
+            return output.toByteArray();
+        }
+    }
+
     private void putCellToken(XWPFTableCell cell, String token) {
         for (int i = cell.getParagraphs().size() - 1; i >= 0; i--) {
             cell.removeParagraph(i);
         }
         cell.addParagraph().createRun().setText(token);
+    }
+
+    private void setCellParagraph(XWPFTableCell cell, String value, ParagraphAlignment alignment) {
+        for (int i = cell.getParagraphs().size() - 1; i >= 0; i--) {
+            cell.removeParagraph(i);
+        }
+        XWPFParagraph paragraph = cell.addParagraph();
+        paragraph.setAlignment(alignment);
+        paragraph.createRun().setText(value);
     }
 
     protected byte[] createDocxScalarTemplate(String value) throws Exception {

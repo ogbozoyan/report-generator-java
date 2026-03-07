@@ -1,5 +1,6 @@
 package io.github.ogbozoyan.processor;
 
+import io.github.ogbozoyan.contract.RowBuilder;
 import io.github.ogbozoyan.contract.TableBuilder;
 import io.github.ogbozoyan.data.DocxTableAnchor;
 import io.github.ogbozoyan.data.GenerateOptions;
@@ -13,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.xmlbeans.XmlCursor;
 
 import java.io.ByteArrayInputStream;
@@ -22,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.github.ogbozoyan.helper.DocxHelper.buildColumnOrder;
+import static io.github.ogbozoyan.helper.DocxHelper.cloneTableRow;
 import static io.github.ogbozoyan.helper.DocxHelper.collectParagraphTargets;
 import static io.github.ogbozoyan.helper.DocxHelper.getOrCreateFirstRow;
 import static io.github.ogbozoyan.helper.DocxHelper.insertTableAtParagraphCursor;
@@ -29,6 +33,7 @@ import static io.github.ogbozoyan.helper.DocxHelper.removeParagraphFromContainer
 import static io.github.ogbozoyan.helper.DocxHelper.replaceParagraphText;
 import static io.github.ogbozoyan.helper.DocxHelper.resetRowCells;
 import static io.github.ogbozoyan.helper.DocxHelper.setCellText;
+import static io.github.ogbozoyan.helper.DocxHelper.setCellTextPreservingParagraphStyle;
 import static io.github.ogbozoyan.helper.DocxHelper.setHorizontalSpan;
 import static io.github.ogbozoyan.helper.DocxHelper.writeTable;
 
@@ -41,7 +46,9 @@ import static io.github.ogbozoyan.helper.DocxHelper.writeTable;
  *
  * <p>Table token payload can be either classic {@code List<Map<String,Object>>}
  * (header + data rows) or declarative {@code io.github.ogbozoyan.contract.TableBuilder}
- * (explicit row/cell model with colspan and cell-level bold).
+ * (explicit row/cell model with colspan and cell-level bold) or
+ * {@code io.github.ogbozoyan.contract.RowBuilder}
+ * (clone styled template row inside an existing DOCX table).
  *
  * <p>Example:
  * <pre>{@code
@@ -116,7 +123,9 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
             String exactToken = TokenResolver.getExactToken(text);
             if (exactToken != null) {
                 Object resolved = TokenResolver.resolvePath(context, exactToken);
-                if (resolved instanceof TableBuilder || TokenResolver.isTableValue(resolved)) {
+                if (resolved instanceof TableBuilder
+                    || resolved instanceof RowBuilder
+                    || TokenResolver.isTableValue(resolved)) {
                     anchors.add(
                         new DocxTableAnchor(
                             paragraph,
@@ -202,6 +211,10 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
         WarningCollector warningCollector
     ) {
         Object payload = anchor.tablePayload();
+        if (payload instanceof RowBuilder rowBuilder) {
+            insertTemplateRowsAtParagraph(anchor, rowBuilder, context, options, warningCollector);
+            return;
+        }
         if (payload instanceof TableBuilder builder) {
             insertDeclarativeTableAtParagraph(anchor, builder, context, options, warningCollector);
             return;
@@ -312,6 +325,105 @@ public class DocxDocumentProcessor implements WorkbookProcessor {
 
         removeParagraphFromContainer(anchor.paragraph());
         log.trace("insertDeclarativeTableAtParagraph() - end: inserted=true, columns={}", columnCount);
+    }
+
+    private void insertTemplateRowsAtParagraph(
+        DocxTableAnchor anchor,
+        RowBuilder rowBuilder,
+        Map<String, Object> context,
+        GenerateOptions options,
+        WarningCollector warningCollector
+    ) {
+        List<RowBuilder.Row> specRows = rowBuilder.rows();
+        log.trace("insertTemplateRowsAtParagraph() - start: token={}, rowCount={}, location={}",
+            anchor.token(), specRows.size(), anchor.location());
+        if (specRows.isEmpty()) {
+            warningCollector.add("TABLE_TOKEN_EMPTY", "Template row payload has no rows: " + anchor.token(), anchor.location());
+            replaceParagraphText(anchor.paragraph(), "");
+            log.trace("insertTemplateRowsAtParagraph() - end: inserted=false, reason=emptyRows");
+            return;
+        }
+
+        if (!(anchor.paragraph().getBody() instanceof XWPFTableCell tableCell)) {
+            warningCollector.add(
+                "TABLE_TOKEN_INVALID",
+                "Template row token must be placed inside DOCX table cell: " + anchor.token(),
+                anchor.location()
+            );
+            replaceParagraphText(anchor.paragraph(), "");
+            log.trace("insertTemplateRowsAtParagraph() - end: inserted=false, reason=invalidAnchorContainer");
+            return;
+        }
+
+        XWPFTableRow templateRow = tableCell.getTableRow();
+        XWPFTable table = templateRow == null ? null : templateRow.getTable();
+        if (templateRow == null || table == null) {
+            warningCollector.add(
+                "TABLE_TOKEN_INVALID",
+                "Template row token has invalid DOCX table context: " + anchor.token(),
+                anchor.location()
+            );
+            replaceParagraphText(anchor.paragraph(), "");
+            log.trace("insertTemplateRowsAtParagraph() - end: inserted=false, reason=missingTableContext");
+            return;
+        }
+
+        int templateRowIndex = table.getRows().indexOf(templateRow);
+        if (templateRowIndex < 0) {
+            warningCollector.add(
+                "TABLE_TOKEN_INVALID",
+                "Template row token row is not attached to table: " + anchor.token(),
+                anchor.location()
+            );
+            replaceParagraphText(anchor.paragraph(), "");
+            log.trace("insertTemplateRowsAtParagraph() - end: inserted=false, reason=detachedRow");
+            return;
+        }
+
+        boolean truncated = false;
+        for (int rowIndex = 0; rowIndex < specRows.size(); rowIndex++) {
+            RowBuilder.Row rowSpec = specRows.get(rowIndex);
+            XWPFTableRow insertedRow = cloneTableRow(table, templateRow, templateRowIndex + rowIndex);
+            int cellCount = insertedRow.getTableCells().size();
+            int writableCells = Math.min(cellCount, rowSpec.cells().size());
+            if (rowSpec.cells().size() > cellCount) {
+                truncated = true;
+            }
+
+            for (int cellIndex = 0; cellIndex < writableCells; cellIndex++) {
+                String cellLocation = anchor.location() + "/row#" + rowIndex + "/cell#" + cellIndex;
+                ResolvedText resolvedText = TokenResolver.resolve(
+                    rowSpec.cells().get(cellIndex).text(),
+                    context,
+                    options.missingValuePolicy(),
+                    warningCollector,
+                    cellLocation,
+                    false
+                );
+                XWPFTableCell targetCell = insertedRow.getCell(cellIndex);
+                if (targetCell == null) {
+                    truncated = true;
+                    continue;
+                }
+                setCellTextPreservingParagraphStyle(targetCell, resolvedText.value());
+            }
+            for (int cellIndex = writableCells; cellIndex < cellCount; cellIndex++) {
+                XWPFTableCell targetCell = insertedRow.getCell(cellIndex);
+                if (targetCell != null) {
+                    setCellTextPreservingParagraphStyle(targetCell, "");
+                }
+            }
+        }
+
+        table.removeRow(templateRowIndex + specRows.size());
+        if (truncated) {
+            warningCollector.add(
+                "TABLE_TOKEN_INVALID",
+                "Template row payload has more cells than template row allows: " + anchor.token(),
+                anchor.location()
+            );
+        }
+        log.trace("insertTemplateRowsAtParagraph() - end: inserted=true, rows={}", specRows.size());
     }
 
 
