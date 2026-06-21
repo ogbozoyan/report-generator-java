@@ -36,7 +36,7 @@ class ReportGeneratorManualIntegrationTest {
     private static GeneratedReport docx(ReportGeneratorService service) throws IOException {
         String fileName = "DOC1.docx";
         String resultFileName = "DOC1_result.docx";
-        byte[] templateBytes = Files.readAllBytes(Path.of(fileName));
+        byte[] templateBytes = Files.readAllBytes(Path.of("src/test/resources/fixtures/" + fileName));
         TemplateInput input = new TemplateInput(
             fileName,
             null,
@@ -91,7 +91,7 @@ class ReportGeneratorManualIntegrationTest {
      * @throws IOException when template/result file I/O fails
      */
     private static @NonNull GeneratedReport xlsx(ReportGeneratorService service) throws IOException {
-        byte[] templateBytes = Files.readAllBytes(Path.of("TABLE_BOOK.xlsx"));
+        byte[] templateBytes = Files.readAllBytes(Path.of("src/test/resources/fixtures/TABLE_BOOK.xlsx"));
 
         TemplateInput input = new TemplateInput(
             "TABLE_BOOK.xlsx",
@@ -153,7 +153,7 @@ class ReportGeneratorManualIntegrationTest {
      * @throws IOException when template/result file I/O fails
      */
     private static @NonNull GeneratedReport xlsxRows(ReportGeneratorService service) throws IOException {
-        byte[] templateBytes = Files.readAllBytes(Path.of("TABLE_BOOK_ROWS.xlsx"));
+        byte[] templateBytes = Files.readAllBytes(Path.of("src/test/resources/fixtures/TABLE_BOOK_ROWS.xlsx"));
 
         TemplateInput input = new TemplateInput(
             "TABLE_BOOK_ROWS.xlsx",
@@ -206,7 +206,7 @@ class ReportGeneratorManualIntegrationTest {
      * @throws IOException when template/result file I/O fails
      */
     private static @NonNull GeneratedReport xlsxRowsAndTemplateBellow(ReportGeneratorService service) throws IOException {
-        byte[] templateBytes = Files.readAllBytes(Path.of("table_with_row_and_template.xlsx"));
+        byte[] templateBytes = Files.readAllBytes(Path.of("src/test/resources/fixtures/table_with_row_and_template.xlsx"));
 
         TemplateInput input = new TemplateInput(
             "table_with_row_and_template.xlsx",
@@ -514,7 +514,7 @@ class ReportGeneratorManualIntegrationTest {
 
     @SneakyThrows
     private static GeneratedReport xlsxRowsAndTemplateBellowDifficult(ReportGeneratorService service) {
-        byte[] templateBytes = Files.readAllBytes(Path.of("table_with_row_and_template_difficult.xlsx"));
+        byte[] templateBytes = Files.readAllBytes(Path.of("src/test/resources/fixtures/table_with_row_and_template_difficult.xlsx"));
 
         TemplateInput input = new TemplateInput(
             "table_with_row_and_template_difficult.xlsx",

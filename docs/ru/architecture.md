@@ -1,15 +1,19 @@
+> **Язык:** **Русский** · [English](../en/architecture.md)
+>
+> [Обзор](README.md) · [Архитектура и внутреннее устройство](architecture.md) · [Публикация в Maven Central](publishing.md)
+
 # Report Generator: внутренняя документация
 
 ## 1. Цель документа
 
-`docs.md` описывает внутреннее устройство библиотеки: pipeline обработки, алгоритмы, компромиссы и причины архитектурных
-решений.
+Этот документ описывает внутреннее устройство библиотеки: pipeline обработки, алгоритмы, компромиссы и причины
+архитектурных решений.
 
-Этот документ ориентирован на разработчиков, которые поддерживают или расширяют кодовую базу.
+Документ ориентирован на разработчиков, которые поддерживают или расширяют кодовую базу.
 
 ## 2. Pipeline генерации
 
-Класс: `com.template.reportgenerator.io.github.ogbozoyan.service.ReportGeneratorServiceImpl`
+Класс: `io.github.ogbozoyan.service.ReportGeneratorServiceImpl`
 
 Поток `generate(...)`:
 
@@ -60,12 +64,12 @@
 
 ## 4. Карта модулей и ответственности
 
-### 4.1 `io.github.ogbozoyan.service/*`
+### 4.1 `service/*`
 
 - `ReportGeneratorService`: публичный API генерации.
 - `ReportGeneratorServiceImpl`: orchestration и маршрутизация по форматам.
 
-### 4.2 `io.github.ogbozoyan.processor/*`
+### 4.2 `processor/*`
 
 - `WorkbookProcessor`: единый lifecycle-контракт форматных обработчиков.
 - `PoiWorkbookProcessor`: `XLS/XLSX` таблицы, типизированная запись значений, auto-width, формулы.
@@ -73,7 +77,7 @@
 - `DocDocumentProcessor`: basic text-table в `.doc` (включая declarative `TableBuilder` как text-grid fallback).
 - `PdfDocumentProcessor`: text reconstruction и ASCII-grid таблицы.
 
-### 4.3 `io.github.ogbozoyan.util/*`
+### 4.3 `util/*`
 
 - `TemplateFormatDetector`: format detection по magic bytes/extension/MIME.
 - `TokenResolver`: поиск/резолв токенов и table-typing.
@@ -89,7 +93,7 @@
 
 ## 5. Алгоритмы и почему выбран такой подход
 
-## 5.1 `WorkbookProcessor` (единый контракт и lifecycle)
+### 5.1 `WorkbookProcessor` (единый контракт и lifecycle)
 
 Контракт:
 
@@ -105,7 +109,7 @@
 - `default` для `recalculateFormulas` не заставляет non-spreadsheet процессоры реализовывать неактуальную логику;
 - `AutoCloseable` делает ресурсную дисциплину одинаковой для всех реализаций.
 
-## 5.2 `PoiWorkbookProcessor`
+### 5.2 `PoiWorkbookProcessor`
 
 Ключевые алгоритмы:
 
@@ -138,7 +142,7 @@
 - локальный auto-width не ломает внешний layout листа;
 - пропуск formula-токенов безопаснее, чем риск повреждения формульного синтаксиса.
 
-## 5.3 `DocxDocumentProcessor`
+### 5.3 `DocxDocumentProcessor`
 
 Ключевые алгоритмы:
 
@@ -162,7 +166,7 @@
 - корректный контейнер вставки устраняет кейс, когда таблица создавалась не там, где стоял placeholder;
 - удаление placeholder-абзаца предотвращает дублирование контента.
 
-## 5.4 `DocDocumentProcessor`
+### 5.4 `DocDocumentProcessor`
 
 Ключевые алгоритмы:
 
@@ -181,7 +185,7 @@
 
 - это не полноценная Word table model, а текстовая имитация таблицы.
 
-## 5.5 `PdfDocumentProcessor`
+### 5.5 `PdfDocumentProcessor`
 
 Ключевые алгоритмы:
 
@@ -235,7 +239,7 @@
 ### 7.1 XLSX с table token
 
 ```java
-ReportGeneratorService serviceI = new io.github.ogbozoyan.service.ReportGeneratorServiceImpl();
+ReportGeneratorService service = new ReportGeneratorServiceImpl();
 
 TemplateInput input = new TemplateInput("TABLE_BOOK.xlsx", null, xlsxTemplateBytes);
 ReportData data = new ReportData(Map.of(
@@ -255,7 +259,7 @@ GenerateOptions options = new GenerateOptions(
         false
 );
 
-GeneratedReport report = serviceI.generate(input, data, options);
+GeneratedReport report = service.generate(input, data, options);
 ```
 
 ### 7.2 DOCX: table token внутри существующей таблицы
@@ -275,14 +279,14 @@ ReportData data = new ReportData(Map.of(
         )
 ));
 
-GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
+GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
 ```
 
 ### 7.3 XLSX -> ODS
 
 ```java
 TemplateInput input = new TemplateInput("sales-report.ods", null, xlsxTemplateBytes);
-GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
+GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
 ```
 
 ### 7.4 DOCX -> ODT
@@ -293,7 +297,7 @@ TemplateInput input = new TemplateInput(
         "application/vnd.oasis.opendocument.text",
         docxTemplateBytes
 );
-GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
+GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
 ```
 
 ### 7.5 DOCX declarative table (`TableBuilder`)
@@ -321,7 +325,7 @@ ReportData data = new ReportData(Map.of(
         "amount", "250000",
         "balance", "750000"
 ));
-GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
+GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
 ```
 
 ### 7.6 XLSX declarative table (`TableXlsxBuilder`)
@@ -343,7 +347,7 @@ ReportData data = new ReportData(Map.of(
         "amount", 250000,
         "balance", 750000
 ));
-GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
+GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
 ```
 
 ### 7.7 DOCX template row clone (`RowBuilder`)
@@ -367,7 +371,7 @@ TemplateInput input = new TemplateInput("contract.docx", null, docxTemplateBytes
 ReportData data = new ReportData(Map.of(
         "PAYMENT_ROWS", paymentRows
 ));
-GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, GenerateOptions.defaults());
+GeneratedReport report = service.generate(input, data, GenerateOptions.defaults());
 ```
 
 Условие шаблона:
@@ -377,30 +381,30 @@ GeneratedReport report = io.github.ogbozoyan.service.generate(input, data, Gener
 
 Ключевые тестовые наборы и что они подтверждают:
 
-- `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.service.ReportGeneratorServiceImplTest.java`
+- `src/test/java/io/github/ogbozoyan/service/ReportGeneratorServiceImplTest.java`
   - сервисный pipeline;
   - вставка таблиц в `XLS/XLSX` и non-spreadsheet форматах;
   - порядок колонок;
   - inline/exact-placeholder поведение;
   - поддерживаемые маршруты post-convert.
 
-- `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.service.ReportGeneratorFormattingGoldenTest.java`
+- `src/test/java/io/github/ogbozoyan/service/ReportGeneratorFormattingGoldenTest.java`
   - регрессионная проверка форматирования spreadsheet при table insertion.
 
 - `src/test/java/io/github/ogbozoyan/integration/ReportGeneratorManualIntegrationTest.java`
   - ручные интеграционные сценарии, вынесенные из `main` (класс помечен `@Disabled`).
 
-- `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.util/TemplateFormatDetectorTest.java`
+- `src/test/java/io/github/ogbozoyan/util/TemplateFormatDetectorTest.java`
   - детект формата по magic bytes/content-type/extension;
   - различение OLE2 (`DOC` vs `XLS`);
   - маршрутизация requested output format.
 
-- `src/test/java/com/template/reportgenerator/io.github.ogbozoyan.util/TemplateValidatorTest.java`
+- `src/test/java/io/github/ogbozoyan/util/TemplateValidatorTest.java`
   - корректность scan/validation helper-логики для block-маркеров.
 
-## 9. Почему разделены `README.md` и `docs.md`
+## 9. Почему разделены обзор и архитектура
 
-- `README.md` отвечает на вопросы "что это" и "как быстро запустить".
-- `docs.md` отвечает на вопросы "как это реализовано" и "почему именно так".
+- [Обзор](README.md) отвечает на вопросы "что это" и "как быстро запустить".
+- [Архитектура](architecture.md) отвечает на вопросы "как это реализовано" и "почему именно так".
 
 Это уменьшает дублирование и упрощает сопровождение документации при изменениях алгоритмов.
